@@ -1,0 +1,12 @@
+class Colour:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return self.name
+
+
+if __name__ == '__main__':
+    c1 = Coulour("Spades")'
+    print(c1)
+    
