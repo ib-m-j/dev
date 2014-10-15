@@ -2,7 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 
 
-#NEW
 
 class Colour:
     def __init__(self, name, id, symbol, order):
