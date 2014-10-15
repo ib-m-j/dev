@@ -2,6 +2,8 @@
 Thumbs.db
 ehthumbs.db
 
+# python backups
+*.py[~cod]
 # Folder config file
 Desktop.ini
 
