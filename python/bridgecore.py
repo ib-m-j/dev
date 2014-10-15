@@ -1,7 +1,15 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
+import collections
 
+
+coloursInput = [("Spades", "S", u"\x50", 4),
+                ("Hearts", "H", u"\x50", 3),
+                ("Diamonds", "D", u"\x50", 2),
+                ("Clubs", "C", u"\x50", 1)]
+
+strainsInput = [("Notrump", "NT", u"\x50", 5)]+coloursInput
 
 class Colour:
     def __init__(self, name, id, symbol, order):
@@ -16,6 +24,14 @@ class Colour:
     def __lt__(self, other):
         return self.order < other.order
 
+colours = [Colour(x[0], x[1], x[2], x[3]) for x in coloursInput]
+
+
+class Strain(Colour):
+    pass
+    
+strains = [Strain(x[0], x[1], x[2], x[3]) for x in strainsInput]
+
 cardValuesInput = [(1,"A",14),
               (2,"2", 2),
               (3,"3", 3),
@@ -29,11 +45,6 @@ cardValuesInput = [(1,"A",14),
               (11,"J", 11),
               (12,"Q", 12),
               (13,"K", 13)]
-
-colours = [Colour("Spades", "S", u"\x50", 4),
-            Colour("Hearts", "H", u"\x50", 3),
-            Colour("Diamonds", "D", u"\x50", 2),
-            Colour("Clubs", "C", u"\x50", 1)]
 
 class CardValue:
     def __init__(self, a):
@@ -67,28 +78,42 @@ class Card:
     def __str__(self):
         return(self.colour.__str__()+self.value.__str__())
 
-class Deck:
-    cards = {}
-    cards1 = []
+class Cards:
+    def __init__(self, cards):
+        self.cards = cards
 
-#    def __init__(self):
-#        for value in cardValues:
-#            for colour in colours:
-#                Deck.cards1.append(Card(colour, value))
-        
+    def __in__(self,x):
+        return x in self.cards
 
-    def __init__(self):
-        for value in cardValues:
-            for colour in colours:
-                print("added:"+value.__str__()+colour.__str__())
-                Deck.cards[(colour.id, value.symbol)
-                ]  =   Card(colour, value)
+    def __sort__(self):
+        self.cards.sort()
+
+    def cardsByColour(self):
+        byColour = collections.defaultdict(list)
+        for card in  self.cards:
+            byColour[card.colour].append(card.value)
+        res = ""
+        colours = [k for k in byColour.keys()]
+        colours.sort(reverse=True)
+        for c in colours:
+            res1 = "\n"+c.__str__()+" "
+            for v in byColour[c]:
+                res1 = res1 + v.__str__()+", "
+            res = res + res1[:len(res1)-2]
+        return res 
+            
+
+deck = Cards([Card(colour, value) for value in cardValues for colour in colours])
+            
         
 
 if __name__ == '__main__':
-    Deck()
-    v = Deck.cards.values()
-    k = [x for x in v]
-    k.sort()
-    for c in k:
+#    deck.cards.sort(a)
+#    for c in deck.cards:
+#        print(c)
+
+    for c in colours:
         print(c)
+    print (deck.cardsByColour())
+    for p in strains:
+        print(p)
