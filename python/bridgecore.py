@@ -2,7 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 
 import collections
-
+import random
 
 coloursInput = [("Spades", "S", u"\x50", 4),
                 ("Hearts", "H", u"\x50", 3),
@@ -28,7 +28,16 @@ colours = [Colour(x[0], x[1], x[2], x[3]) for x in coloursInput]
 
 
 class Strain(Colour):
-    pass
+    strains = {}
+
+    def __init__(self, name, id, symbol, order):
+        Colour.__init__(self, name, id, symbol, order)
+        Strain.strains[id] = self
+    
+    @staticmethod
+    def fromId(id):
+        return Strain.strains[id]
+            
     
 strains = [Strain(x[0], x[1], x[2], x[3]) for x in strainsInput]
 
@@ -77,6 +86,7 @@ class Card:
 
     def __str__(self):
         return(self.colour.__str__()+self.value.__str__())
+        
 
 class Cards:
     def __init__(self, cards):
@@ -85,8 +95,35 @@ class Cards:
     def __in__(self,x):
         return x in self.cards
 
-    def __sort__(self):
-        self.cards.sort()
+    def __iter__(self):
+        self.step = -1
+        return self
+
+    def __next__(self):
+        self.step = self.step + 1
+        if self.step == len(self.cards):
+            raise StopIteration
+        else:
+            return self.cards[self.step]
+
+    def shuffle(self):
+        l = self.cards
+        random.shuffle(l)
+        return Cards(l)
+
+    def deal(self, piles):
+        if sum(piles) > len(self.cards):
+            print("error")
+        start = 0
+        res = []
+        for pile in piles:
+            end = start + pile
+            res.append(Cards(self.cards[start:end]))
+            start = end
+        if start < len(self.cards):
+            res.append(Cards(self.cards[start:]))
+        return res
+            
 
     def cardsByColour(self):
         byColour = collections.defaultdict(list)
@@ -97,11 +134,19 @@ class Cards:
         colours.sort(reverse=True)
         for c in colours:
             res1 = "\n"+c.__str__()+" "
-            for v in byColour[c]:
-                res1 = res1 + v.__str__()+", "
-            res = res + res1[:len(res1)-2]
+            values = byColour[c]
+            values.sort(reverse= True)
+            for v in values:
+                res1 = res1 + v.__str__()+" "
+            res = res + res1[:len(res1)-1]
         return res 
             
+
+class Bid:
+    def __init__(self, tricks, strain, dbl):
+        pass
+    
+
 
 deck = Cards([Card(colour, value) for value in cardValues for colour in colours])
             
@@ -117,3 +162,15 @@ if __name__ == '__main__':
     print (deck.cardsByColour())
     for p in strains:
         print(p)
+
+    shuffled = deck.shuffle()
+    for c in shuffled:
+        print( c)
+
+    res = shuffled.deal([13,13,13])
+    for hand in res:
+        print(hand.cardsByColour())
+
+    print(Strain.fromId("NT").name)
+
+                       
