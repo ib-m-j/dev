@@ -3,6 +3,7 @@
 
 import collections
 import random
+import re
 
 coloursInput = [("Spades", "S", u"\x50", 4),
                 ("Hearts", "H", u"\x50", 3),
@@ -31,12 +32,30 @@ class Strain(Colour):
     strains = {}
 
     def __init__(self, name, id, symbol, order):
+        scores = {"NT":(30, 10),
+                  "S":(30, 0),
+                  "H":(30, 0),
+                  "D":(20, 0),
+                  "C":(20, 0)}
         Colour.__init__(self, name, id, symbol, order)
+        self.baseScore = 0
+        self.firstScore = 0
         Strain.strains[id] = self
+        Strain.strains[id].baseScore = scores[id][0]
+        Strain.strains[id].firstScore = scores[id][1]
+
+    def __str__(self):
+        return(format("{} {} {} {}".format(
+            self.name,self.id,self.baseScore,self.firstScore)))
     
     @staticmethod
     def fromId(id):
         return Strain.strains[id]
+
+#    @staticmethod
+#    def setStrainScores():
+#        for s in scores:
+#        pass
             
     
 strains = [Strain(x[0], x[1], x[2], x[3]) for x in strainsInput]
@@ -142,11 +161,22 @@ class Cards:
         return res 
             
 
-class Bid:
-    def __init__(self, tricks, strain, dbl):
-        pass
-    
 
+class Bid:
+    pattern = re.compile(
+        "(?P<tricks>[1-7])(?P<strain>[NT,S,H,D,C]{1,2})(?P<dbl>[PDR])")
+
+    def __init__(self, bidstring):
+        match = Bid.pattern.match(bidstring)
+        if match:
+            self.tricks = match.group("tricks")
+            self.strain = Strain.fromId(match.group("strain"))
+            self.dbl = match.group("dbl")
+        else:
+            raise (BaseException("bid exception"))
+    
+    def __str__(self):
+        return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
 
 deck = Cards([Card(colour, value) for value in cardValues for colour in colours])
             
@@ -164,13 +194,17 @@ if __name__ == '__main__':
         print(p)
 
     shuffled = deck.shuffle()
-    for c in shuffled:
-        print( c)
+#    for c in shuffled:
+#        print( c)
 
     res = shuffled.deal([13,13,13])
     for hand in res:
         print(hand.cardsByColour())
 
-    print(Strain.fromId("NT").name)
+    for x in Strain.strains:
+        x
 
+    for t in range(1,8):
+        for s in Strain.strains.keys():
+            print(Bid('{}{}P'.format(t,s)))
                        
