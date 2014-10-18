@@ -13,17 +13,25 @@ coloursInput = [("Spades", "S", u"\x50", 4),
 strainsInput = [("Notrump", "NT", u"\x50", 5)]+coloursInput
 
 class Colour:
+    colours = {}
+
     def __init__(self, name, id, symbol, order):
         self.name = name
         self.id = id
         self.symbol = symbol
         self.order = order
+        Colour.colours[id] = self
 
     def __str__(self):
         return self.id
 
     def __lt__(self, other):
         return self.order < other.order
+
+    @staticmethod
+    def fromId(id):
+        return Colour.colours[id]
+
 
 colours = [Colour(x[0], x[1], x[2], x[3]) for x in coloursInput]
 
@@ -109,13 +117,13 @@ class Card:
         return(self.colour.__str__()+self.value.__str__())
         
     def beats(self, other, trump):
-        print(self, other)
+        print(self, other.colour, trump.colour)
         if self.colour == other.colour and self.value > other.value:
             return True
         if other.colour == trump and not(self.colour == trump):
-            return False
+            print("trump")
+            return True
         return False
-            
 
 class Cards:
     def __init__(self, cards):
@@ -198,7 +206,7 @@ class Bid:
     def __str__(self):
         return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
 
-deck = Cards([Card(colour, value) for value in cardValues for colour in colours])
+deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours])
 
 class Seat:
     all = []
