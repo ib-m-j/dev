@@ -5,6 +5,7 @@ class Trick:
     def __init__(self, contractStrain, start, cards):
         self.start = start
         self.cards = cards
+        
         self.contractStrain = contractStrain
 
     def addCard(self, card):
@@ -16,17 +17,21 @@ class Trick:
 
     def winner(self):
         winner = self.cards.cards[0]
-        for c in self.cards.cards[1:]:
+        offset = 0
+        for (no,c) in enumerate(self.cards.cards[1:]):
             if c.beats(winner,self.contractStrain):
                 winner = c
-
-        print("winner!!!",self, winner, self.contractStrain)
-
+                offset = no+1
+        return self.start.getNext(offset)
+        
 class CardPlay:
 
-    def __init__(self, strain, dealer, zone):
+    def __init__(self, strainId, dealer, zone):
         self.dealer = dealer
-        self.strain = strain
+        if strainId in bridgecore.Colour.colours:
+            self.strain = bridgecore.Colour.colours[strainId]
+        else:
+            self.strain = None
         self.tricks = []
         self.player = bridgecore.Seat.fromId('N')
         self.zone = ''
@@ -45,16 +50,33 @@ class CardPlay:
 
     def playATrick(self):
         trickInput = []
+        self.trickColour = None
         for x in range(len(bridgecore.Seat.all)):
             seat = self.player.getNext(x)           
-            pick = random.randrange(0,len(self.dealt[seat].cards.cards))
-            played = self.dealt[seat].cards.cards[pick]
+            #  pick = random.randrange(0,len(self.dealt[seat].cards.cards))
+            #  played = self.dealt[seat].cards.cards[pick]
+            played = self.legalPlay(x, seat)
             self.dealt[seat].cards.cards.remove(played)
             trickInput.append(played)
         trick = Trick(self.strain, self.player, bridgecore.Cards(trickInput))
         self.tricks.append(trick)
-        trick.winner()
+        self.player = trick.winner()
 
+    def legalPlay(self, x, seat):
+        if x == 0:
+            pick = random.randrange(0,len(self.dealt[seat].cards.cards))
+            played = self.dealt[seat].cards.cards[pick]
+            self.trickColour = played.colour
+        else:
+            correctColour = self.dealt[seat].cards.getCardsOfColour(
+                self.trickColour)
+            if len(correctColour)>0:
+                played = correctColour[0]
+            else:
+                played = self.dealt[seat].cards.cards[0]
+            #raise (BaseException("bid exception"))
+
+        return played
 
 class Table:
     def __init__(self, names):
@@ -79,14 +101,14 @@ class Table:
 if __name__ == '__main__':
     shuffled = bridgecore.deck.shuffle()
     shuffled.deal([13,13,13])
-    print("starting")
-    for x in bridgecore.Seat.all:
-        print(x)
+#    print("starting")
+#    for x in bridgecore.Seat.all:
+#        print(x)
 
 
     t = Table (['a','b','c','d'])
-    t.startPlay(bridgecore.Colour.fromId('S'), 'N', '')
-    print(t)
+    t.startPlay('S', 'N', '')
+ #   print(t)
     print(t.play.showDeal())
     
     while len(t.play.tricks) < 13:
