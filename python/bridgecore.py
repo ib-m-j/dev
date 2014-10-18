@@ -179,8 +179,35 @@ class Bid:
         return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
 
 deck = Cards([Card(colour, value) for value in cardValues for colour in colours])
-            
-        
+
+class Seat:
+    all = []
+
+    def __init__(self, id, order):
+        self.id = id
+        self.order = order
+        Seat.all.append(self)
+
+    def getNext(self, step = 1):
+        own = Seat.all.index(self)
+        return Seat.all[(own+step) % 4]
+
+    def __str__(self):
+        return '{} {}'.format(self.id, self.order)
+
+    @staticmethod
+    def fromId(id):
+        for x in Seat.all:
+            if x.id == id:
+                return x
+        raise (BaseException("seat not found" + id))
+
+allSeatsInput = [("S",0), ("W",1), ("N",2), ('E',3)]
+for seat in allSeatsInput:
+    Seat(seat[0],seat[1])
+
+Seat.all.sort(key = lambda x: x.order)
+
 
 if __name__ == '__main__':
 #    deck.cards.sort(a)
@@ -207,4 +234,10 @@ if __name__ == '__main__':
     for t in range(1,8):
         for s in Strain.strains.keys():
             print(Bid('{}{}P'.format(t,s)))
+
+    print("N", Seat.fromId("N"))
                        
+    for x in (Seat.all):
+        print(x)
+    for x in range (4):
+        print('N + {} {}'.format(x, Seat.fromId("N").getNext(x)))
