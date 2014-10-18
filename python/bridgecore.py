@@ -45,8 +45,10 @@ class Strain(Colour):
         Strain.strains[id].firstScore = scores[id][1]
 
     def __str__(self):
-        return(format("{} {} {} {}".format(
-            self.name,self.id,self.baseScore,self.firstScore)))
+        return("{} ".format(self.name))
+#
+#        return("{} {} {} {}".format(
+#            self.name,self.id,self.baseScore,self.firstScore))
     
     @staticmethod
     def fromId(id):
@@ -106,6 +108,14 @@ class Card:
     def __str__(self):
         return(self.colour.__str__()+self.value.__str__())
         
+    def beats(self, other, trump):
+        print(self, other)
+        if self.colour == other.colour and self.value > other.value:
+            return True
+        if other.colour == trump and not(self.colour == trump):
+            return False
+        return False
+            
 
 class Cards:
     def __init__(self, cards):
@@ -124,6 +134,15 @@ class Cards:
             raise StopIteration
         else:
             return self.cards[self.step]
+
+    def __len__(self):
+        return len(self.cards)
+
+    def __str__(self):
+        res = ''
+        for c in self.cards:
+            res = res + '{}, '.format(c)
+        return res
 
     def shuffle(self):
         l = self.cards
@@ -160,7 +179,8 @@ class Cards:
             res = res + res1[:len(res1)-1]
         return res 
             
-
+    def removeCard(self, card):
+        self.cards.remove(card)
 
 class Bid:
     pattern = re.compile(
@@ -193,7 +213,21 @@ class Seat:
         return Seat.all[(own+step) % 4]
 
     def __str__(self):
-        return '{} {}'.format(self.id, self.order)
+        return '{}'.format(self.id)
+
+    def __iter__(self):
+        self.count = -1
+        print("in iter")
+        return self
+
+    def next(self):
+        print("in next")
+        self.count = self.count + 1
+        if self.count == len(Seat.all):
+            raise StopIteration
+        else:
+            return self.getNext(self.count)
+
 
     @staticmethod
     def fromId(id):
