@@ -23,6 +23,48 @@ class Trick:
                 winner = c
                 offset = no+1
         return self.start.getNext(offset)
+
+
+def getScore(bidTricks, bidStrain, wonTricks, inZone):
+    won = wonTricks - 6 
+
+    def gameBonus(inZone):
+        if inZone:
+            return 500
+        return 300
+            
+    def smallSlamBonus(inZone):
+        if inZone:
+            return 750
+        return 500
+
+    def largeSlamBonus(inZone):
+        if inZone:
+            return 1000
+        return 750
+
+    if won >= bidTricks:
+        res = won*bidStrain.baseScore + bidStrain.firstScore
+        if bidTricks >= bidStrain.gameBonusTricks:
+            res = res + gameBonus(inZone)
+            if bidTricks == 6:
+                res = res + smallSlamBonus(inZone)
+            if bidTricks == 7:
+                res = res + largeSlamBonus(inZone)
+        else:
+            res = res + 50
+    else:
+        res = -10
+
+  #  return '{} {} - {} {} tricks {}\n'.format(
+  #      bidTricks, bidStrain, wonTricks, inZone, res)
+    return res
+
+
+
+
+
+
         
 class CardPlay:
 
@@ -95,46 +137,14 @@ class CardPlay:
         return self.bid
 
     def getNSScore(self):
-        won = self.wonTricks[bridgecore.Seat.getPair(self.bid.bidder)]
-        bid = self.bid.getTricks()
+        won = self.wonTricks[bridgecore.Seat.getPair(self.bid.bidder)] - 6
+        bidTricks = self.bid.getTricks()
         player = self.getFinalBid().bidder
         inZone = self.zone.inZone(player)
-
         print( '{} - {} tricks \n'.format(
             self.getFinalBid(), won))
         print(self.strain, self.bid.strain)
 
-        def gameBonus(inZone):
-            if inZone:
-                return 500
-            return 300
-
-        def smallslamBonus(inZone):
-            if inZone:
-                return 750
-            return 500
-
-        def largeslamBonus(inZone):
-            if inZone:
-                return 1000
-            return 750
-
-        if won >= bid:
-            res = won*self.bid.strain.baseScore + self.bid.strain.firstScore
-            if bid > self.bid.strain.gameBonusTricks:
-                res = res + gameBonus(inZone)
-                if bid == 6:
-                    res = res + smallSlamBonus(inZone)
-                if bid == 7:
-                    res = res + largeSlamBonus(inZone)
-            else:
-                res = res + 50
-        else:
-            res = -10
-
-        return '{} - {} tricks {}\n'.format(
-            self.getFinalBid(), won, res)
-        return res
         
 
     def dealCards(self):
@@ -179,14 +189,8 @@ class Table:
     def getScore(self):
         return self.play.getNSScore()
 
-if __name__ == '__main__':
-#    shuffled = bridgecore.deck.shuffle()
-#    shuffled.deal([13,13,13])
-#    print("starting")
-#    for x in bridgecore.Seat.all:
-#        print(x)
 
-
+def runPlay():
     t = Table (['a','b','c','d'])
     t.startPlay('S', 'N', 'ALL')
  #   print(t)
@@ -200,3 +204,20 @@ if __name__ == '__main__':
         print('{}: {}'.format(n,trick))
 
     print(t.getScore())    
+
+
+if __name__ == '__main__':
+#    shuffled = bridgecore.deck.shuffle()
+#    shuffled.deal([13,13,13])
+#    print("starting")
+#    for x in bridgecore.Seat.all:
+#        print(x)
+    for inZone in [False, True]:
+        for strain in bridgecore.Strain.strains.values():
+            for bid in range(1,6):
+                print (inZone, strain, bid)
+                res = ''
+                for won in range(1,13):
+                    res = res + '{}:{} '.format(
+                        won, getScore(bid, strain, won, inZone))
+                print( res)

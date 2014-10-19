@@ -51,7 +51,7 @@ class Strain(Colour):
         self.order = order
         self.baseScore = Strain.scores[id][0]
         self.firstScore = Strain.scores[id][1]
-        self.gameBonusTricks = (100-self.firstScore)/self.baseScore + 6
+        self.gameBonusTricks = (100-self.firstScore)/self.baseScore
         Strain.strains[id] = self
 
     def __str__(self):
@@ -216,7 +216,7 @@ class Bid:
             self.tricks,self.strain.name,self.dbl,self.bidder))
 
     def getTricks(self):
-        return int(self.tricks) + 6
+        return int(self.tricks)
 
 deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours.values()])
 
