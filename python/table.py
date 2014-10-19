@@ -5,14 +5,14 @@ class Trick:
     def __init__(self, contractStrain, start, cards):
         self.start = start
         self.cards = cards
-        
         self.contractStrain = contractStrain
 
     def addCard(self, card):
         self.cards.append(card)
 
     def __str__(self):
-        res =  'by {}  {}'.format(self.start, self.cards)
+        res =  'by {}  {} won by {}'.format(
+            self.start, self.cards, self.winner())
         return res
 
     def winner(self):
@@ -28,6 +28,10 @@ class CardPlay:
 
     def __init__(self, strainId, dealer, zone = 'NONE'):
         self.dealer = dealer
+        self.dealt = {}
+        self.wonTricks = {}
+        for x in bridgecore.Seat.pairs:
+            self.wonTricks[x] = 0
         #if strainId in bridgecore.Colour.colours:
         #    self.strain = bridgecore.Colour.colours[strainId]
         #else:
@@ -58,6 +62,8 @@ class CardPlay:
         trick = Trick(self.strain, self.player, bridgecore.Cards(trickInput))
         self.playedTricks.append(trick)
         self.player = trick.winner()
+        self.wonTricks[self.player.getPair()] = self.wonTricks[
+            self.player.getPair()] + 1
 
     def legalPlay(self, x, seat):
         if x == 0:
@@ -75,17 +81,61 @@ class CardPlay:
 
         return played
 
-    def getFinalBid(self, bid):
-        bid = bridgecore.Bid(bridgecore.Seat.fromId('N'), "4SP")
+    def setFinalBid(self, bid):
+        #this still suffers from mixup between colour and strain
+        #self.strain is now set to be a colour as needed by trick playing
         self.bid = bid
-        self.dealer = bid.dealer
-        if self.bid.strain in bridgecore.Colour.colours:
-            self.strain = bridgecore.Colour.colours[strainId]
+        self.player = bid.bidder
+        if self.bid.strain.id in bridgecore.Colour.colours:
+            self.strain = bridgecore.Colour.colours[self.bid.strain.id]
         else:
             self.strain = None
 
-    def getScore(self):
-        pass
+    def getFinalBid(self):
+        return self.bid
+
+    def getNSScore(self):
+        won = self.wonTricks[bridgecore.Seat.getPair(self.bid.bidder)]
+        bid = self.bid.getTricks()
+        player = self.getFinalBid().bidder
+        inZone = self.zone.inZone(player)
+
+        print( '{} - {} tricks \n'.format(
+            self.getFinalBid(), won))
+        print(self.strain, self.bid.strain)
+
+        def gameBonus(inZone):
+            if inZone:
+                return 500
+            return 300
+
+        def smallslamBonus(inZone):
+            if inZone:
+                return 750
+            return 500
+
+        def largeslamBonus(inZone):
+            if inZone:
+                return 1000
+            return 750
+
+        if won >= bid:
+            res = won*self.bid.strain.baseScore + self.bid.strain.firstScore
+            if bid > self.bid.strain.gameBonusTricks:
+                res = res + gameBonus(inZone)
+                if bid == 6:
+                    res = res + smallSlamBonus(inZone)
+                if bid == 7:
+                    res = res + largeSlamBonus(inZone)
+            else:
+                res = res + 50
+        else:
+            res = -10
+
+        return '{} - {} tricks {}\n'.format(
+            self.getFinalBid(), won, res)
+        return res
+        
 
     def dealCards(self):
         shuffled = bridgecore.deck.shuffle()
@@ -119,10 +169,15 @@ class Table:
 
     def startPlay(self, strain, dealer, zone):
         self.play = CardPlay(strain, dealer, zone)
+        self.play.dealCards()
+        self.play.setFinalBid(
+            bridgecore.Bid(bridgecore.Seat.fromId('N'), "4SP"))
 
     def playATrick(self):
         self.play.playATrick()
             
+    def getScore(self):
+        return self.play.getNSScore()
 
 if __name__ == '__main__':
 #    shuffled = bridgecore.deck.shuffle()
@@ -133,13 +188,15 @@ if __name__ == '__main__':
 
 
     t = Table (['a','b','c','d'])
-    shuffled = bridgecore.deck.shuffle()
-    t.dealCards()
     t.startPlay('S', 'N', 'ALL')
  #   print(t)
     print(t.play.showDeal())
     
+    print(t.play.getFinalBid())
+
     while len(t.play.playedTricks) < 13:
         t.playATrick()
     for (n,trick) in enumerate(t.play.playedTricks):
         print('{}: {}'.format(n,trick))
+
+    print(t.getScore())    

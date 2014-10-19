@@ -38,22 +38,21 @@ colours = [Colour(x[0], x[1], x[2], x[3]) for x in coloursInput]
 
 class Strain(Colour):
     strains = {}
+    scores = {"NT":(30, 10),
+              "S":(30, 0),
+              "H":(30, 0),
+              "D":(20, 0),
+              "C":(20, 0)}
 
     def __init__(self, name, id, symbol, order):
-        scores = {"NT":(30, 10),
-                  "S":(30, 0),
-                  "H":(30, 0),
-                  "D":(20, 0),
-                  "C":(20, 0)}
         self.name = name
         self.id = id
         self.symbol = symbol
         self.order = order
-        self.baseScore = 0
-        self.firstScore = 0
+        self.baseScore = Strain.scores[id][0]
+        self.firstScore = Strain.scores[id][1]
+        self.gameBonusTricks = (100-self.firstScore)/self.baseScore + 6
         Strain.strains[id] = self
-        Strain.strains[id].baseScore = scores[id][0]
-        Strain.strains[id].firstScore = scores[id][1]
 
     def __str__(self):
         return("{} ".format(self.name))
@@ -213,12 +212,17 @@ class Bid:
         self.bidder = bidder
 
     def __str__(self):
-        return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
+        return("{} {} {} by {}".format(
+            self.tricks,self.strain.name,self.dbl,self.bidder))
+
+    def getTricks(self):
+        return int(self.tricks) + 6
 
 deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours.values()])
 
 class Seat:
     all = []
+    pairs = ["NS", "EW"]
 
     def __init__(self, id, order):
         self.id = id
@@ -244,6 +248,12 @@ class Seat:
             raise StopIteration
         else:
             return self.getNext(self.count)
+
+    def getPair(self):
+        if self.id == "N" or self.id == "S":
+            return "NS"
+        else:
+            return "EW"
 
 
     @staticmethod
