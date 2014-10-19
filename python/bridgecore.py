@@ -197,11 +197,12 @@ class Cards:
     def removeCard(self, card):
         self.cards.remove(card)
 
+
 class Bid:
     pattern = re.compile(
-        "(?P<tricks>[1-7])(?P<strain>[NT,S,H,D,C]{1,2})(?P<dbl>[PDR])")
+        "(?P<tricks>[1-7])(?P<strain>NT|S|H|D|C)(?P<dbl>[PDR])")
 
-    def __init__(self, bidstring):
+    def __init__(self, bidder, bidstring):
         match = Bid.pattern.match(bidstring)
         if match:
             self.tricks = match.group("tricks")
@@ -209,7 +210,8 @@ class Bid:
             self.dbl = match.group("dbl")
         else:
             raise (BaseException("bid exception"))
-    
+        self.bidder = bidder
+
     def __str__(self):
         return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
 
@@ -257,6 +259,21 @@ for seat in allSeatsInput:
 
 Seat.all.sort(key = lambda x: x.order)
 
+class Zone:
+    def __init__(self, zoneString):
+        pattern = re.compile("(NONE|NS|EW|ALL)")
+        match = pattern.match(zoneString)
+        if match:
+            self.zone = match.group()
+        else:
+            raise (BaseException("zone exception"))
+
+    def inZone(self, seat):
+        if self.zone == 'ALL':
+            return True
+        if self.zone == 'NONE':
+            return False
+        return seat.id in self.zone
 
 if __name__ == '__main__':
 #    deck.cards.sort(a)
@@ -282,11 +299,16 @@ if __name__ == '__main__':
 
     for t in range(1,8):
         for s in Strain.strains.keys():
-            print(Bid('{}{}P'.format(t,s)))
+            print(Bid(Seat.fromId('N'),'{}{}P'.format(t,s)))
 
     print("N", Seat.fromId("N"))
                        
     for x in (Seat.all):
         print(x)
+        print("NSZone: ", Zone("NS").inZone(x))
+        print("EWZone: ", Zone("EW").inZone(x))
+        print("ALLZone: ", Zone("ALL").inZone(x))
+        print("NoneZone: ", Zone("NONE").inZone(x))
     for x in range (4):
         print('N + {} {}'.format(x, Seat.fromId("N").getNext(x)))
+

@@ -45,7 +45,10 @@ class Strain(Colour):
                   "H":(30, 0),
                   "D":(20, 0),
                   "C":(20, 0)}
-        Colour.__init__(self, name, id, symbol, order)
+        self.name = name
+        self.id = id
+        self.symbol = symbol
+        self.order = order
         self.baseScore = 0
         self.firstScore = 0
         Strain.strains[id] = self
@@ -117,11 +120,9 @@ class Card:
         return(self.colour.__str__()+self.value.__str__())
         
     def beats(self, other, trump):
-        print(self, other.colour, trump.colour)
         if self.colour == other.colour and self.value > other.value:
             return True
-        if other.colour == trump and not(self.colour == trump):
-            print("trump")
+        if self.colour == trump and not(other.colour == trump):
             return True
         return False
 
@@ -169,7 +170,13 @@ class Cards:
         if start < len(self.cards):
             res.append(Cards(self.cards[start:]))
         return res
-            
+
+    def getCardsOfColour(self, colour):
+        byColour = []
+        for card in  self.cards:
+            if card.colour == colour:
+                byColour.append(card)
+        return byColour
 
     def cardsByColour(self):
         byColour = collections.defaultdict(list)
@@ -206,7 +213,7 @@ class Bid:
     def __str__(self):
         return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
 
-deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours])
+deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours.values()])
 
 class Seat:
     all = []
