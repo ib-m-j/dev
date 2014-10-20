@@ -25,7 +25,7 @@ class Trick:
         return self.start.getNext(offset)
 
 
-def getScore(bidTricks, bidStrain, wonTricks, inZone):
+def getScore(bidTricks, bidStrain, wonTricks, dbl, inZone):
     won = wonTricks - 6 
 
     def gameBonus(inZone):
@@ -40,11 +40,57 @@ def getScore(bidTricks, bidStrain, wonTricks, inZone):
 
     def largeSlamBonus(inZone):
         if inZone:
-            return 1000
-        return 750
+            return 1500
+        return 1000
 
+    def overtrickValue(inZone, dbl, bidStrain, overTricks):
+        if inZone:
+            factor = 2
+        else: 
+            factor = 1
+
+        if dbl == "P":
+            return bidStrain.baseScore*overTricks
+        elif dbl == "D":
+            return 100*factor*overTricks
+        else:
+            return 200*factor*overTricks
+
+    def defeatedScore(inZone, dbl, lostTricks):
+        if inZone:
+            factor = 2
+        else:
+            factor = 1
+
+        baseDbl = [100,300,500]
+        baseRdbl =[200,500,800]
+        extraDownValue = 300
+        simpleDown = 50
+        extraDownTricks = lostTricks - 3
+        if extraDownTricks < 0:
+            extraDownTricks = 0
+
+        if dbl == "P":
+            return lostTricks*simpleDown*factor
+        
+        if extraDownTricks == 0:
+            if dbl == "D":
+                return baseDbl[lostTricks - 1]*factor
+            if dbl == "R":
+                return baseRdbl[lostTricks - 1]*factor
+        else:
+            if dbl == "D":
+                return (extraDownTricks*extraDownValue + baseDbl[-1])*factor
+            if dbl == "R":
+                return (extraDownTricks*extraDownValue + baseRdbl[-1])*factor
+                
+    if dbl == "D":
+        factor = 1
+    else:
+        factor = 2
+#still need to compensate for games whe doubled...
     if won >= bidTricks:
-        res = won*bidStrain.baseScore + bidStrain.firstScore
+        res = bidTricks*bidStrain.baseScore + bidStrain.firstScore
         if bidTricks >= bidStrain.gameBonusTricks:
             res = res + gameBonus(inZone)
             if bidTricks == 6:
@@ -53,8 +99,12 @@ def getScore(bidTricks, bidStrain, wonTricks, inZone):
                 res = res + largeSlamBonus(inZone)
         else:
             res = res + 50
+
+        res = res*factor + overtrickValue(inZone, dbl, bidStrain, won - bidTricks)
+
     else:
-        res = -10
+        res = -defeatedScore(inZone, dbl, bidTricks - won)
+
 
   #  return '{} {} - {} {} tricks {}\n'.format(
   #      bidTricks, bidStrain, wonTricks, inZone, res)
@@ -213,11 +263,13 @@ if __name__ == '__main__':
 #    for x in bridgecore.Seat.all:
 #        print(x)
     for inZone in [False, True]:
-        for strain in bridgecore.Strain.strains.values():
-            for bid in range(1,6):
-                print (inZone, strain, bid)
-                res = ''
-                for won in range(1,13):
-                    res = res + '{}:{} '.format(
-                        won, getScore(bid, strain, won, inZone))
-                print( res)
+        print("\n")
+#        for strain in bridgecore.Strain.strains.values():
+        strain = bridgecore.Strain.strains["S"]
+        for bid in range(1,8):
+            print (inZone, strain, bid)
+            res = ''
+            for won in range(14):
+                res = res + '{}:{} '.format(
+                    won, getScore(bid, strain, won, "R", inZone))
+            print( res)
