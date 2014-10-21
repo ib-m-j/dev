@@ -38,22 +38,21 @@ colours = [Colour(x[0], x[1], x[2], x[3]) for x in coloursInput]
 
 class Strain(Colour):
     strains = {}
+    scores = {"NT":(30, 10),
+              "S":(30, 0),
+              "H":(30, 0),
+              "D":(20, 0),
+              "C":(20, 0)}
 
     def __init__(self, name, id, symbol, order):
-        scores = {"NT":(30, 10),
-                  "S":(30, 0),
-                  "H":(30, 0),
-                  "D":(20, 0),
-                  "C":(20, 0)}
         self.name = name
         self.id = id
         self.symbol = symbol
         self.order = order
-        self.baseScore = 0
-        self.firstScore = 0
+        self.baseScore = Strain.scores[id][0]
+        self.firstScore = Strain.scores[id][1]
+        self.gameBonusTricks = (100-self.firstScore)/self.baseScore
         Strain.strains[id] = self
-        Strain.strains[id].baseScore = scores[id][0]
-        Strain.strains[id].firstScore = scores[id][1]
 
     def __str__(self):
         return("{} ".format(self.name))
@@ -197,11 +196,12 @@ class Cards:
     def removeCard(self, card):
         self.cards.remove(card)
 
+
 class Bid:
     pattern = re.compile(
-        "(?P<tricks>[1-7])(?P<strain>[NT,S,H,D,C]{1,2})(?P<dbl>[PDR])")
+        "(?P<tricks>[1-7])(?P<strain>NT|S|H|D|C)(?P<dbl>[PDR])")
 
-    def __init__(self, bidstring):
+    def __init__(self, bidder, bidstring):
         match = Bid.pattern.match(bidstring)
         if match:
             self.tricks = match.group("tricks")
@@ -209,14 +209,20 @@ class Bid:
             self.dbl = match.group("dbl")
         else:
             raise (BaseException("bid exception"))
-    
+        self.bidder = bidder
+
     def __str__(self):
-        return("{} {} {}".format(self.tricks,self.strain.name,self.dbl))
+        return("{} {} {} by {}".format(
+            self.tricks,self.strain.name,self.dbl,self.bidder))
+
+    def getTricks(self):
+        return int(self.tricks)
 
 deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours.values()])
 
 class Seat:
     all = []
+    pairs = ["NS", "EW"]
 
     def __init__(self, id, order):
         self.id = id
@@ -243,6 +249,12 @@ class Seat:
         else:
             return self.getNext(self.count)
 
+    def getPair(self):
+        if self.id == "N" or self.id == "S":
+            return "NS"
+        else:
+            return "EW"
+
 
     @staticmethod
     def fromId(id):
@@ -257,6 +269,21 @@ for seat in allSeatsInput:
 
 Seat.all.sort(key = lambda x: x.order)
 
+class Zone:
+    def __init__(self, zoneString):
+        pattern = re.compile("(NONE|NS|EW|ALL)")
+        match = pattern.match(zoneString)
+        if match:
+            self.zone = match.group()
+        else:
+            raise (BaseException("zone exception"))
+
+    def inZone(self, seat):
+        if self.zone == 'ALL':
+            return True
+        if self.zone == 'NONE':
+            return False
+        return seat.id in self.zone
 
 if __name__ == '__main__':
 #    deck.cards.sort(a)
@@ -282,11 +309,16 @@ if __name__ == '__main__':
 
     for t in range(1,8):
         for s in Strain.strains.keys():
-            print(Bid('{}{}P'.format(t,s)))
+            print(Bid(Seat.fromId('N'),'{}{}P'.format(t,s)))
 
     print("N", Seat.fromId("N"))
                        
     for x in (Seat.all):
         print(x)
+        print("NSZone: ", Zone("NS").inZone(x))
+        print("EWZone: ", Zone("EW").inZone(x))
+        print("ALLZone: ", Zone("ALL").inZone(x))
+        print("NoneZone: ", Zone("NONE").inZone(x))
     for x in range (4):
         print('N + {} {}'.format(x, Seat.fromId("N").getNext(x)))
+

@@ -25,8 +25,8 @@ class Trick:
         return self.start.getNext(offset)
 
 
-def getScore(bidTricks, bidStrain, wonTricks, dbl, inZone):
-    won = wonTricks - 6 
+def getScore(bidValue, bidStrain, wonTricks, dbl, inZone):
+    wonValue = wonTricks - 6 
 
     def gameBonus(inZone):
         if inZone:
@@ -57,13 +57,18 @@ def getScore(bidTricks, bidStrain, wonTricks, dbl, inZone):
             return 200*factor*overTricks
 
     def defeatedScore(inZone, dbl, lostTricks):
-        if inZone:
+        if inZone == True:
             factor = 2
         else:
             factor = 1
 
+        if dbl == "D":
+            dblFactor = 1
+        elif dbl == "R":
+            dblFactor = 2
+
         baseDbl = [100,300,500]
-        baseRdbl =[200,500,800]
+        baseDblInZone =[200,500,800]
         extraDownValue = 300
         simpleDown = 50
         extraDownTricks = lostTricks - 3
@@ -72,42 +77,57 @@ def getScore(bidTricks, bidStrain, wonTricks, dbl, inZone):
 
         if dbl == "P":
             return lostTricks*simpleDown*factor
-        
-        if extraDownTricks == 0:
-            if dbl == "D":
-                return baseDbl[lostTricks - 1]*factor
-            if dbl == "R":
-                return baseRdbl[lostTricks - 1]*factor
+
+        if lostTricks <= 3:
+            if inZone:
+                res = baseDblInZone[lostTricks - 1]
+            else:
+                res = baseDbl[lostTricks - 1]
         else:
-            if dbl == "D":
-                return (extraDownTricks*extraDownValue + baseDbl[-1])*factor
-            if dbl == "R":
-                return (extraDownTricks*extraDownValue + baseRdbl[-1])*factor
-                
-    if dbl == "D":
+            if inZone:
+                res = baseDblInZone[-1]
+            else:
+                res = baseDbl[-1]
+        res = res +  extraDownTricks*extraDownValue
+        res = res *dblFactor
+        return res
+ 
+    if dbl == "P":
         factor = 1
-    else:
+    elif dbl == "D":
         factor = 2
-#still need to compensate for games whe doubled...
-    if won >= bidTricks:
-        res = bidTricks*bidStrain.baseScore + bidStrain.firstScore
-        if bidTricks >= bidStrain.gameBonusTricks:
+    else:
+        factor = 4
+
+    
+    if wonValue >= bidValue:
+        #first the bid score
+        res = (bidValue*bidStrain.baseScore + bidStrain.firstScore)*factor
+        if res >= 100:
             res = res + gameBonus(inZone)
-            if bidTricks == 6:
-                res = res + smallSlamBonus(inZone)
-            if bidTricks == 7:
-                res = res + largeSlamBonus(inZone)
         else:
             res = res + 50
+        
+        if dbl == "D":
+            res = res + 50
+        elif dbl == "R":
+            res = res + 100
 
-        res = res*factor + overtrickValue(inZone, dbl, bidStrain, won - bidTricks)
+        #other bonusses
+        if bidValue == 6:
+            res = res + smallSlamBonus(inZone)
+        if bidValue == 7:
+            res = res + largeSlamBonus(inZone)
+
+        
+        res = res + overtrickValue(inZone, dbl, bidStrain, wonValue - bidValue)
 
     else:
-        res = -defeatedScore(inZone, dbl, bidTricks - won)
+        res = -defeatedScore(inZone, dbl, bidValue - wonValue)
 
 
   #  return '{} {} - {} {} tricks {}\n'.format(
-  #      bidTricks, bidStrain, wonTricks, inZone, res)
+  #      bidValue, bidStrain, wonTricks, inZone, res)
     return res
 
 
@@ -188,7 +208,7 @@ class CardPlay:
 
     def getNSScore(self):
         won = self.wonTricks[bridgecore.Seat.getPair(self.bid.bidder)] - 6
-        bidTricks = self.bid.getTricks()
+        bidValue = self.bid.getTricks()
         player = self.getFinalBid().bidder
         inZone = self.zone.inZone(player)
         print( '{} - {} tricks \n'.format(
@@ -256,20 +276,42 @@ def runPlay():
     print(t.getScore())    
 
 
+def checkGoingDown():
+    strains = [x.id for x in bridgecore.Strain.strains.values()]
+    for inZone in [True, False]:
+        print("in Zone: ", inZone)
+        for dbl in ["P","D","R"]:
+            print("Dbl: ", dbl)
+            for x in range (13):
+                strain = bridgecore.Strain.strains[random.choice(strains)]
+                bid = 7
+                won = x
+                print("in zone {}. {} {} {} {} ({}): {}".format(
+                    inZone, bid, strain, dbl, x, bid + 6 - won ,
+                    getScore(bid, strain, x, dbl, inZone)))
+
+
+def checkWinning():
+    for strainId in ["NT", "S", "D"]:
+        strain = bridgecore.Strain.strains[strainId]
+        for inZone in [True, False]:
+            print("in Zone: ", inZone)
+            for dbl in ["P","D","R"]:
+                print("Dbl: ", dbl)
+                for bid in range (1,8):
+                    res = "in zone {}. {} {} {} ".format(
+                        inZone, bid, strain, dbl,)
+                        
+                    for won in range(13, bid + 5,-1):
+                        res = res + '  {}: {}'.format(
+                            won, getScore(bid, strain, won, dbl, inZone))
+                    print(res)
+
+
 if __name__ == '__main__':
 #    shuffled = bridgecore.deck.shuffle()
 #    shuffled.deal([13,13,13])
 #    print("starting")
 #    for x in bridgecore.Seat.all:
 #        print(x)
-    for inZone in [False, True]:
-        print("\n")
-#        for strain in bridgecore.Strain.strains.values():
-        strain = bridgecore.Strain.strains["S"]
-        for bid in range(1,8):
-            print (inZone, strain, bid)
-            res = ''
-            for won in range(14):
-                res = res + '{}:{} '.format(
-                    won, getScore(bid, strain, won, "R", inZone))
-            print( res)
+    checkWinning()

@@ -2,9 +2,13 @@
 Thumbs.db
 ehthumbs.db
 
+.gitignore
+tatus
+.gitignore~
 TAGS
 # python backups
-*.py[~cod]
+*.py~
+__pycache__
 # Folder config file
 Desktop.ini
 
