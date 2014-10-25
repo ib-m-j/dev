@@ -55,10 +55,18 @@ class Strain(Colour):
 
     def __str__(self):
         return("{} ".format(self.name))
-#
-#        return("{} {} {} {}".format(
-#            self.name,self.id,self.baseScore,self.firstScore))
+        #
+        #        return("{} {} {} {}".format(
+        #            self.name,self.id,self.baseScore,self.firstScore))
     
+
+    def getColour(self):
+        if self.id in Colour.colours:
+            return Colour.colours[self.id]
+        else:
+            return None
+
+
     @staticmethod
     def fromId(id):
         return Strain.strains[id]
@@ -276,6 +284,9 @@ class Zone:
             self.zone = match.group()
         else:
             raise (BaseException("zone exception"))
+
+    def __str__(self):
+        return self.zone
 
     def inZone(self, seat):
         if self.zone == 'ALL':

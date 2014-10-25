@@ -1,4 +1,6 @@
 import bridgecore
+import bridgescore
+import cardevaluation
 import random
 
 class Trick:
@@ -25,120 +27,11 @@ class Trick:
         return self.start.getNext(offset)
 
 
-def getScore(bidValue, bidStrain, wonTricks, dbl, inZone):
-    wonValue = wonTricks - 6 
-
-    def gameBonus(inZone):
-        if inZone:
-            return 500
-        return 300
-            
-    def smallSlamBonus(inZone):
-        if inZone:
-            return 750
-        return 500
-
-    def largeSlamBonus(inZone):
-        if inZone:
-            return 1500
-        return 1000
-
-    def overtrickValue(inZone, dbl, bidStrain, overTricks):
-        if inZone:
-            factor = 2
-        else: 
-            factor = 1
-
-        if dbl == "P":
-            return bidStrain.baseScore*overTricks
-        elif dbl == "D":
-            return 100*factor*overTricks
-        else:
-            return 200*factor*overTricks
-
-    def defeatedScore(inZone, dbl, lostTricks):
-        if inZone == True:
-            factor = 2
-        else:
-            factor = 1
-
-        if dbl == "D":
-            dblFactor = 1
-        elif dbl == "R":
-            dblFactor = 2
-
-        baseDbl = [100,300,500]
-        baseDblInZone =[200,500,800]
-        extraDownValue = 300
-        simpleDown = 50
-        extraDownTricks = lostTricks - 3
-        if extraDownTricks < 0:
-            extraDownTricks = 0
-
-        if dbl == "P":
-            return lostTricks*simpleDown*factor
-
-        if lostTricks <= 3:
-            if inZone:
-                res = baseDblInZone[lostTricks - 1]
-            else:
-                res = baseDbl[lostTricks - 1]
-        else:
-            if inZone:
-                res = baseDblInZone[-1]
-            else:
-                res = baseDbl[-1]
-        res = res +  extraDownTricks*extraDownValue
-        res = res *dblFactor
-        return res
- 
-    if dbl == "P":
-        factor = 1
-    elif dbl == "D":
-        factor = 2
-    else:
-        factor = 4
-
-    
-    if wonValue >= bidValue:
-        #first the bid score
-        res = (bidValue*bidStrain.baseScore + bidStrain.firstScore)*factor
-        if res >= 100:
-            res = res + gameBonus(inZone)
-        else:
-            res = res + 50
-        
-        if dbl == "D":
-            res = res + 50
-        elif dbl == "R":
-            res = res + 100
-
-        #other bonusses
-        if bidValue == 6:
-            res = res + smallSlamBonus(inZone)
-        if bidValue == 7:
-            res = res + largeSlamBonus(inZone)
-
-        
-        res = res + overtrickValue(inZone, dbl, bidStrain, wonValue - bidValue)
-
-    else:
-        res = -defeatedScore(inZone, dbl, bidValue - wonValue)
-
-
-  #  return '{} {} - {} {} tricks {}\n'.format(
-  #      bidValue, bidStrain, wonTricks, inZone, res)
-    return res
-
-
-
-
-
 
         
 class CardPlay:
 
-    def __init__(self, strainId, dealer, zone = 'NONE'):
+    def __init__(self, dealer, zone = 'NONE'):
         self.dealer = dealer
         self.dealt = {}
         self.wonTricks = {}
@@ -159,6 +52,7 @@ class CardPlay:
         s=''
         for (p,n) in self.dealt.items():
             s = s + '\n{}: {}\n'.format(p,n.cardsByColour())
+        s = s + '\nZone {}\n'.format(self.zone )
         return s
 
     def playATrick(self):
@@ -171,13 +65,16 @@ class CardPlay:
             played = self.legalPlay(x, seat)
             self.dealt[seat].cards.cards.remove(played)
             trickInput.append(played)
-        trick = Trick(self.strain, self.player, bridgecore.Cards(trickInput))
+        trick = Trick(
+            self.strain.getColour(), self.player, bridgecore.Cards(trickInput))
         self.playedTricks.append(trick)
         self.player = trick.winner()
         self.wonTricks[self.player.getPair()] = self.wonTricks[
             self.player.getPair()] + 1
 
     def legalPlay(self, x, seat):
+        trumpColour = self.bid.strain.getColour()
+        played = None
         if x == 0:
             pick = random.randrange(0,len(self.dealt[seat].cards.cards))
             played = self.dealt[seat].cards.cards[pick]
@@ -187,34 +84,47 @@ class CardPlay:
                 self.trickColour)
             if len(correctColour)>0:
                 played = correctColour[0]
-            else:
+            elif trumpColour:
+                trumps = self.dealt[seat].cards.getCardsOfColour(
+                    trumpColour)
+                if len(trumps)>0:
+                    played = trumps[0]
+
+            if not played:
                 played = self.dealt[seat].cards.cards[0]
             #raise (BaseException("bid exception"))
 
         return played
 
     def setFinalBid(self, bid):
-        #this still suffers from mixup between colour and strain
-        #self.strain is now set to be a colour as needed by trick playing
         self.bid = bid
         self.player = bid.bidder
-        if self.bid.strain.id in bridgecore.Colour.colours:
-            self.strain = bridgecore.Colour.colours[self.bid.strain.id]
-        else:
-            self.strain = None
+        self.strain = self.bid.strain
+
+#not used kept until I am sure this is irrelevant
+#        if self.bid.strain.id in bridgecore.Colour.colours:
+#            self.strain = bridgecore.Colour.colours[self.bid.strain.id]
+#        else:
+#            self.strain = None
 
     def getFinalBid(self):
         return self.bid
 
     def getNSScore(self):
-        won = self.wonTricks[bridgecore.Seat.getPair(self.bid.bidder)] - 6
+        wonTricks = self.wonTricks[bridgecore.Seat.getPair(self.bid.bidder)]
         bidValue = self.bid.getTricks()
         player = self.getFinalBid().bidder
         inZone = self.zone.inZone(player)
         print( '{} - {} tricks \n'.format(
-            self.getFinalBid(), won))
+            self.getFinalBid(), wonTricks))
         print(self.strain, self.bid.strain)
+        score = bridgescore.getScore(
+            bidValue, self.bid.strain, wonTricks, self.bid.dbl, inZone)
 
+        if self.bid.bidder.getPair() == "NS":
+            return score
+        else:
+            return -score
         
 
     def dealCards(self):
@@ -238,20 +148,21 @@ class Table:
         #from bidding system included in self.play
         #from scoring system ijcluded in self.play
 
-
-
-
     def __str__(self):
         s = ""
         for (p,n) in self.seats.items():
             s = s + '\n{}: {}\n'.format(p,n)
         return s+'\n'
 
-    def startPlay(self, strain, dealer, zone):
-        self.play = CardPlay(strain, dealer, zone)
+    def startPlay(self, dealer, zone):
+        #these values should come from other sources in the end
+        self.play = CardPlay( dealer, zone)
         self.play.dealCards()
+        (bestSeat, bestLength, bestColour) = \
+        cardevaluation.getBestHandAndColour(self.play.dealt)
         self.play.setFinalBid(
-            bridgecore.Bid(bridgecore.Seat.fromId('N'), "4SP"))
+            bridgecore.Bid(bestSeat, "3NTP"))
+#            bridgecore.Bid(bestSeat, "4{}P".format(bestColour.id)))
 
     def playATrick(self):
         self.play.playATrick()
@@ -259,21 +170,21 @@ class Table:
     def getScore(self):
         return self.play.getNSScore()
 
+#unittests
 
 def runPlay():
     t = Table (['a','b','c','d'])
-    t.startPlay('S', 'N', 'ALL')
+    t.startPlay('N', 'ALL')
  #   print(t)
     print(t.play.showDeal())
-    
     print(t.play.getFinalBid())
-
     while len(t.play.playedTricks) < 13:
         t.playATrick()
     for (n,trick) in enumerate(t.play.playedTricks):
         print('{}: {}'.format(n,trick))
 
     print(t.getScore())    
+
 
 
 def checkGoingDown():
@@ -288,7 +199,7 @@ def checkGoingDown():
                 won = x
                 print("in zone {}. {} {} {} {} ({}): {}".format(
                     inZone, bid, strain, dbl, x, bid + 6 - won ,
-                    getScore(bid, strain, x, dbl, inZone)))
+                    brdigescore.getScore(bid, strain, x, dbl, inZone)))
 
 
 def checkWinning():
@@ -304,14 +215,16 @@ def checkWinning():
                         
                     for won in range(13, bid + 5,-1):
                         res = res + '  {}: {}'.format(
-                            won, getScore(bid, strain, won, dbl, inZone))
+                            won, bridgescore.getScore(
+                                bid, strain, won, dbl, inZone))
                     print(res)
 
 
 if __name__ == '__main__':
-#    shuffled = bridgecore.deck.shuffle()
-#    shuffled.deal([13,13,13])
-#    print("starting")
-#    for x in bridgecore.Seat.all:
-#        print(x)
-    checkWinning()
+    shuffled = bridgecore.deck.shuffle()
+    shuffled.deal([13,13,13])
+    print("starting")
+    for x in bridgecore.Seat.all:
+        print(x)
+
+    runPlay()
