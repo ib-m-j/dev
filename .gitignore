@@ -2,9 +2,6 @@
 Thumbs.db
 ehthumbs.db
 
-.gitignore
-tatus
-.gitignore~
 TAGS
 # python backups
 *.py~
