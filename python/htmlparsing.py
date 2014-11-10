@@ -1,6 +1,7 @@
 import html.parser
 import sys
 import tournament
+import codecs
 
 islevParser = []
     
@@ -97,41 +98,78 @@ class HTMLParserTableAnalysis(html.parser.HTMLParser):
             
 
 
-class HTMLParserTablebased(html.parser.HTMLParser):
+
+
+class HTMLParserTableBased(html.parser.HTMLParser):
     level = 0
     lastTag = ''
     allTables = []
+    gotoTable = 0
+    skipRows = 0
+    printRows = 0
+    rowdata = []
+    definition = []
+
+    def setParseDef(self, definition):
+        HTMLParserTableBased.definition = definition
+        self.setNextParse()
+
+    def setNextParse(self):
+        print(HTMLParserTableBased.definition[0], "nesrtdef")
+
+        first = HTMLParserTableBased.definition[0]
+        HTMLParserTableBased.definition = HTMLParserTableBased.definition[1:]
+
+        HTMLParserTableBased.gotoTable = 0
+        HTMLParserTableBased.skipRows = 0
+        HTMLParserTableBased.printRows = 0
+        print("setting", first[0], first[1])
+        if first[0] == 'gotoTable':
+            HTMLParserTableBased.gotoTable = first[1]
+        elif first[0] == 'skipRows':
+            HTMLParserTableBased.skipRows = first[1]
+        else:
+            HTMLParserTableBased.printRows = first[1]
 
 
     def handle_starttag(self, tag, attrs):
-        HTMLParserTableAnalysis.lastTag = tag
+        self.lastTag = tag
         if tag == 'table':
-            attributeValue = getAttribute('class', attrs)
-            if attributeValue:
-                tableClass = attributeValue
-            else:
-                tableClass = 'undefined'
-        
-            HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level + 1
-
-            newTable = HtmlTable(tableClass, 
-                                 len(HTMLParserTableAnalysis.allTables),
-                                 HTMLParserTableAnalysis.level)
-            HTMLParserTableAnalysis.allTables.append(newTable)
+            if HTMLParserTableBased.gotoTable > 0:
+                HTMLParserTableBased.gotoTable = \
+                HTMLParserTableBased.gotoTable - 1
+                if HTMLParserTableBased.gotoTable == 0:
+                    self.setNextParse()
 
         if tag == 'tr':
-            HTMLParserTableAnalysis.allTables[-1].addRow()
-
-        if tag == 'th':
-            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
-            
+            if self.printRows > 0:
+                self.rowdata = []
 
 
     def handle_endtag(self, tag):
         if tag == 'table':
-            HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level -1
+            if (HTMLParserTableBased.printRows > 0 or 
+                HTMLParserTableBased.skipRows > 0):
+                self.setNextParse()
             
-
+        if tag == 'tr':
+            if HTMLParserTableBased.printRows > 0:
+                print(self.rowdata)
+                self.rowdata = []
+                HTMLParserTableBased.printRows = \
+                    HTMLParserTableBased.printRows - 1
+                if self.printRows == 0:
+                    self.setNextParse()
+            if HTMLParserTableBased.skipRows > 0:
+                HTMLParserTableBased.skipRows = HTMLParserTableBased.skipRows -1
+                if HTMLParserTableBased.skipRows == 0:
+                    self.setNextParse()
+            
+    def handle_data(self, data):
+        if self.lastTag == 'td' or self.lastTag == 'th':
+            #self.rowdata.append(data.strip()) 
+            if HTMLParserTableBased.printRows > 0:
+                print(data)
 
 
 def registerTables():
@@ -147,17 +185,21 @@ def registerTables():
 
 
 def parseIslev():
-    skipFirstTables = SkipTables('starting', 3, 'skipHeaderRows')
-    skipHeaderRows = SkipRows('skipHeaderRows', 2, 'readTeamNr')
-    readTeamNr = PrintData('readTeamNr', 'readTeamName')
-    readTeamName = PrintData('readTeamName', 'readContract')
-    readContract = PrintData('readContract', 'goToEnd')
-    goToEnd = SkipTables('goToEnd',200, 'goToEnd')
-    skipFirstTables.setCurrentState('starting')
+    #skipFirstTables = SkipTables('starting', 3, 'skipHeaderRows')
+    #skipHeaderRows = SkipRows('skipHeaderRows', 2, 'readTeamNr')
+    #readTeamNr = PrintData('readTeamNr', 'readTeamName')
+    #readTeamName = PrintData('readTeamName', 'readContract')
+    #readContract = PrintData('readContract', 'goToEnd')
+    #goToEnd = SkipTables('goToEnd',200, 'goToEnd')
+    #skipFirstTables.setCurrentState('starting')
 
-    parser = HTMLParserTableAnalysis()
+    parser = HTMLParserTableBased()
+    parseDef = [('gotoTable', 5), ('skipRows', 2), ('printRows', 6), 
+                ('gotoTable', 200)]
+    parser.setParseDef(parseDef)
     input = open(r"..\data\allresults.html")
-    parser.feed(input.read())
+    #print(input.read().encode('latin-1','ignore'))
+    parser.feed(input.read().encode('latin-1').decode('utf-8','ignore'))
 
 
 if __name__ == '__main__':
@@ -170,7 +212,6 @@ if __name__ == '__main__':
     #starting.setCurrentState('starting')
     #
 
-    registerTables()
 
     #parser = MyHTMLParser()
     #input = open(r"..\data\allresults.html")
@@ -180,4 +221,5 @@ if __name__ == '__main__':
     #    print('\t{}\n'.format(x))
 
                            
-    #parseIslev()
+    parseIslev()
+    #registerTables()
