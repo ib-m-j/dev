@@ -31,75 +31,16 @@ class State:
     def registerData(self, data):
         pass
 
-class SkipTables(State):
-    def __init__(self, id, skipNo, nextStateId):
-        State.__init__(self, id, nextStateId)
-        self.skipNo = skipNo
-        
-    def doEvent(self, tag, startEnd, attrs = None):
-        if tag == 'table' and startEnd == 'S':
-            self.skipNo = self.skipNo - 1
-        if self.skipNo <= 0:
-            self.setCurrentState(self.nextStateId)
-
-class SkipRows(State):
-    def __init__(self, id, skipNo, nextStateId):
-        State.__init__(self, id, nextStateId)
-        self.skipNo = skipNo
-        
-    def doEvent(self, tag, startEnd, attrs = None):
-        if tag == 'tr' and startEnd == 'S':
-            self.skipNo = self.skipNo - 1
-        if self.skipNo <= 0:
-            self.setCurrentState(self.nextStateId)
-
-class SkipRemainingRows(State):
-    def __init__(self, id, nextStateId):
-        State.__init__(self, id, nextStateId)
-        
-    def doEvent(self, tag, startEnd, attrs = None):
-        if tag == 'tr' and startEnd == 'E':
-            self.setCurrentState(self.nextStateId)
-
-class PrintData(State):
-    def __init__(self, id, nextStateId):
-        State.__init__(self, id, nextStateId)
-        self.data = ''
-        
-    def doEvent(self, tag, startEnd, attrs = None):
-        if tag == 'td' and startEnd == 'E':
-            print("in data",self.data)
-            self.setCurrentState(self.nextStateId)
-
-    def registerData(self, data):
-        self.data = self.data + data.strip()
-
-    
-            
-
-
-
-    
 
 
 class HtmlTable:
-    openTables = []
-    level = 0
-    allTables = {}
     
-    def __init__(self, name):
+    def __init__(self, name, nr, level):
         self.name = name
-        self.nr = len(HtmlTable.openTables)
-        self.level = HtmlTable.level
+        self.nr = nr
+        self.level = level
         self.header = 'none'
         self.rows = 0
-        HtmlTable.level = HtmlTable.level + 1
-        HtmlTable.openTables.append(self)
-        #print(self.level, HtmlTable.allTables)
-        if self.level in HtmlTable.allTables:
-            HtmlTable.allTables[self.level].append(self)
-        else:
-            HtmlTable.allTables[self.level] = [self]
 
     def addRow(self):
         self.rows = self.rows + 1
@@ -108,87 +49,101 @@ class HtmlTable:
         self.header = header
 
     def __str__(self):
-        return '{} {} - {} {} rows. TableNr {}'.format(self.level, 
+        return '{} {:7} - {:10} {:2} rows. TableNr {:3}'.format(self.level, 
                                                        self.header, self.name,
                                                        self.rows, self.nr)
 
+def getAttribute(x, attrs):
+    res = "none"
+    for (a,b) in attrs:
+        if a == x:
+            res = b
+    return res
 
-class MyHTMLParser(html.parser.HTMLParser):
+
+class HTMLParserTableAnalysis(html.parser.HTMLParser):
+    level = 0
     lastTag = ''
-    openTable = []
+    allTables = []
 
 
     def handle_starttag(self, tag, attrs):
-        State.currentState.doEvent(tag, 'S', attrs)
+        HTMLParserTableAnalysis.lastTag = tag
+        if tag == 'table':
+            attributeValue = getAttribute('class', attrs)
+            if attributeValue:
+                tableClass = attributeValue
+            else:
+                tableClass = 'undefined'
+        
+            HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level + 1
 
+            newTable = HtmlTable(tableClass, 
+                                 len(HTMLParserTableAnalysis.allTables),
+                                 HTMLParserTableAnalysis.level)
+            HTMLParserTableAnalysis.allTables.append(newTable)
 
+        if tag == 'tr':
+            HTMLParserTableAnalysis.allTables[-1].addRow()
 
-        #MyHTMLParser.lastTag = tag
-        #if tag == 'table':
-        #    tableClass = 'undefined'
-        #    for (x,y) in attrs:
-        #        if x == 'class':
-        #            tableClass = y
-        #            break
-        #
-        #    newTable = HtmlTable(tableClass)
-        #    MyHTMLParser.openTable.append( newTable)
-
-        #if tag == 'tr':
-        #    MyHTMLParser.openTable[-1].addRow()
-
-        #if tag == 'th':
-        #    HtmlTable.openTables[-1].addHeader()
+        if tag == 'th':
+            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
             
 
 
     def handle_endtag(self, tag):
-        State.currentState.doEvent(tag, 'E', None)
-        #if tag == 'table':
-        #    HtmlTable.level = HtmlTable.level - 1
-        #    MyHTMLParser.openTable.pop()
-        #    
-        #    #if len(HtmlTable.openTables) > 4:
-        #    #    print (HtmlTable.allTables)
-        #    #    sys.exit(1)
-        #pass
-        #print("Encountered an end tag :", tag)
+        if tag == 'table':
+            HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level -1
+            
 
-    def handle_data(self, data):
-        State.currentState.registerData(data)
-        #if MyHTMLParser.lastTag == 'th':
-        #    if len(data.strip()) > 0:
-        #        HtmlTable.openTables[-1].addHeader(data)
-        #
-        #
-        #    #print("saw data:{}:".format(data))
-        #pass
-        #print("Encountered some data  :", data)
+
+class HTMLParserTablebased(html.parser.HTMLParser):
+    level = 0
+    lastTag = ''
+    allTables = []
+
+
+    def handle_starttag(self, tag, attrs):
+        HTMLParserTableAnalysis.lastTag = tag
+        if tag == 'table':
+            attributeValue = getAttribute('class', attrs)
+            if attributeValue:
+                tableClass = attributeValue
+            else:
+                tableClass = 'undefined'
+        
+            HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level + 1
+
+            newTable = HtmlTable(tableClass, 
+                                 len(HTMLParserTableAnalysis.allTables),
+                                 HTMLParserTableAnalysis.level)
+            HTMLParserTableAnalysis.allTables.append(newTable)
+
+        if tag == 'tr':
+            HTMLParserTableAnalysis.allTables[-1].addRow()
+
+        if tag == 'th':
+            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
+            
+
+
+    def handle_endtag(self, tag):
+        if tag == 'table':
+            HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level -1
+            
+
 
 
 def registerTables():
-    class OneMoreTable(State):
-        def doEvent(self, tag, startEnd, attrs):
-            if tag == 'table' and startEnd == 'S':
-                tableClass = 'undefined'
-                print( attrs)
-                for (x,y) in attrs:
-                    if x == 'class':
-                        tableClass = y
-                        break
         
-                newTable = HtmlTable(tableClass)
-
-        
-    dumpTables = OneMoreTable('tables', 'tables')
-    dumpTables.setCurrentState('tables')
-
-    parser = MyHTMLParser()
+    parser = HTMLParserTableAnalysis()
     input = open(r"..\data\allresults.html")
+    log = open(r'..\logs\allresults.txt', 'w')
     parser.feed(input.read())
-
-    for x in HtmlTable.openTables:
+    for x in HTMLParserTableAnalysis.allTables:
         print(x)
+        log.write(x.__str__()+'\n')
+    log.close()
 
 
 def parseIslev():
@@ -200,7 +155,7 @@ def parseIslev():
     goToEnd = SkipTables('goToEnd',200, 'goToEnd')
     skipFirstTables.setCurrentState('starting')
 
-    parser = MyHTMLParser()
+    parser = HTMLParserTableAnalysis()
     input = open(r"..\data\allresults.html")
     parser.feed(input.read())
 
@@ -215,7 +170,7 @@ if __name__ == '__main__':
     #starting.setCurrentState('starting')
     #
 
-    #registerTables()
+    registerTables()
 
     #parser = MyHTMLParser()
     #input = open(r"..\data\allresults.html")
@@ -225,4 +180,4 @@ if __name__ == '__main__':
     #    print('\t{}\n'.format(x))
 
                            
-    parseIslev()
+    #parseIslev()
