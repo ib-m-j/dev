@@ -11,7 +11,6 @@ islevParser = []
 #SkipTable, SkipRow, SkipCell, RegisterNSNr, RegisterNSName, RegisterEWNr, RegisterEWName, RegisterPlayer, RegisterContract, RegisterResult, RegistePlayout, RegisterScore,RegisterNSpoints, RegisterEWPoints  
 #
 #State(
-#one more test
 
 class State:
     all = {}
