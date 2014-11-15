@@ -1,8 +1,3 @@
-
-class Tournament:
-    #pairs, deals, 
-
-
 class Deal:
     def __init__(self, id, dealer, zone):
         self.id = id    #created by define tournament
