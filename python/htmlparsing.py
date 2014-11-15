@@ -35,23 +35,52 @@ class SkipTables(State):
     def __init__(self, id, skipNo, nextStateId):
         State.__init__(self, id, nextStateId)
         self.skipNo = skipNo
+        self.started = False
         
     def doEvent(self, tag, startEnd, attrs = None):
         if tag == 'table' and startEnd == 'S':
+            self.started = True
+        if tag == 'table' and startEnd == 'E':
             self.skipNo = self.skipNo - 1
-        if self.skipNo <= 0:
-            self.setCurrentState(self.nextStateId)
+            if self.skipNo <= 0:
+                self.setCurrentState(self.nextStateId)
+            self.started = False
 
+class GotoTable(State):
+    def __init__(self, id, gotoNo, nextStateId):
+        State.__init__(self, id, nextStateId)
+        self.gotoNo = gotoNo
+        
+    def doEvent(self, tag, startEnd, attrs = None):
+        if tag == 'table' and startEnd == 'S':
+            self.gotoNo = self.gotoNo - 1
+            if self.gotoNo <= 0:
+                self.setCurrentState(self.nextStateId)
+                
 class SkipRows(State):
     def __init__(self, id, skipNo, nextStateId):
         State.__init__(self, id, nextStateId)
         self.skipNo = skipNo
+        self.started = False
         
     def doEvent(self, tag, startEnd, attrs = None):
         if tag == 'tr' and startEnd == 'S':
+            self.started = True
+        if tag == 'tr' and startEnd == 'E':
             self.skipNo = self.skipNo - 1
-        if self.skipNo <= 0:
-            self.setCurrentState(self.nextStateId)
+            if self.skipNo <= 0:
+                self.setCurrentState(self.nextStateId)
+
+class GotoRow(State):
+    def __init__(self, id, gotoNo, nextStateId):
+        State.__init__(self, id, nextStateId)
+        self.gotoNo = gotoNo
+        
+    def doEvent(self, tag, startEnd, attrs = None):
+        if tag == 'tr' and startEnd == 'S':
+            self.gotoNo = self.gotoNo - 1
+            if self.gotoNo <= 0:
+                self.setCurrentState(self.nextStateId)
 
 class SkipRemainingRows(State):
     def __init__(self, id, nextStateId):
@@ -65,22 +94,69 @@ class PrintData(State):
     def __init__(self, id, nextStateId):
         State.__init__(self, id, nextStateId)
         self.data = ''
+        self.started = False
         
     def doEvent(self, tag, startEnd, attrs = None):
         if tag == 'td' and startEnd == 'E':
-            print("in data",self.data)
-            self.setCurrentState(self.nextStateId)
+            if self.started:
+                print(self.data)
+                self.setCurrentState(self.nextStateId)
+        if tag == 'td' and startEnd == 'S':
+            self.started = True
+            self.data = ''
 
     def registerData(self, data):
-        self.data = self.data + data.strip()
+        if self.started:
+            self.data = data.strip()
+
+
+
+class GetRecordData(State): #last tag was not a <tr>
+    def __init__(self, id, nextStateId, tournament):
+        State.__init__(self, id, nextStateId)
+        self.allData = []
+        self.tournament = tournament
+        self.started = False
+        
+    def doEvent(self, tag, startEnd, attrs = None):
+        if tag == 'tr' and startEnd == 'S':
+            self.started = True
+            self.allData = []
+        if self.started:
+            if tag == 'td' and startEnd == 'E':
+                self.allData.append(self.data)
+            if tag == 'td' and startEnd == 'S':
+                self.data = ''
+            if tag == 'tr' and startEnd == 'E':
+                print("store :", self.allData)
+                self.started = False
+                self.setCurrentState(self.nextStateId)
+
+    def registerData(self, data):
+        if self.started:
+            self.data = data.strip()
+
+class GetRecords(State): 
+    def __init__(self, id, nextStateId):
+        State.__init__(self, id, nextStateId)
+
+    def doEvent(self, tag, startEnd, attrs = None):
+        if tag == 'table' and startEnd == 'E':
+            self.setCurrentState('getNewDeal')
+        if tag == 'tr' and startEnd == 'E':
+            self.setCurrentState('getOneRecord')
+
+class GetDeal(State): 
+    def __init__(self, id, nextStateId):
+        State.__init__(self, id, nextStateId)
+
+    def doEvent(self, tag, startEnd, attrs = None):
+        if tag == 'table' and startEnd == 'E':
+            self.setCurrentState('getNewDeal')
+        if tag == 'tr' and startEnd == 'E':
+            self.setCurrentState('getOneRecord')
 
     
-            
-
-
-
-    
-
 
 class HtmlTable:
     openTables = []
@@ -155,7 +231,8 @@ class MyHTMLParser(html.parser.HTMLParser):
         #print("Encountered an end tag :", tag)
 
     def handle_data(self, data):
-        State.currentState.registerData(data)
+        if len(data.strip())>0:
+            State.currentState.registerData(data)
         #if MyHTMLParser.lastTag == 'th':
         #    if len(data.strip()) > 0:
         #        HtmlTable.openTables[-1].addHeader(data)
@@ -192,11 +269,22 @@ def registerTables():
 
 
 def parseIslev():
-    skipFirstTables = SkipTables('starting', 3, 'skipHeaderRows')
-    skipHeaderRows = SkipRows('skipHeaderRows', 2, 'readTeamNr')
-    readTeamNr = PrintData('readTeamNr', 'readTeamName')
-    readTeamName = PrintData('readTeamName', 'readContract')
-    readContract = PrintData('readContract', 'goToEnd')
+    skipFirstTables = GotoTable('starting', 4, 'skipHeaderRows')
+    skipHeaderRows = SkipRows('skipHeaderRows', 5, 'getRecords')
+    getOneRecord = GetRecordData('getOneRecord', 'getRecords', 0)
+    getRecords = GetRecords('getRecords', 'getRecords')
+    getNewDeal = GetDeal('getNewDeal', 'getRecords')
+    #readNSNr = PrintData('readNSNr', 'readNSName')
+    #readNSName = PrintData('readNSName', 'readEWNr')
+    #readEWNr = PrintData('readEWNr', 'readEWName')
+    #readEWName = PrintData('readEWName', 'readContract')
+    #readContract = PrintData('readContract', 'readTricks')
+    #readTricks = PrintData('readTricks', 'played')
+    #played = PrintData('played', 'nsScore')
+    #nsScore = PrintData('nsScore', 'ewScore')
+    #ewScore = PrintData('ewScore', 'nsPoints')
+    #nsPoints = PrintData('nsPoints', 'ewPoints')
+    #ewPoints = PrintData('ewPoints', 'goToEnd')
     goToEnd = SkipTables('goToEnd',200, 'goToEnd')
     skipFirstTables.setCurrentState('starting')
 
