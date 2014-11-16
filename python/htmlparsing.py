@@ -40,6 +40,9 @@ class State:
 
     
 
+
+
+
 class HtmlTable:
     
     def __init__(self, name, nr, level):
@@ -93,8 +96,7 @@ class HTMLParserTableAnalysis(html.parser.HTMLParser):
         if tag == 'tr':
             HTMLParserTableAnalysis.allTables[-1].addRow()
 
-        if tag == 'th':
-            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
+        if tag == 'th':            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
             
 
 
@@ -205,8 +207,8 @@ def parseIslev():
     parser.setParseDef(parseDef)
     input = open(r"..\data\allresults.html")
     #print(input.read().encode('latin-1','ignore'))
-    parser.feed(input.read().encode('latin-1').decode('utf-8','ignore'))
-
+    #parser.feed(input.read().encode('latin-1').decode('utf-8','ignore'))
+    parser.feed(input.read()) #changes here for unicode issue
 
 if __name__ == '__main__':
     #starting = SkipTables('starting', 5, 'getOneCell')
