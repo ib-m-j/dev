@@ -13,7 +13,7 @@ class Action(Keyword):
     grammar = Enum( K('newTable'), K('newRow'), K('newData'), K('flushData'))
 
 class BasicObject(str):
-    grammar = '(', name(),',',attr('tagtype', TagType),',',\
+    grammar = '(', attr('tagName',word),',',attr('tagtype', TagType),',',\
               (attr('action', Action),attr('parameter',optional('(',word,')'))),')'
 
 class EndAction(str):
@@ -30,7 +30,7 @@ class ParserDef(str):
 tableParseDef1 = 'loop((endtag, end)(tag, start, finish)loop((tag1, end, skip(a))))(tag2, start, finish)(tag3, end, inc)'
 
 tableDescribing = 'loop((table, end)(table, start, newTable)\
-loop((tr, end)(tr, start, newRow)loop((tr, end)(td, start, newData)(td,end,flushData))))'
+loop((tr, end)(tr, start, newRow)loop((tr1, end)(td, start, newData)(td,end,flushData))))'
 
 tableTest = '(table,start,newTable)(tr,end,newRow)(td,start,newData)(td,end,flushData)'
 
@@ -40,7 +40,7 @@ def parseValue(res, attr):
     return attr in res.__dict__
 
 
-class Table:
+class TableWithData:
     def __init__(self, name = 'none'):
         self.rows = []
         self.name = name
@@ -65,10 +65,13 @@ class Data:
 
 class TableParser:
     tables = []
+    count = 0
 
     def __init__(self, parser, parent, type):
+        self.id = TableParser.count
+        TableParser.count = TableParser.count + 1
         self.states = []
-        self.endactions = []
+        self.endActions = []
         self.parent = parent
         self.input = ''
         self.level = 0
@@ -83,6 +86,12 @@ class TableParser:
     def setInput(self, input):
         self.input = input
 
+    def setEndActions(self, actions):
+        for a in actions:
+            self.endActions.append(a)
+        
+    
+
     def setStates(self, level):
         self.level = level
         while len(self.input) > 0:
@@ -90,16 +99,23 @@ class TableParser:
             res = parse(self.input, ParserDef)
             if parseValue(res, 'loop'):
                 child = TableParser(parser, self, res.loop)
+                child.setEndActions(self.endActions)
+                #print('setting end:', child.endActions)
                 child.setInput(res.rest)
                 child.setStates(level + 1)
                 self.states.append(child)
+                
             elif parseValue(res, 'basic'):
-                self.states.append((res.basic.name,res.basic.tagtype,
-                                    res.basic.action, res.basic.parameter))
+                #print('!!!!!!!',res.__dict__['basic'].__dict__['name'])
+                #print('!!!!!',res.basic.name, res.basic.tagtype)
+                self.states.append((res.basic.tagName,res.basic.tagtype.name,
+                                    res.basic.action.name, res.basic.parameter))
                 self.input = res.rest
             elif parseValue(res, 'endaction'):
-                self.endactions.append((res.endaction.name,
-                                        res.endaction.tagtype))
+                self.endActions.append((res.endaction.name.name,
+                                        res.endaction.tagtype.name, 
+                                        self.levelUp))
+                #print('adding end:', self.endActions)
                 self.input = res.rest
             else:
                 if level> 0:
@@ -108,11 +124,11 @@ class TableParser:
 
 
     def __str__(self):
-        res = '{} type {} length {}\n'.format(
-            self.level, self.type, len(self.states))
+        res = 'id: {}, level: {} type {} length {}\n'.format(
+            self.id, self.level, self.type, len(self.states))
         res = res + '{}endactions: '.format(self.level*'  ')
-        for s in self.endactions:
-            res = res + '{}, '.format(s)
+        for s in self.endActions:
+            res = res + '{}, {} -  '.format(s[0],s[1])
         res = res + '\n'
         for s in self.states:
             if isinstance(s, TableParser):
@@ -122,11 +138,12 @@ class TableParser:
         
         return res
 
-    
+    def strShort(self):
+        return '{} type {}\n'.format(self.level, self.type)
 
     def newTable(self):
         print('got callback table')
-        newTable = Table()
+        newTable = TableWithData()
         TableParser.tables.append(newTable)
         TableParser.currentTable = newTable
         self.advance()
@@ -134,12 +151,12 @@ class TableParser:
     def newRow(self):
         print('got callback row')
         newRow = Row()
-        TableParser.currentTable.addRow(self)
+        TableParser.currentTable.addRow(newRow)
         TableParser.currentRow = newRow
         self.advance()
 
     def newData(self):
-        print('got callback data')
+        print('got callback data start')
         newData = Data()
         TableParser.currentRow.addData(newData)
         TableParser.currentData  = newData
@@ -149,52 +166,61 @@ class TableParser:
     def addData(self, data):
         if TableParser.currentData:
             TableParser.currentData = TableParser.currentData.setData(data)
+            #print('set data to:',data)
         
     def flushData(self):
+        print('flush data')
         self.parser.dataTarget = None
         self.advance()
 
     def levelUp(self):
-        if self.parent:
-            self.parent.cont()
+        if self.parent.id == 0:
+            con = self
+        else:
+            con = self.parent
+        print('got callback level up to', self.parent.id)
+        con.parser.registerLevelUps(self.endActions)
+        con.advance()
+
+        
 
     def advance(self):
-        #print('advancwe', len(self.remainingStates))
         if len(self.remainingStates) > 0:
             nextWait = self.remainingStates[0]
-            #print("states", nextWait.__dict__)
-            #print(nextWait[0].name, nextWait[1].name, nextWait[2].name)
             self.remainingStates = self.remainingStates[1:]
-            #print("!!!!!!!!!!!!", self.type)
             if isinstance(nextWait, TableParser):
+                #print("Going down to",nextWait.id, nextWait.endActions)
                 nextWait.remainingStates = nextWait.states
                 nextWait.parser.settags()
+                if len(nextWait.endActions) > 0:
+                    #print('set endActions: ',nextWait.endActions[0])
+                    nextWait.parser.registerLevelUps(nextWait.endActions)
+                        #nextWait.endActions[0][0], nextWait.endActions[0][1], 
+                        #nextWait.levelUp)
                 nextWait.advance()
-                print("here")
             else:
+                print('set callbacks:', nextWait)
                 self.parser.registerCallback(
-                    nextWait[0].name, nextWait[1].name, 
-                    self.callback[nextWait[2].name])
+                    nextWait[0], nextWait[1], 
+                    self.callback[nextWait[2]])
         else:
             if self.type == 'loop':
+                print('doing loop')
                 self.remainingStates = self.states
+                print(self.states[0])
+                self.advance()
             elif self.parent:
-                self.parent.cont()
+                self.levelUp()
             else:
                 self.parser.registerCallback(None)
 
-    def cont(self):
-        self.advance()
-        self.parser.registerLevelUp(
-            self.endactions[0].name, self.endactions[1].name, self.levelUp)
 
     def read(self, file):
         self.remainingStates = self.states
         self.parser.settags()
-        print (self.endactions)
-        if len(self.endactions) > 0:
-            self.parser.registerLevelUp(
-                self.endactions[0].name, self.endactions[1].name, self.levelUp)
+        #print ('endactions!!!!', self.endActions)
+        if len(self.endActions) > 0:
+            self.parser.registerLevelUps(self.endActions)
         self.advance()
         f = open(file, 'r')
         parser.feed(f.read())
@@ -213,18 +239,26 @@ class HTMLParserTableBased(html.parser.HTMLParser):
     definition = []
 
     def settags(self):
-        self.count = 4 #for testing
+        self.count = 2 #for testing
         self.startTags = {}
         self.endTags = {}
         self.levelUpStart = {}
         self.levelUpEnd = {}
         self.dataTarget = None
 
-    def setParseDef(self, definition):
-        HTMLParserTableBased.definition = definition
-        self.setNextParse()
+    #def setParseDef(self, definition):
+    #    HTMLParserTableBased.definition = definition
+    #    self.setNextParse()
+    
+    def registerLevelUps(self, levelUps):
+        #print(levelUps)
+        self.levelUpStart = {}
+        self.levelUpEnd = {}
+        for lU in levelUps:
+            self.registerLevelUp(lU[0], lU[1], lU[2])
 
     def registerLevelUp(self, levelUpTag, levelUpType, levelUpAction):
+        #print('register levelUp:', levelUpTag, levelUpType)
         if levelUpTag:
             if levelUpType == 'end':
                 self.levelUpEnd[levelUpTag] = levelUpAction
@@ -237,7 +271,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         self.endTags = {}
         if not(tag):
             return
-        print(' registercallback ', tag, type)
+        #print(' registercallback ', tag, type)
         if type == 'start':
             self.startTags[tag] = action
         elif type == 'end':
@@ -245,22 +279,22 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         else:
             pass
 
-    def setNextParse(self):
-        print(HTMLParserTableBased.definition[0], "nesrtdef")
-
-        first = HTMLParserTableBased.definition[0]
-        HTMLParserTableBased.definition = HTMLParserTableBased.definition[1:]
-
-        HTMLParserTableBased.gotoTable = 0
-        HTMLParserTableBased.skipRows = 0
-        HTMLParserTableBased.printRows = 0
-        print("setting", first[0], first[1])
-        if first[0] == 'gotoTable':
-            HTMLParserTableBased.gotoTable = first[1]
-        elif first[0] == 'skipRows':
-            HTMLParserTableBased.skipRows = first[1]
-        else:
-            HTMLParserTableBased.printRows = first[1]
+    #def setNextParse(self):
+    #    print(HTMLParserTableBased.definition[0], "nesrtdef")
+    #
+    #    first = HTMLParserTableBased.definition[0]
+    #    HTMLParserTableBased.definition = HTMLParserTableBased.definition[1:]
+    #
+    #    HTMLParserTableBased.gotoTable = 0
+    #    HTMLParserTableBased.skipRows = 0
+    #    HTMLParserTableBased.printRows = 0
+    #    print("setting", first[0], first[1])
+    #    if first[0] == 'gotoTable':
+    #        HTMLParserTableBased.gotoTable = first[1]
+    #    elif first[0] == 'skipRows':
+    #        HTMLParserTableBased.skipRows = first[1]
+    #    else:
+    #        HTMLParserTableBased.printRows = first[1]
 
 
     def handle_starttag(self, tag, attrs):
@@ -272,14 +306,20 @@ class HTMLParserTableBased(html.parser.HTMLParser):
 
     def handle_endtag(self, tag):
         if tag == 'table':
+            pass
+            #print('got end tag', tag, self.count)
+        if tag == 'table':
             self.count = self.count - 1
             if self.count == 0:
                 self.startTags = {}
                 self.endTags = {}
-        if tag in self.endTags.keys():
+                self.dataTarget = None
+                print("!!!!!!!!!!!!!stopping")
+                #sys.exit(0)
+        if tag in self.endTags.keys()and self. count > 0:
             self.endTags[tag]()
-        print(self.levelUpEnd.keys(), tag)
-        if tag in self.levelUpEnd.keys():
+        if tag in self.levelUpEnd.keys() and self.count > 0:
+            print('tag: ', tag, 'end')
             self.levelUpEnd[tag]()
             
     def handle_data(self, data):
@@ -309,5 +349,12 @@ if __name__ == "__main__":
     print()
     print(top)
 
-    top.read(r".\data\allresults.html")
+    top.read(r"..\data\allresults.html")
     print('registered tables:',len(top.tables))
+    for t in top.tables:
+        print('start table', t)
+        for r in t.rows:
+            res = ''
+            for d in r.data: 
+                res = res + d.value + '@'
+            print(res)
