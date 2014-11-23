@@ -10,7 +10,7 @@ class TagType(Keyword):
     grammar = Enum( K('end'), K('start'))
 
 class Action(Keyword):
-    grammar = Enum( K('newTable'), K('newRow'), K('newData'), K('flushData'))
+    grammar = Enum( K('newTable'), K('newRow'), K('newData'), K('flushData'), K('advance'))
 
 class BasicObject(str):
     grammar = '(', attr('tagName',word),',',attr('tagtype', TagType),',',\
@@ -27,12 +27,24 @@ class ParserDef(str):
                (attr('basic',BasicObject)),')'] , attr('rest',restline)
 
 
+standardData = [(tr, start, newRow), (tr, end, flushRow), 
+                (td, start, newData), (td, end, flushData),
+                (table, end , flushTable)]
+ 
+
+islevTotal = 'islevGetHeader loop(islevGetPlays, islevGetCards)'
+
+islevGetHeader = standardData
+islevGetPlays = '(tr, start, (
+
 tableParseDef1 = 'loop((endtag, end)(tag, start, finish)loop((tag1, end, skip(a))))(tag2, start, finish)(tag3, end, inc)'
 
 tableDescribing = 'loop((table, end)(table, start, newTable)\
-loop((tr, end)(tr, start, newRow)loop((tr1, end)(td, start, newData)(td,end,flushData))))'
+loop((tr, end)(tr, start, newRow)loop((tr, end)(td, start, newData)(td,end,flushData))))'
 
 tableTest = '(table,start,newTable)(tr,end,newRow)(td,start,newData)(td,end,flushData)'
+
+testDetails = '(table, start, newTable) (tr, start, newRow) (td, start, newData) (td, end, flushData)(table, start, newTable)loop((table, end)(tr, start, newRow)loop((tr, end) (td, start, newData)(td,end,flushData)))(table, start, newTable)(table, start, newTable)(table, start, newTable)loop((table, end)(tr, start, newRow)loop((tr, end) (td, start, newData)(td,end,flushData)))'
 
 tablesOnly = 'loop((table, end)(table, start, newTable))'
 
@@ -80,7 +92,8 @@ class TableParser:
         self.callback = {'newTable': self.newTable,
                          'newRow': self.newRow,
                          'newData': self.newData,
-                         'flushData': self.flushData}
+                         'flushData': self.flushData,
+                         'advance': self.advance}
                          
 
     def setInput(self, input):
@@ -164,6 +177,7 @@ class TableParser:
         self.advance()
 
     def addData(self, data):
+        print(data)
         if TableParser.currentData:
             TableParser.currentData = TableParser.currentData.setData(data)
             #print('set data to:',data)
@@ -173,13 +187,13 @@ class TableParser:
         self.parser.dataTarget = None
         self.advance()
 
+    def advance(self):
+        self.advance()
+
     def levelUp(self):
-        if self.parent.id == 0:
-            con = self
-        else:
-            con = self.parent
-        print('got callback level up to', self.parent.id)
-        con.parser.registerLevelUps(self.endActions)
+        con = self.parent #hmm problems handling going up
+        print('got callback level up from', self.id)
+        con.parser.registerLevelUps(con.endActions)
         con.advance()
 
         
@@ -200,9 +214,10 @@ class TableParser:
                 nextWait.advance()
             else:
                 print('set callbacks:', nextWait)
-                self.parser.registerCallback(
-                    nextWait[0], nextWait[1], 
-                    self.callback[nextWait[2]])
+                if nextWait[2] != 'None':
+                    self.parser.registerCallback(
+                        nextWait[0], nextWait[1], 
+                        self.callback[nextWait[2]])
         else:
             if self.type == 'loop':
                 print('doing loop')
@@ -239,7 +254,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
     definition = []
 
     def settags(self):
-        self.count = 2 #for testing
+        self.count = 6 #for testing
         self.startTags = {}
         self.endTags = {}
         self.levelUpStart = {}
@@ -251,7 +266,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
     #    self.setNextParse()
     
     def registerLevelUps(self, levelUps):
-        #print(levelUps)
+        print(levelUps)
         self.levelUpStart = {}
         self.levelUpEnd = {}
         for lU in levelUps:
@@ -308,14 +323,14 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         if tag == 'table':
             pass
             #print('got end tag', tag, self.count)
-        if tag == 'table':
-            self.count = self.count - 1
-            if self.count == 0:
-                self.startTags = {}
-                self.endTags = {}
-                self.dataTarget = None
-                print("!!!!!!!!!!!!!stopping")
-                #sys.exit(0)
+        ##if tag == 'table':
+        #    self.count = self.count - 1
+        #    if self.count == 0:
+        #        self.startTags = {}
+        #        self.endTags = {}
+        #        self.dataTarget = None
+        #        print("!!!!!!!!!!!!!stopping")
+        #        #sys.exit(0)
         if tag in self.endTags.keys()and self. count > 0:
             self.endTags[tag]()
         if tag in self.levelUpEnd.keys() and self.count > 0:
@@ -331,12 +346,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         #        print(data)
 
 
-
-
-
-
-if __name__ == "__main__":
-
+def doTables():
     print(tableDescribing)
 
     parser = HTMLParserTableBased()
@@ -354,7 +364,31 @@ if __name__ == "__main__":
     for t in top.tables:
         print('start table', t)
         for r in t.rows:
-            res = ''
+            res = 'New Row>>'
+            for d in r.data: 
+                res = res + d.value + '@'
+            print(res)
+
+
+
+if __name__ == "__main__":
+
+    print(testDetails)
+
+    parser = HTMLParserTableBased()
+    top = TableParser(parser, None,'top')
+    top.setInput(testDetails)
+    top.setStates(0)
+
+    print()
+    print(top)
+
+    top.read(r"..\data\allresults.html")
+    print('registered tables:',len(top.tables))
+    for t in top.tables:
+        print('start table', t)
+        for r in t.rows:
+            res = 'New Row>>'
             for d in r.data: 
                 res = res + d.value + '@'
             print(res)
