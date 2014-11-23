@@ -63,7 +63,9 @@ class State:
     def run(self, input):
         self.parser.setCallbacks(self.actions)
         self.parser.setDataTarget(self.addData)
-        self.parser.parse(input, StateDef)
+        self.parser.parse(input, StateDef
+
+)
     
     def checkExists(self, action):
         res = eval('self.'+action.callBack)
