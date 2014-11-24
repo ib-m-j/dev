@@ -48,7 +48,7 @@ class State:
         for actionDef in actionDefs.actions:
             newAction = Action(actionDef)
             self.actions.append(newAction)
-            self.checkExists(newAction)
+            res = self.checkExists(newAction)
             newAction.callBack = res
 
         self.rows = []
@@ -60,12 +60,11 @@ class State:
     def __str__(self):
         return self.name
         
-    def run(self, input):
+    def run(self):
+        self.parser.settags()
         self.parser.setCallbacks(self.actions)
         self.parser.setDataTarget(self.addData)
-        self.parser.parse(input, StateDef
-
-)
+        #self.parser.feed(input)
     
     def checkExists(self, action):
         res = eval('self.'+action.callBack)
@@ -73,46 +72,45 @@ class State:
         return res
                
     def newRow(self):
+        print('got callback row')
         self.currentRow = []
         pass
 
     def flushRow(self):
+        print('got flush row')
         self.rows.append(self.currentRow)
         pass
 
     def newData(self):
+        print('got callback data')
         self.currentData = Data()
         self.parser.activateData()
         pass
 
     def flushData(self):
+        print('got flush data')
         self.currentRow.append(self.currentData)
         self.parser.deActivateData()
         pass
 
     def flushTable(self):
+        print('got flush table')
+        sys.exit(0)
         pass
 
     def skip(self):
         pass
 
-    def addData(self):
-        self.currentData.addData()
+    def addData(self, data):
+        if self.currentData:
+            self.currentData.addData(data)
 
 
 
 class HTMLParserTableBased(html.parser.HTMLParser):
-    level = 0
-    lastTag = ''
-    allTables = []
-    gotoTable = 0
-    skipRows = 0
-    printRows = 0
-    rowdata = []
-    definition = []
 
     def settags(self):
-        self.count = 6 #for testing
+        self.count = 0 #for testing
         self.startTags = {}
         self.endTags = {}
         self.dataTarget = None
@@ -126,7 +124,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         for action in actions:
             if action.tagType == 'start':
                 self.startTags[action.tag] = action.callBack
-            elif type == 'end':
+            elif action.tagType == 'end':
                 self.endTags[action.tag]  = action.callBack
         else:
             pass
@@ -141,13 +139,17 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         self.dataActive = None
 
     def handle_starttag(self, tag, attrs):
-        #print("saw tag ", tag)
+        if self.count > 0:
+            self.count = self.count - 1
+            if self.count == 0:
+                sys.exit(0)
+        print("saw tag ", tag)
         if tag in self.startTags.keys():
-            self.startTags[tag].callBack()
+            self.startTags[tag]()
 
     def handle_endtag(self, tag):
         if tag in self.endTags.keys():
-            self.endTags[tag].callBack()
+            self.endTags[tag]()
 
     def handle_data(self, data):
         if self.dataTarget:
@@ -166,6 +168,10 @@ if __name__ == '__main__':
         print(x.tagName, x.tagType.name, x.action, x.parameter)
         print(x.__dict__)
     state = State(res, parser)
+
     inputFile  = open(r"..\data\allresults.html",'r')
-    
-    state.run(inputFile.read())
+    input = inputFile.read()
+    inputFile.close()
+
+    state.run()
+    parser.feed(input)
