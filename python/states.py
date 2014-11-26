@@ -21,9 +21,11 @@ class CoreActionDef(str):
 class StateDef(str):
     grammar = attr('stateName', word),'(',attr('actions',some(CoreActionDef)),')'
 
+
 coreActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable))'
 
 standardState = 'standard ' + coreActionElements
+
 
 
 class Action:
@@ -61,10 +63,14 @@ class StatesManager:
             self.type = 'tuple'
 
     def advance(self):
+        print('remainingnnn',self.remainingStates)
         if len(self.remainingStates) > 0:
             self.currentState = self.remainingStates[0]
             self.remainingStates = self.remainingStates[1:]
-            if isinstance(self.currentState, State):
+            print('tuplecomparison', isinstance(self.remainingStates, tuple))
+            print(self.currentState, 'goingtostart',isinstance(self.currentState, State) )
+            if not(isinstance(self.currentState, list) or isinstance(
+                    self.currentState, list)):
                 print('starting new state')
                 self.currentState.start(self)
             else:
@@ -98,9 +104,11 @@ class State:
         self.parser = parser
         
     def __str__(self):
+        return self.name
         pass
 
     def start(self, mgr):
+        pripnt("starting state start")
         self.mgr = mgr
         self.parser.noCallbacks()
         self.parser.setCallbacks(self.actions)
@@ -114,27 +122,43 @@ class State:
                
 
 
-class TableState(State):
-    #def __init__(self, actionDefs, parser):
-    #    self.name = actionDefs.stateName
-    #    self.actions = []
-    #    for actionDef in actionDefs.actions:
-    #        newAction = Action(actionDef)
-    #        self.actions.append(newAction)
-    #        res = self.checkExists(newAction)
-    #        newAction.callBack = res
-    #
-    #    self.parser = parser
-        
-    def __str__(self):
-        res = ''
-        for r in self.rows:
-            for d in r:
-                res = res + '{}, '.format(d.__str__())
-            res = res[:-2] +'\n'
-        return res
+class SkipState(State):
 
     def start(self, mgr):
+        print("starting skipstart")
+        self.mgr = mgr
+        self.parser.noCallbacks()
+        self.parser.setCallbacks(self.actions)
+        self.parser.deActivateData()
+
+    def skip(self):
+        print('got skip now at', self.count)
+        if self.count == 0:
+            self.mgr.advance()
+        else:
+            self.count = self.count - 1
+
+gotoTemplate = '{} ((table, start, skip ({})))'
+
+def gotoTableNo(no, parser):
+    res = parse(gotoTemplate.format('gotoTable', no), StateDef)
+    
+    state =  SkipState(res, parser)
+    state.count = no
+    return state
+
+
+class TableState(State):
+    #def __str__(self):
+    #    res = ''
+    #    for r in self.rows:
+    #        for d in r:
+    #            res = res + '{}, '.format(d.__str__())
+    #        res = res[:-2] +'\n'
+    #    return res
+
+    def start(self, mgr):
+        print('starting tablestate')
         self.mgr = mgr
         self.rows = []
         self.currentRow = []
@@ -143,12 +167,7 @@ class TableState(State):
         self.parser.setCallbacks(self.actions)
         self.parser.setDataTarget(self.addData)
         self.parser.deActivateData()
-        #self.parser.feed(input)
     
-#    def checkExists(self, action):
-#        res = eval('self.'+action.callBack)
-#        print(res)
-#        return res
                
     def newRow(self):
         print('got callback row')
@@ -254,7 +273,8 @@ if __name__ == '__main__':
     #    print(x.tagName, x.tagType.name, x.action, x.parameter)
     #    print(x.__dict__)
     state = TableState(res, parser)
-    mgr = StatesManager(parser, (state, ), None)
+    mgr = StatesManager(parser, (gotoTableNo(4, parser), State), None)
+    #mgr = StatesManager(parser, (State, State), None)
     inputFile  = open(r"..\data\allresults.html",'r')
     input = inputFile.read()
     inputFile.close()
