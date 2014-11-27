@@ -4,10 +4,12 @@ import sys
 from pypeg2 import *
 import re
 import types
-
+from bridgecore import Strain
+from bridgescore import getScore
 
 games = []
 cards = []
+
 
 class TagType(Keyword):
     grammar = Enum( K('end'), K('start'))
@@ -151,7 +153,7 @@ class TableState(State):
 
 
     def start(self, mgr):
-        print('starting tablestate')
+        #print('starting tablestate')
         self.mgr = mgr
         self.rows = []
         self.currentRow = []
@@ -175,7 +177,7 @@ class TableState(State):
         pass
 
     def flushRow(self):
-        print('got flush row')
+        #print('got flush row')
         self.rows.append(self.currentRow)
         pass
 
@@ -364,4 +366,29 @@ if __name__ == '__main__':
 
     for l in cards:
         print(l)
-# a small change
+
+
+
+    getStrain(s):
+        if s == 'UT':
+            return Strain.fromId('NT')
+        elif s == 'SP':
+            return Strain.fromId('S')
+        elif s == 'HJ':
+            return Strain.fromId('H')
+        elif s == 'RU':
+            return Strain.fromId('D')
+        elif s == 'KL':
+            return Strain.fromId('C')
+        
+
+    
+    def checkScore(bidValue, bidStrain, wonTricks, dbl, inZone, score):
+        
+    bid = re.compile('(?P<tricks>[0-9])(?P<strain>UT|SP|HJ|KL) (?P<dbl>D|R )\d{1,2}' 
+
+    for l in games:
+        elements = l.split(',')
+        print( elements[6],elements[7],elements[10],elements[11] )
+        
+        
