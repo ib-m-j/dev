@@ -1,10 +1,13 @@
  # -*- coding: utf-8 -*-
-
 import html.parser
 import sys
 from pypeg2 import *
 import re
 import types
+
+
+games = []
+cards = []
 
 class TagType(Keyword):
     grammar = Enum( K('end'), K('start'))
@@ -22,7 +25,7 @@ class StateDef(str):
     grammar = attr('stateName', word),'(',attr('actions',some(CoreActionDef)),')'
 
 
-coreActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable))'
+coreActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable)(img, start, cardColour))'
 
 standardState = 'standard ' + coreActionElements
 
@@ -34,6 +37,9 @@ class Action:
         self.tagType =   definition.tagType.name
         self.callBack =  definition.action
         self.parametre = definition.parameter
+
+    def __str__(self):
+        return '{}, {}'.format(self.tag, self.tagType)
 
 class Data:
     def __init__(self, name = ''):
@@ -51,7 +57,7 @@ class Data:
 
 class StatesManager:
     def __init__(self, parser, states, parent):
-        print(states)
+        #print(states)
         self.parser = parser
         self.states = states
         self.remainingStates = self.states
@@ -63,15 +69,10 @@ class StatesManager:
             self.type = 'tuple'
 
     def advance(self):
-        print('remainingnnn',self.remainingStates)
         if len(self.remainingStates) > 0:
             self.currentState = self.remainingStates[0]
             self.remainingStates = self.remainingStates[1:]
-            print('tuplecomparison', isinstance(self.remainingStates, tuple))
-            print(self.currentState, 'goingtostart',isinstance(self.currentState, State) )
-            if not(isinstance(self.currentState, list) or isinstance(
-                    self.currentState, list)):
-                print('starting new state')
+            if isinstance(self.currentState, State):
                 self.currentState.start(self)
             else:
                 self.child = StatesManager(parser, self.currentState, self)
@@ -93,7 +94,6 @@ class StatesManager:
 
 class State:
     def __init__(self, actionDefs, parser):
-        self.name = actionDefs.stateName
         self.actions = []
         for actionDef in actionDefs.actions:
             newAction = Action(actionDef)
@@ -107,55 +107,48 @@ class State:
         return self.name
         pass
 
-    def start(self, mgr):
-        pripnt("starting state start")
-        self.mgr = mgr
-        self.parser.noCallbacks()
-        self.parser.setCallbacks(self.actions)
-        self.parser.setDataTarget(self.addData)
-        self.parser.deActivateData()
-    
+    def reset(self):
+        pass
+
+    @staticmethod
+    def getAttr(key, attrs):
+        res = None
+        for (k,v) in attrs:
+            if k == key:
+                res = v
+                break
+        return res
+        
+
+
+#    def start(self, mgr):
+#        pripnt("starting state start")
+#        self.mgr = mgr
+#        self.parser.noCallbacks()
+#        self.parser.setCallbacks(self.actions)
+#        self.parser.setDataTarget(self.addData)
+#        self.parser.deActivateData()
+#    
     def checkExists(self, action):
         res = eval('self.'+action.callBack)
         print(res)
         return res
                
 
-
-class SkipState(State):
-
-    def start(self, mgr):
-        print("starting skipstart")
-        self.mgr = mgr
-        self.parser.noCallbacks()
-        self.parser.setCallbacks(self.actions)
-        self.parser.deActivateData()
-
-    def skip(self):
-        print('got skip now at', self.count)
-        if self.count == 0:
-            self.mgr.advance()
-        else:
-            self.count = self.count - 1
-
-gotoTemplate = '{} ((table, start, skip ({})))'
-
-def gotoTableNo(no, parser):
-    res = parse(gotoTemplate.format('gotoTable', no), StateDef)
-    
-    state =  SkipState(res, parser)
-    state.count = no
-    return state
-
-
 class TableState(State):
-    #def __str__(self):
-    #    res = ''
-    #    for r in self.rows:
-    #        for d in r:
-    #            res = res + '{}, '.format(d.__str__())
-    #        res = res[:-2] +'\n'
-    #    return res
+    def __init__(self, actionDefs, parser, storage):
+        self.storage = storage
+        State.__init__(self, actionDefs, parser)
+
+    def __str__(self):
+        res = str(len(self.rows))+'\n'
+        for c,r in enumerate(self.rows):
+            res = res + '{}:'.format(c)
+            for d in r:
+                res = res + '{}, '.format(d.__str__())
+            res = res[:-2] +'\n'
+        return res
+
 
     def start(self, mgr):
         print('starting tablestate')
@@ -168,9 +161,16 @@ class TableState(State):
         self.parser.setDataTarget(self.addData)
         self.parser.deActivateData()
     
+    def cardColour(self, attrs):
+        attrValue = State.getAttr('src', attrs)
+        if attrValue:
+            d = Data()
+            d.addData(attrValue[0])
+            self.currentRow.append(d)
+        
                
-    def newRow(self):
-        print('got callback row')
+    def newRow(self, attrs = None):
+        #print('got callback row')
         self.currentRow = []
         pass
 
@@ -179,20 +179,36 @@ class TableState(State):
         self.rows.append(self.currentRow)
         pass
 
-    def newData(self):
-        print('got callback data')
+    def newData(self, attrs = None):
+        #print('got callback data')
+        
+        attrValue = State.getAttr('name', attrs)
+        if attrValue:
+            d = Data()
+            d.addData(attrValue)
+            self.currentRow.append(d)
+
         self.currentData = Data()
         self.parser.activateData()
         pass
 
     def flushData(self):
         self.currentRow.append(self.currentData)
+        #res = ''
+        #for d in self.currentRow:
+        #    res = res +d.value + ', '
+        #print('register data: ', self.currentData)
         self.parser.deActivateData()
         pass
 
     def flushTable(self):
-        print('got flush table')
-        print(self)
+        #print('got flush table')
+        for r in self.rows:
+            line = ''
+            for d in r:
+                line = line + '{}, '.format(d.value)
+            self.storage.append(line[:-2])
+        self.rows = []
         self.mgr.advance()
         pass
 
@@ -201,12 +217,62 @@ class TableState(State):
 
     def addData(self, data):
         if self.currentData:
-            print('adding', data)
+            #print('adding', data)
             self.currentData.addData(data)
 
 
 
 
+
+class SkipState(State):
+
+    def start(self, mgr):
+        #print("starting skipstate")
+        self.mgr = mgr
+        self.parser.noCallbacks()
+        self.parser.setCallbacks(self.actions)
+        self.parser.deActivateData()
+        #for a in self.actions:
+        #    print(a)
+
+    def setSkipNo(self, no):
+        self.count = no
+        self.orgCount = no
+
+    def reset(self):
+        #print('resttintg to', self.count)
+        self.count = self.orgCount
+
+    def skip(self, attrs = None):
+        #print('got skip now at', self.count)
+        if self.count == 0:
+            self.reset()
+            self.mgr.advance()
+        else:
+            self.count = self.count - 1
+
+gotoTemplate = '{} (({}, start, skip ({})))'
+skipTemplate = '{} (({}, end, skip ({})))'
+
+def gotoTableNo(no, parser):
+    res = parse(gotoTemplate.format('gotoTable', 'table', no), StateDef)
+    
+    state =  SkipState(res, parser)
+    state.setSkipNo(no)
+    return state
+
+def skipRowNo(no, parser):
+    res = parse(skipTemplate.format('skipRow', 'tr', no), StateDef)
+    state = SkipState(res, parser)
+    state.setSkipNo(no)
+    return state
+
+
+def skipTableNo(no, parser):
+    res = parse(skipTemplate.format('skipTable', 'table', no), StateDef)
+    state = SkipState(res, parser)
+    state.setCount = no
+    return state
 
 
 class HTMLParserTableBased(html.parser.HTMLParser):
@@ -237,11 +303,11 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         self.dataTarget = callBack
 
     def activateData(self):
-        print('data activated')
+        #print('data activated')
         self.dataActive = True
 
     def deActivateData(self):
-        print('Data de activates')
+        #print('Data de activates')
         self.dataActive = None
 
     def handle_starttag(self, tag, attrs):
@@ -250,7 +316,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
             if self.count == 0:
                 sys.exit(0)
         if tag in self.startTags.keys():
-            self.startTags[tag]()
+            self.startTags[tag](attrs)
 
     def handle_endtag(self, tag):
         if tag in self.endTags.keys():
@@ -268,13 +334,23 @@ if __name__ == '__main__':
 
     res = parse(standardState, StateDef)
 
-    #print(res.stateName)
-    #for x in res.actions:
-    #    print(x.tagName, x.tagType.name, x.action, x.parameter)
-    #    print(x.__dict__)
-    state = TableState(res, parser)
-    mgr = StatesManager(parser, (gotoTableNo(4, parser), State), None)
-    #mgr = StatesManager(parser, (State, State), None)
+    gamesResults = TableState(res, parser, games)
+    hands = TableState(res, parser, cards)
+
+
+
+    #mgr = StatesManager(parser, (gotoTableNo(8, parser), gotoTableNo(4, parser)), None)
+    mgr = StatesManager(parser, (gotoTableNo(4, parser), 
+                                 skipRowNo(1, parser), 
+                                 [gamesResults,gotoTableNo(1, parser),
+                                  hands, gotoTableNo(2, parser),
+                                  skipRowNo(1, parser)]), None)
+    #mgr = StatesManager(parser, (gotoTableNo(4, parser), 
+    #                             skipRowNo(1, parser), 
+    #                             gamesResults,gotoTableNo(1,parser),
+    #                             hands, gotoTableNo(2, parser),
+    #                              skipRowNo(1, parser), gamesResults), None)
+    #mgr = StatesManager(parser, [state, state], None)
     inputFile  = open(r"..\data\allresults.html",'r')
     input = inputFile.read()
     inputFile.close()
@@ -283,5 +359,9 @@ if __name__ == '__main__':
     res = input.translate(map)
     mgr.advance()
     parser.feed(res)
+    for l in games:
+        print(l)
 
+    for l in cards:
+        print(l)
 # a small change
