@@ -1,11 +1,11 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import html.parser
 import sys
 from pypeg2 import *
 import re
 import types
 from bridgecore import Strain
-from bridgescore import getScore
+import bridgescore
 
 games = []
 cards = []
@@ -332,6 +332,13 @@ class HTMLParserTableBased(html.parser.HTMLParser):
 
 if __name__ == '__main__':
 
+#    patternDK = re.compile('(?P<bidder>[xVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) *(?P<dbl>[DR])*')
+#    res = patternDK.match('N 2SP')
+#    print(res.groups())
+#    sys.exit(0)
+
+
+
     parser = HTMLParserTableBased()
 
     res = parse(standardState, StateDef)
@@ -364,31 +371,81 @@ if __name__ == '__main__':
     for l in games:
         print(l)
 
-    for l in cards:
+
+    zones = {}
+    for (n,l) in enumerate(cards):
+        if n % 12 == 0:
+            gameno = int(l.split(',')[0]) - 1
+        if n % 12 == 1:
+            zones[gameno] = l.split(',')[0][2:]
+            print(gameno, zones[gameno])
         print(l)
-
-
-
-    getStrain(s):
-        if s == 'UT':
-            return Strain.fromId('NT')
-        elif s == 'SP':
-            return Strain.fromId('S')
-        elif s == 'HJ':
-            return Strain.fromId('H')
-        elif s == 'RU':
-            return Strain.fromId('D')
-        elif s == 'KL':
-            return Strain.fromId('C')
         
+    for n in zones.keys():
+        print(n, zones[n])
 
     
-    def checkScore(bidValue, bidStrain, wonTricks, dbl, inZone, score):
         
-    bid = re.compile('(?P<tricks>[0-9])(?P<strain>UT|SP|HJ|KL) (?P<dbl>D|R )\d{1,2}' 
+    
+    def checkScore(bidValue, bidStrain, wonTricks, dbl, inZone, score):
+        pass
+        
+#    patternDK = re.compile('(?P<bidder>[xVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) +(?P<dbl>[DR])*')
 
-    for l in games:
+    patternDK = re.compile('((?P<bidder>[xVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) *(?P<dbl>[DR])*)|(?P<other>.*)')
+
+    def getZone(bidder, gamenumber):
+        gn = gamenumber // 8 
+        if zones[gn] == 'Ingen':
+            return False
+        if zones[gn] == 'Alle':
+            return True
+        if zones[gn] =='NS':
+            if bidder in 'NS':
+                return True
+            return False
+        if zones[gn] == 'xV':
+            if bidder in 'NS':
+                return False
+            return True
+        
+    def getNSres(bidder, NSRes, EWRes):
+        if len(NSRes.strip()) != 0:
+            return int(NSRes)
+        else:
+            return -1*int(EWRes)
+
+    def getNSResFromCalc(bidder, res):
+        if bidder in 'NS':
+            return res
+        return -res
+
+    for (n, l) in enumerate(games):
         elements = l.split(',')
-        print( elements[6],elements[7],elements[10],elements[11] )
+        #print('trying :', elements[6].strip(),':')
+        match = patternDK.match(elements[6].strip())
+        if match:
+            if not(match.group('other')):
+                tricks = int(match.group("tricks"))
+                strain = Strain.fromDKString(match.group("strain"))
+                dbl = match.group("dbl")
+                if dbl != 'D':
+                    dbl = 'P'
+                won = int(elements[7])
+                bidder = match.group('bidder')
+                zone = getZone(bidder, n)
+                NSRes = getNSres(bidder, elements[10], elements[11])
+                calcRes =  bridgescore.getScore(tricks, 
+                                                strain, won, dbl, zone)
+
+                if NSRes != getNSResFromCalc(bidder,calcRes):
+                    print('{} {} {} {} {}:  {}'.format(
+                        n // 8, elements[6],elements[7],NSRes,(n//8)%4,
+                        getNSResFromCalc(bidder,calcRes)))
+               
+
+        else:
+            raise (BaseException("bid exception"))
+
         
         

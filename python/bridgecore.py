@@ -60,6 +60,7 @@ class Strain(Colour):
         #            self.name,self.id,self.baseScore,self.firstScore))
     
 
+
     def getColour(self):
         if self.id in Colour.colours:
             return Colour.colours[self.id]
@@ -67,9 +68,20 @@ class Strain(Colour):
             return None
 
 
+    
+
     @staticmethod
     def fromId(id):
         return Strain.strains[id]
+
+
+    @staticmethod
+    def fromDKString(string):
+        map = {'UT':'NT','SP':'S','HJ':'H','RU':'D','KL':'C'}
+        return Strain.fromId(map[string])
+        
+
+
 
 #    @staticmethod
 #    def setStrainScores():
