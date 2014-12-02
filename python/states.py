@@ -364,10 +364,10 @@ if __name__ == '__main__':
     input = inputFile.read()
     inputFile.close()
 
-    map = str.maketrans('æøåÆØÅ', 'xxxxxx')
-    res = input.translate(map)
+    #map = str.maketrans('æøåÆØÅ', 'xxxxxx')
+    #res = input.translate(map)
     mgr.advance()
-    parser.feed(res)
+    parser.feed(input)
     for l in games:
         print(l)
 
@@ -392,7 +392,7 @@ if __name__ == '__main__':
         
 #    patternDK = re.compile('(?P<bidder>[xVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) +(?P<dbl>[DR])*')
 
-    patternDK = re.compile('((?P<bidder>[xVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) *(?P<dbl>[DR])*)|(?P<other>.*)')
+    patternDK = re.compile('((?P<bidder>[ØVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) *(?P<dbl>[DR])*)|(?P<other>.*)')
 
     def getZone(bidder, gamenumber):
         gn = gamenumber // 8 
@@ -404,7 +404,7 @@ if __name__ == '__main__':
             if bidder in 'NS':
                 return True
             return False
-        if zones[gn] == 'xV':
+        if zones[gn] == 'ØV':
             if bidder in 'NS':
                 return False
             return True
