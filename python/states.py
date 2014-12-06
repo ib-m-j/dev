@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import html.parser
 import sys
-from pypeg2 import *
+#from pypeg2 import *
+import pypeg2
 import re
 import types
 from bridgecore import Strain
@@ -9,29 +10,32 @@ import bridgescore
 
 games = []
 cards = []
+title = []
 
-
-class TagType(Keyword):
-    grammar = Enum( K('end'), K('start'))
-
+class TagType(pypeg2.Keyword):
+    grammar = pypeg2.Enum( pypeg2.K('end'), pypeg2.K('start'))
 
 class CoreActionDef(str):
-    grammar = '(', attr('tagName',word),',',\
-              attr('tagType', TagType),',',\
-              (attr('action', word),\
-               attr('parameter',optional('(',word,')'))),')'
-
-
+    grammar = '(', pypeg2.attr('tagName',pypeg2.word),',',\
+              pypeg2.attr('tagType', TagType),',',\
+              (pypeg2.attr('action', pypeg2.word),\
+               pypeg2.attr('parameter',pypeg2.optional('(',pypeg2.word,')'))),')'
 
 class StateDef(str):
-    grammar = attr('stateName', word),'(',attr('actions',some(CoreActionDef)),')'
+    grammar = pypeg2.attr(
+        'stateName', pypeg2.word),'(',pypeg2.attr(
+            'actions',pypeg2.some(CoreActionDef)),')'
 
+coreActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable))'
 
-coreActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable)(img, start, cardColour))'
+cardActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable)(img, start, cardColour))'
 
-standardState = 'standard ' + coreActionElements
+standardStates = 'standard ' + coreActionElements
+tournamentStates = 'tournament ' + cardActionElements
 
+oneLineStates = 'oneline ' + '((tr, start, newRow)(td, start, newData)(td, end, flushData)(tr, end, flushRowAndExit))'
 
+oneHeaderStates = 'oneline ' + '((tr, start, newRow)(th, start, newData)(th, end, flushData)(tr, end, flushRowAndExit))'
 
 class Action:
     def __init__(self, definition):
@@ -77,7 +81,7 @@ class StatesManager:
             if isinstance(self.currentState, State):
                 self.currentState.start(self)
             else:
-                self.child = StatesManager(parser, self.currentState, self)
+                self.child = StatesManager(self.parser, self.currentState, self)
                 self.child.advance()
         else:
             if self.type == 'tuple':
@@ -123,14 +127,6 @@ class State:
         
 
 
-#    def start(self, mgr):
-#        pripnt("starting state start")
-#        self.mgr = mgr
-#        self.parser.noCallbacks()
-#        self.parser.setCallbacks(self.actions)
-#        self.parser.setDataTarget(self.addData)
-#        self.parser.deActivateData()
-#    
     def checkExists(self, action):
         res = eval('self.'+action.callBack)
         print(res)
@@ -181,6 +177,16 @@ class TableState(State):
         self.rows.append(self.currentRow)
         pass
 
+    def flushRowAndExit(self):
+        self.rows.append(self.currentRow)
+        for r in self.rows:
+            line = ''
+            for d in r:
+                line = line + '{}, '.format(d.value)
+            self.storage.append(line[:-2])
+        self.rows = []
+        self.mgr.advance()
+
     def newData(self, attrs = None):
         #print('got callback data')
         
@@ -222,10 +228,6 @@ class TableState(State):
             #print('adding', data)
             self.currentData.addData(data)
 
-
-
-
-
 class SkipState(State):
 
     def start(self, mgr):
@@ -256,22 +258,23 @@ class SkipState(State):
 gotoTemplate = '{} (({}, start, skip ({})))'
 skipTemplate = '{} (({}, end, skip ({})))'
 
+
 def gotoTableNo(no, parser):
-    res = parse(gotoTemplate.format('gotoTable', 'table', no), StateDef)
+    res = pypeg2.parse(gotoTemplate.format('gotoTable', 'table', no), StateDef)
     
     state =  SkipState(res, parser)
     state.setSkipNo(no)
     return state
 
 def skipRowNo(no, parser):
-    res = parse(skipTemplate.format('skipRow', 'tr', no), StateDef)
+    res = pypeg2.parse(skipTemplate.format('skipRow', 'tr', no), StateDef)
     state = SkipState(res, parser)
     state.setSkipNo(no)
     return state
 
 
 def skipTableNo(no, parser):
-    res = parse(skipTemplate.format('skipTable', 'table', no), StateDef)
+    res = pypeg2.parse(skipTemplate.format('skipTable', 'table', no), StateDef)
     state = SkipState(res, parser)
     state.setCount = no
     return state
@@ -313,7 +316,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
         self.dataActive = None
 
     def handle_starttag(self, tag, attrs):
-        if self.count > 0:
+        if self.count > 0: #testing
             self.count = self.count - 1
             if self.count == 0:
                 sys.exit(0)
@@ -329,43 +332,47 @@ class HTMLParserTableBased(html.parser.HTMLParser):
             self.dataTarget(data.strip())
 
 
+def setIslevSpilResStates():
+    parser = HTMLParserTableBased()
+
+    tournamentActions = pypeg2.parse(tournamentStates, StateDef)
+    gamesResults = TableState(tournamentActions, parser, games)
+    hands = TableState(tournamentActions, parser, cards)
+    oneLineActions = pypeg2.parse(oneLineStates, StateDef)
+    tournamentTitle = TableState(oneLineActions, parser, title)
+    oneHeaderActions = pypeg2.parse(oneHeaderStates, StateDef)
+    gameNo = TableState(oneHeaderActions, parser, games)
+
+
+#    mgr = StatesManager(parser, (gotoTableNo(4, parser), 
+#                                 skipRowNo(1, parser), 
+#                                 [gamesResults,gotoTableNo(1, parser),
+#                                  hands, gotoTableNo(2, parser),
+#                                  skipRowNo(1, parser)]), None)
+#
+#    mgr = StatesManager(parser, (gotoTableNo(0, parser), 
+#                                 tournamentTitle, gotoTableNo(3, parser),
+#                                 skipRowNo(1, parser), 
+#                                 [gamesResults,gotoTableNo(1, parser),
+#                                  hands, gotoTableNo(2, parser),
+#                                  skipRowNo(1, parser)]), None)
+#
+    mgr = StatesManager(parser, (gotoTableNo(0, parser), 
+                                 tournamentTitle, gotoTableNo(0, parser),
+                                 [gotoTableNo(1, parser), gameNo,
+                                  gotoTableNo(0, parser), skipRowNo(1, parser), 
+                                 gamesResults,gotoTableNo(1, parser),
+                                  hands]), None)
+
+
+    return (parser, mgr, games, cards, title)
 
 if __name__ == '__main__':
 
-#    patternDK = re.compile('(?P<bidder>[xVSN]) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) *(?P<dbl>[DR])*')
-#    res = patternDK.match('N 2SP')
-#    print(res.groups())
-#    sys.exit(0)
-
-
-
-    parser = HTMLParserTableBased()
-
-    res = parse(standardState, StateDef)
-
-    gamesResults = TableState(res, parser, games)
-    hands = TableState(res, parser, cards)
-
-
-
-    #mgr = StatesManager(parser, (gotoTableNo(8, parser), gotoTableNo(4, parser)), None)
-    mgr = StatesManager(parser, (gotoTableNo(4, parser), 
-                                 skipRowNo(1, parser), 
-                                 [gamesResults,gotoTableNo(1, parser),
-                                  hands, gotoTableNo(2, parser),
-                                  skipRowNo(1, parser)]), None)
-    #mgr = StatesManager(parser, (gotoTableNo(4, parser), 
-    #                             skipRowNo(1, parser), 
-    #                             gamesResults,gotoTableNo(1,parser),
-    #                             hands, gotoTableNo(2, parser),
-    #                              skipRowNo(1, parser), gamesResults), None)
-    #mgr = StatesManager(parser, [state, state], None)
     inputFile  = open(r"..\data\allresults.html",'r')
     input = inputFile.read()
     inputFile.close()
 
-    #map = str.maketrans('æøåÆØÅ', 'xxxxxx')
-    #res = input.translate(map)
     mgr.advance()
     parser.feed(input)
     for l in games:
@@ -378,7 +385,6 @@ if __name__ == '__main__':
             gameno = int(l.split(',')[0]) - 1
         if n % 12 == 1:
             zones[gameno] = l.split(',')[0][2:]
-            print(gameno, zones[gameno])
         print(l)
         
     for n in zones.keys():

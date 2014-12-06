@@ -29,6 +29,14 @@ class Colour:
         return self.order < other.order
 
     @staticmethod
+    def standardOrder():
+        all = [v for v in Colour.colours.values()]
+        all.sort()
+        return all
+        
+
+
+    @staticmethod
     def fromId(id):
         return Colour.colours[id]
 
@@ -106,6 +114,8 @@ cardValuesInput = [(1,"A",14),
               (13,"K", 13)]
 
 class CardValue:
+    translate = str.maketrans('EBD','AJQ')
+
     def __init__(self, a):
         self.number = a[0]
         self.symbol = a[1]
@@ -117,6 +127,13 @@ class CardValue:
     def __str__(self):
         return self.symbol
 
+    @staticmethod
+    def fromSymbol(s):
+        s1 = s.translate(CardValue.translate)
+        for c in cardValuesInput:
+            if c[1] == s1:
+                return CardValue((c[0], c[1], c[2]))
+    
 
 cardValues = [CardValue(x) for x in cardValuesInput]
 
@@ -145,6 +162,8 @@ class Card:
         return False
 
 class Cards:
+    all = []
+
     def __init__(self, cards):
         self.cards = cards
 
@@ -216,6 +235,66 @@ class Cards:
         self.cards.remove(card)
 
 
+class Deal:
+    
+    def __init__(self):
+        self.dealer = None
+        self.zone = None
+        self.cards = {}
+        self.dealNo = None
+
+    def setDealNo(self, no):
+        self.dealNo = no
+
+    def setDealer(self, dealer):
+        self.dealer = dealer
+        
+    def setZone(self, zone):
+        self.zone = zone
+
+    def addCards(self, hand, colour, cards):
+        
+        if hand in self.cards:
+            self.cards[hand][colour] = cards
+        else:
+            self.cards[hand] = {colour: cards}
+
+    def __str__(self):
+        res = '{} {}/{}:\n'.format(self.dealNo, self.dealer, self.zone)
+        hand = Seat.fromId('N')
+        for x in range (4):
+            res = res + '{}:\n'.format(hand)
+            suits = [c for c in self.cards[hand].keys()]
+            suits.sort(reverse = True)
+            for suit in suits:
+                res = res + '{} {}\n'.format(suit, self.cards[hand][suit])
+            hand = hand.getNext()
+
+        return res
+            
+
+    def hash(self):
+        res = []
+        res.append(self.dealer.order*4 + self.zone.number)
+        for count in range(3):
+            seat = Seat.all[count]
+            for colour in Colour.standardOrder():
+                for card in self.cards[seat][colour]:
+                    res.append(CardValue.fromSymbol(card).number)
+                res.append(0)
+            res = res[:-1]
+
+        if len(res) % 2 == 1:
+            res.append(0)
+        
+        print( res)
+        compact = []
+        for r in range((len(res) // 2)):
+            compact.append(16*res[2*r] + res[2*r+1])
+            print('{:x}'.format(compact[-1]))
+        self.hash = bytes(compact)
+        return self.hash
+
 class Bid:
     pattern = re.compile(
         "(?P<tricks>[1-7])(?P<strain>NT|S|H|D|C)(?P<dbl>[PDR])")
@@ -282,6 +361,20 @@ class Seat:
                 return x
         raise (BaseException("seat not found" + id))
 
+    @staticmethod
+    def fromDKId(id):
+        if id == 'Ø':
+            id = 'E'
+        elif id == 'V':
+            id = 'W'
+
+        for x in Seat.all:
+            if x.id == id:
+                return x
+        raise (BaseException("seat not found" + id))
+
+    
+
 allSeatsInput = [("S",0), ("W",1), ("N",2), ('E',3)]
 for seat in allSeatsInput:
     Seat(seat[0],seat[1])
@@ -289,11 +382,20 @@ for seat in allSeatsInput:
 Seat.all.sort(key = lambda x: x.order)
 
 class Zone:
+    pattern = re.compile("(NONE|NS|EW|ALL)")
+    
     def __init__(self, zoneString):
-        pattern = re.compile("(NONE|NS|EW|ALL)")
-        match = pattern.match(zoneString)
+        match = Zone.pattern.match(zoneString)
         if match:
             self.zone = match.group()
+            if self.zone == 'NONE':
+                self.number = 0
+            elif self.zone == 'NS':
+                self.number = 1
+            elif self.zone == 'EW':
+                self.number = 2
+            elif self.zone == 'ALL':
+                self.number = 3
         else:
             raise (BaseException("zone exception"))
 
@@ -306,6 +408,18 @@ class Zone:
         if self.zone == 'NONE':
             return False
         return seat.id in self.zone
+    
+    @staticmethod
+    def fromDKName(name):
+        if name == 'Ingen':
+            res = Zone('NONE')
+        elif name == 'Alle':
+            res = Zone('ALL')
+        elif name == 'NS':
+            res = Zone('NS')
+        elif name == 'ØV':
+            res = Zone('EW')
+        return res
 
 if __name__ == '__main__':
 #    deck.cards.sort(a)
