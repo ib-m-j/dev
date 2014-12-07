@@ -34,8 +34,6 @@ class Colour:
         all = [v for v in Colour.colours.values()]
         all.sort()
         return all
-        
-
 
     @staticmethod
     def fromId(id):
@@ -135,6 +133,12 @@ class CardValue:
             if c[1] == s1:
                 return CardValue((c[0], c[1], c[2]))
     
+    @staticmethod
+    def fromNumber(s):
+        for c in cardValuesInput:
+            if c[0] == s:
+                return CardValue((c[0], c[1], c[2]))
+        raise (BaseException("bad cardvalue" + c))
 
 cardValues = [CardValue(x) for x in cardValuesInput]
 
@@ -145,6 +149,10 @@ class Card:
 
     def __lt__(self, other):
        return (self.colour,self.value) < (other.colour, other.value)
+
+    def __eq__(self, other):
+        return (self.value.number == other.value.number and 
+        self.colour.id == other.colour.id)
 
     def byNumber(self, other):
         if self.colour < other.colour:
@@ -198,6 +206,9 @@ class Cards:
         for c in self.cards:
             res = res + '{}, '.format(c)
         return res
+
+    def clone(self):
+        return Cards(self.cards.copy())
 
     def shuffle(self):
         l = self.cards
@@ -263,12 +274,18 @@ class Deal:
 
     def addCards(self, hand, colour, cards):
         cardList = [Card(colour, c) for c in cards]
-        cardList.sort(reverse = True, key = functools.cmp_to_key(Card.byNumber))
+        cardList.sort(reverse = True)
         if hand in self.cards:
             self.cards[hand][colour] = cardList
         else:
             self.cards[hand] = {colour: cardList}
 
+    def addWholeCards(self, hand, colour, cards):
+        cards.sort(reverse = True)
+        if hand in self.cards:
+            self.cards[hand][colour] = cards
+        else:
+            self.cards[hand] = {colour: cards}
 
     def __str__(self):
         res = '{} {}/{}:\n'.format(self.dealNo, self.dealer, self.zone)
@@ -278,7 +295,8 @@ class Deal:
             suits = [c for c in self.cards[hand].keys()]
             suits.sort(reverse = True)
             for suit in suits:
-                symbols = ''.join([c.value.symbol for c in self.cards[hand][suit]])
+                symbols = ''.join(
+                    [c.value.symbol for c in self.cards[hand][suit]])
                 res = res + '{} {}\n'.format(suit, symbols)
             hand = hand.getNext()
 
@@ -287,11 +305,15 @@ class Deal:
 
     def hash(self):
         res = []
-        res.append(self.dealer.order*4 + self.zone.number)
+        res.append(self.dealer.order*4 + self.zone.getNumber())
         for count in range(3):
             seat = Seat.all[count]
             for colour in Colour.standardOrder():
-                for card in self.cards[seat][colour]:
+                cardList = self.cards[seat][colour]
+                cL = cardList.copy()
+                cL.sort(
+                reverse = True, key = functools.cmp_to_key(Card.byNumber))
+                for card in cL:
                     res.append(card.value.number)
                 res.append(0)
             res = res[:-1]
@@ -308,39 +330,55 @@ class Deal:
         return self.hash
 
     @staticmethod
-    def dealFromHash(hash):
+    def fromHash(hash):
+        deal = Deal()
         splitHash = []
         for b in hash:
             splitHash.extend([b // 16, b % 16])
-        dealerNo = Seat.fromNumber(splitHash[0] // 16)
-        zoneNo = Zone.fromNumber(splitHash[0] % 16)
-#!!!!!!!!!!!!!!!!!!!!arrived here with dev        
+        deal.setDealer( Seat.fromNumber(splitHash[0] // 4))
+        deal.setZone( Zone.fromNumber(splitHash[0] % 4))
+        deal.setDealNo(0)
+
         cardCount = 0
         currentSeatNo = 0
-        deal = Deal()
         currentColourCount = 0
         colourOrder = Colour.standardOrder()
-        cards = colourOrder[currentColourCount].id + ': '
+        currentColour = colourOrder[currentColourCount%4]
+        cardValues = []
         for n in splitHash[1:]:
             if n != 0 and cardCount != 13:
-                cards = cards + '{} '.format(n)
+                cardValues.append(CardValue.fromNumber(n))
                 cardCount += 1
             else:
-                deal[Seat.all[currentSeatNo]].append(cards)
+                deal.addCards(
+                    Seat.all[currentSeatNo], currentColour, cardValues)
                 currentColourCount += 1
-                cards = colourOrder[currentColourCount%4].id + ': '
+                currentColour = colourOrder[currentColourCount%4]
+                cardValues = []
                 if cardCount == 13:
                     currentSeatNo += 1
-                    deal[Seat.all[currentSeatNo]] =  []
                     if n == 0:
-                        deal[Seat.all[currentSeatNo]].append(cards)
+                        deal.addCards(
+                            Seat.all[currentSeatNo], currentColour, cardValues)
                         currentColourCount += 1
-                        cards = colourOrder[currentColourCount%4].id + ': '
+                        currentColour = colourOrder[currentColourCount%4]
+                        cardValues = []
                         cardCount = 0
                     else:
-                        cards = cards + '{} '.format(n)
+                        cardValues.append(CardValue.fromNumber(n))
                         cardCount = 1
-                    
+
+        allCards = deck.clone()
+        for seat in deal.cards.keys():
+            for colour in deal.cards[seat].keys():
+                for card in deal.cards[seat][colour]:
+                    allCards.removeCard(card)
+        
+        for colour in Colour.standardOrder():
+            cards = allCards.getCardsOfColour(colour)
+            deal.addWholeCards(Seat.all[3],colour, cards)
+
+                
         return deal
                     
 #    def dealFromHash(hash):
@@ -450,7 +488,7 @@ class Seat:
     @staticmethod
     def fromNumber(no):
         for x in Seat.all:
-            if x.no == no:
+            if x.order == no:
                 return x
         raise (BaseException("seat not found" + id))
 

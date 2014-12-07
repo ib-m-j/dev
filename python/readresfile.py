@@ -163,27 +163,29 @@ def testReadIslev1():
     res = ''
     for b in allDeals[n].hash():
         res = res + '\\x{:x}'.format(b)
+    print("now game 30")
     print(res)
 
     print(allDeals[n])
 
-    res = allDeals[n].dealFromHash()
-    for k in res.keys():
-        print(k)
-        print(res[k])
+    res = bridgecore.Deal.fromHash(allDeals[n].hash)
+    print(res)
+    print('deck',bridgecore.deck)
 
-#    connect = sqlite3.connect('test.db')
-#    cur = connect.cursor()
-#    cur.execute('insert into deals values(?,?)', (
-#        allDeals[n].hash, pickle.dumps(allDeals[n])))
+    connect = sqlite3.connect('..\\database\\tournament.db')
+    cur = connect.cursor()
+    #cur.execute('insert into deals values(?,?)', (
+    #    allDeals[n].hash, allDeals[n].__str__()))
 
-#    cur.execute('select * from deals')
-#    (h, d) = cur.fetchone()
-#    deal = pickle.loads(d)
-#    print('unpickled', deal)
-#    connect.commit()
-#    connect.close()
-#    
+    cur.execute('select * from deals')
+    (h, d) = cur.fetchone()
+    connect.commit()
+    connect.close()
+    print('unpickled')
+    print("hash: \n",h)
+    print("fromhash: \n",bridgecore.Deal.fromHash(h))
+    print("stored string: \n", d)
+    
     
 
         
