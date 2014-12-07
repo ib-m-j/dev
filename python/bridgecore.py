@@ -307,13 +307,17 @@ class Deal:
         self.hash = bytes(compact)
         return self.hash
 
-    def dealFromHash(self):
+    @staticmethod
+    def dealFromHash(hash):
         splitHash = []
-        for b in self.hash:
+        for b in hash:
             splitHash.extend([b // 16, b % 16])
+        dealerNo = Seat.fromNumber(splitHash[0] // 16)
+        zoneNo = Zone.fromNumber(splitHash[0] % 16)
+#!!!!!!!!!!!!!!!!!!!!arrived here with dev        
         cardCount = 0
         currentSeatNo = 0
-        deal = {Seat.all[currentSeatNo]: []}
+        deal = Deal()
         currentColourCount = 0
         colourOrder = Colour.standardOrder()
         cards = colourOrder[currentColourCount].id + ': '
@@ -339,6 +343,38 @@ class Deal:
                     
         return deal
                     
+#    def dealFromHash(hash):
+#        splitHash = []
+#        for b in hash:
+#            splitHash.extend([b // 16, b % 16])
+#        cardCount = 0
+#        currentSeatNo = 0
+#        deal = {Seat.all[currentSeatNo]: []}
+#        currentColourCount = 0
+#        colourOrder = Colour.standardOrder()
+#        cards = colourOrder[currentColourCount].id + ': '
+#        for n in splitHash[1:]:
+#            if n != 0 and cardCount != 13:
+#                cards = cards + '{} '.format(n)
+#                cardCount += 1
+#            else:
+#                deal[Seat.all[currentSeatNo]].append(cards)
+#                currentColourCount += 1
+#                cards = colourOrder[currentColourCount%4].id + ': '
+#                if cardCount == 13:
+#                    currentSeatNo += 1
+#                    deal[Seat.all[currentSeatNo]] =  []
+#                    if n == 0:
+#                        deal[Seat.all[currentSeatNo]].append(cards)
+#                        currentColourCount += 1
+#                        cards = colourOrder[currentColourCount%4].id + ': '
+#                        cardCount = 0
+#                    else:
+#                        cards = cards + '{} '.format(n)
+#                        cardCount = 1
+#                    
+#        return deal
+#                    
                 
                 
                 
@@ -402,11 +438,19 @@ class Seat:
         else:
             return "EW"
 
+    
 
     @staticmethod
     def fromId(id):
         for x in Seat.all:
             if x.id == id:
+                return x
+        raise (BaseException("seat not found" + id))
+
+    @staticmethod
+    def fromNumber(no):
+        for x in Seat.all:
+            if x.no == no:
                 return x
         raise (BaseException("seat not found" + id))
 
@@ -432,19 +476,12 @@ Seat.all.sort(key = lambda x: x.order)
 
 class Zone:
     pattern = re.compile("(NONE|NS|EW|ALL)")
+    all ={0:'NONE', 1:'NS', 2:'EW',3:'ALL'}
     
     def __init__(self, zoneString):
         match = Zone.pattern.match(zoneString)
         if match:
             self.zone = match.group()
-            if self.zone == 'NONE':
-                self.number = 0
-            elif self.zone == 'NS':
-                self.number = 1
-            elif self.zone == 'EW':
-                self.number = 2
-            elif self.zone == 'ALL':
-                self.number = 3
         else:
             raise (BaseException("zone exception"))
 
@@ -469,6 +506,21 @@ class Zone:
         elif name == 'ØV':
             res = Zone('EW')
         return res
+
+    def getNumber(self):
+        for (x,v) in Zone.all.items():
+            if v == self.zone:
+                return x
+            
+        raise (BaseException("zone exception"))
+
+    @staticmethod
+    def fromNumber(x):
+        if x in Zone.all.keys():
+            return Zone.all[x]
+        
+        raise (BaseException("zone exception"))
+    
 
 if __name__ == '__main__':
 #    deck.cards.sort(a)
