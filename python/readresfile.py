@@ -3,6 +3,8 @@ import states
 import re
 import bridgecore 
 import bridgescore
+import pickle
+import sqlite3
 
 allDeals = {}
 
@@ -169,6 +171,19 @@ def testReadIslev1():
     for k in res.keys():
         print(k)
         print(res[k])
+
+#    connect = sqlite3.connect('test.db')
+#    cur = connect.cursor()
+#    cur.execute('insert into deals values(?,?)', (
+#        allDeals[n].hash, pickle.dumps(allDeals[n])))
+
+#    cur.execute('select * from deals')
+#    (h, d) = cur.fetchone()
+#    deal = pickle.loads(d)
+#    print('unpickled', deal)
+#    connect.commit()
+#    connect.close()
+#    
     
 
         
