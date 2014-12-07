@@ -18,7 +18,7 @@ def makeDeals(cards):
             currentDeal.addCards(
                 bridgecore.Seat.fromId('N'),
                 bridgecore.Colour.fromId(cardElements[1]),
-                cardElements[2])
+                [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
         elif n % 12 == 1:
             parts = cardElements[0].split('/')
             currentDeal.setDealer(bridgecore.Seat.fromDKId(parts[0]))
@@ -26,32 +26,32 @@ def makeDeals(cards):
             currentDeal.addCards(
                 bridgecore.Seat.fromId('N'),
                 bridgecore.Colour.fromId(cardElements[1]),
-                cardElements[2])
+                [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
         elif n % 12 == 2 or n % 12 == 3:
             currentDeal.addCards(
                 bridgecore.Seat.fromId('N'),
                 bridgecore.Colour.fromId(cardElements[1]),
-                cardElements[2])
+                [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
         elif 4 <= n%12 and n % 12 < 8:
             currentDeal.addCards(
                 bridgecore.Seat.fromId('W'),
                 bridgecore.Colour.fromId(cardElements[0]),
-                cardElements[1])
+                [bridgecore.CardValue.fromSymbol(c) for c in cardElements[1]])
             if n%12 == 4:
                 currentDeal.addCards(
                     bridgecore.Seat.fromId('E'),
                     bridgecore.Colour.fromId(cardElements[3]),
-                    cardElements[4])
+                    [bridgecore.CardValue.fromSymbol(c) for c in cardElements[4]])
             else:
                 currentDeal.addCards(
                     bridgecore.Seat.fromId('E'),
                     bridgecore.Colour.fromId(cardElements[2]),
-                    cardElements[3])
+                    [bridgecore.CardValue.fromSymbol(c) for c in cardElements[3]])
         elif n%12 < 12:
             currentDeal.addCards(
                 bridgecore.Seat.fromId('S'),
                 bridgecore.Colour.fromId(cardElements[1]),
-                cardElements[2])
+                [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
     
 
 
@@ -162,6 +162,15 @@ def testReadIslev1():
     for b in allDeals[n].hash():
         res = res + '\\x{:x}'.format(b)
     print(res)
+
+    print(allDeals[n])
+
+    res = allDeals[n].dealFromHash()
+    for k in res.keys():
+        print(k)
+        print(res[k])
+    
+
         
 if __name__ == '__main__':
     testReadIslev1()

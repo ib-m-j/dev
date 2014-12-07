@@ -4,6 +4,7 @@
 import collections
 import random
 import re
+import functools
 
 coloursInput = [("Spades", "S", u"\x50", 4),
                 ("Hearts", "H", u"\x50", 3),
@@ -145,6 +146,14 @@ class Card:
     def __lt__(self, other):
        return (self.colour,self.value) < (other.colour, other.value)
 
+    def byNumber(self, other):
+        if self.colour < other.colour:
+            return -1
+        elif self.colour == other.colour:
+            return self.value.number - other.value.number
+        else:
+            return +1
+            
     def sameColour(self,other):
         self.colour == other.colour
 
@@ -253,11 +262,13 @@ class Deal:
         self.zone = zone
 
     def addCards(self, hand, colour, cards):
-        
+        cardList = [Card(colour, c) for c in cards]
+        cardList.sort(reverse = True, key = functools.cmp_to_key(Card.byNumber))
         if hand in self.cards:
-            self.cards[hand][colour] = cards
+            self.cards[hand][colour] = cardList
         else:
-            self.cards[hand] = {colour: cards}
+            self.cards[hand] = {colour: cardList}
+
 
     def __str__(self):
         res = '{} {}/{}:\n'.format(self.dealNo, self.dealer, self.zone)
@@ -267,7 +278,8 @@ class Deal:
             suits = [c for c in self.cards[hand].keys()]
             suits.sort(reverse = True)
             for suit in suits:
-                res = res + '{} {}\n'.format(suit, self.cards[hand][suit])
+                symbols = ''.join([c.value.symbol for c in self.cards[hand][suit]])
+                res = res + '{} {}\n'.format(suit, symbols)
             hand = hand.getNext()
 
         return res
@@ -280,7 +292,7 @@ class Deal:
             seat = Seat.all[count]
             for colour in Colour.standardOrder():
                 for card in self.cards[seat][colour]:
-                    res.append(CardValue.fromSymbol(card).number)
+                    res.append(card.value.number)
                 res.append(0)
             res = res[:-1]
 
@@ -294,6 +306,43 @@ class Deal:
             print('{:x}'.format(compact[-1]))
         self.hash = bytes(compact)
         return self.hash
+
+    def dealFromHash(self):
+        splitHash = []
+        for b in self.hash:
+            splitHash.extend([b // 16, b % 16])
+        cardCount = 0
+        currentSeatNo = 0
+        deal = {Seat.all[currentSeatNo]: []}
+        currentColourCount = 0
+        colourOrder = Colour.standardOrder()
+        cards = colourOrder[currentColourCount].id + ': '
+        for n in splitHash[1:]:
+            if n != 0 and cardCount != 13:
+                cards = cards + '{} '.format(n)
+                cardCount += 1
+            else:
+                deal[Seat.all[currentSeatNo]].append(cards)
+                currentColourCount += 1
+                cards = colourOrder[currentColourCount%4].id + ': '
+                if cardCount == 13:
+                    currentSeatNo += 1
+                    deal[Seat.all[currentSeatNo]] =  []
+                    if n == 0:
+                        deal[Seat.all[currentSeatNo]].append(cards)
+                        currentColourCount += 1
+                        cards = colourOrder[currentColourCount%4].id + ': '
+                        cardCount = 0
+                    else:
+                        cards = cards + '{} '.format(n)
+                        cardCount = 1
+                    
+        return deal
+                    
+                
+                
+                
+            
 
 class Bid:
     pattern = re.compile(
