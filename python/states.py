@@ -37,6 +37,8 @@ oneLineStates = 'oneline ' + '((tr, start, newRow)(td, start, newData)(td, end, 
 
 oneHeaderStates = 'oneline ' + '((tr, start, newRow)(th, start, newData)(th, end, flushData)(tr, end, flushRowAndExit))'
 
+titleStates = 'title' + '((head, start, newRow) (head, end, flushRowAndExit) (title, start, newData) (title, end, flushData))'
+
 class Action:
     def __init__(self, definition):
         self.tag = definition.tagName
@@ -332,7 +334,7 @@ class HTMLParserTableBased(html.parser.HTMLParser):
             self.dataTarget(data.strip())
 
 
-def setIslevSpilResStates():
+def setIslevPairResStates():
     parser = HTMLParserTableBased()
 
     tournamentActions = pypeg2.parse(tournamentStates, StateDef)
@@ -342,22 +344,10 @@ def setIslevSpilResStates():
     tournamentTitle = TableState(oneLineActions, parser, title)
     oneHeaderActions = pypeg2.parse(oneHeaderStates, StateDef)
     gameNo = TableState(oneHeaderActions, parser, games)
+    titleActions = pypeg2.parse(titleStates, StateDef)
+    clubName = TableState(titleActions, parser, title)
 
-
-#    mgr = StatesManager(parser, (gotoTableNo(4, parser), 
-#                                 skipRowNo(1, parser), 
-#                                 [gamesResults,gotoTableNo(1, parser),
-#                                  hands, gotoTableNo(2, parser),
-#                                  skipRowNo(1, parser)]), None)
-#
-#    mgr = StatesManager(parser, (gotoTableNo(0, parser), 
-#                                 tournamentTitle, gotoTableNo(3, parser),
-#                                 skipRowNo(1, parser), 
-#                                 [gamesResults,gotoTableNo(1, parser),
-#                                  hands, gotoTableNo(2, parser),
-#                                  skipRowNo(1, parser)]), None)
-#
-    mgr = StatesManager(parser, (gotoTableNo(0, parser), 
+    mgr = StatesManager(parser, (clubName, gotoTableNo(0, parser), 
                                  tournamentTitle, gotoTableNo(0, parser),
                                  [gotoTableNo(1, parser), gameNo,
                                   gotoTableNo(0, parser), skipRowNo(1, parser), 

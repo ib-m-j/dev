@@ -56,9 +56,24 @@ def makeDeals(cards):
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
     
 
+def basicIslevPairs():
+    (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
+    inputFile  = open(r"..\data\allresults.html",'r')
+    input = inputFile.read()
+    inputFile.close()
 
-def testReadIslev1():
-    (parser,statesManager, games, cards, title) = states.setIslevSpilResStates()
+    statesManager.advance()
+    parser.feed(input)
+    for l in title:
+        print( l)
+    for l in games:
+        print(l)
+    for l in cards:
+        print( l)
+
+
+def largeIslevPairs():
+    (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
     inputFile  = open(r"..\data\allresults.html",'r')
     input = inputFile.read()
     inputFile.close()
@@ -190,4 +205,5 @@ def testReadIslev1():
 
         
 if __name__ == '__main__':
-    testReadIslev1()
+    #largeIslevPairs()
+    basicIslevPairs()
