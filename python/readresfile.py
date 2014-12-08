@@ -5,12 +5,18 @@ import bridgecore
 import bridgescore
 import pickle
 import sqlite3
+import datetime
+import locale
 
 allDeals = {}
 
 def makeDeals(cards):
     for (n,l) in enumerate(cards):
-        print(l)
+        #print(l)
+        if n >= 12*(len(cards) //12):
+            print('breaking', n, len(cards))
+            break
+
         cardElements = [x.strip() for x in l.split(',')]
 
         if n % 12 == 0:
@@ -55,21 +61,6 @@ def makeDeals(cards):
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
     
-
-def basicIslevPairs():
-    (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
-    inputFile  = open(r"..\data\allresults.html",'r')
-    input = inputFile.read()
-    inputFile.close()
-
-    statesManager.advance()
-    parser.feed(input)
-    for l in title:
-        print( l)
-    for l in games:
-        print(l)
-    for l in cards:
-        print( l)
 
 
 def largeIslevPairs():
@@ -201,9 +192,88 @@ def largeIslevPairs():
     print("fromhash: \n",bridgecore.Deal.fromHash(h))
     print("stored string: \n", d)
     
+
+def searchTournamentType(text):
+    pairTexts = 'par|pair'
+    teamTexts = 'hold|team'
+    pairSearcher = re.compile(pairTexts, re.IGNORECASE)
+    teamSearcher = re.compile(teamTexts, re.IGNORECASE)
+    if pairSearcher.search(text):
+        return 'PAIR'
+    elif teamSearcher.search(text):
+        return 'TEAM'
+    raise BaseException("no tournament type fouond")
     
+def parseIslevTitle(title):
+    elements = title.split(',')
+    tournamentName = elements[0].strip()
+    tournamentType = searchTournamentType(tournamentName)
+    date = elements[1].strip()
+    section = elements[2].strip()
+    bracket = elements[3].strip()
+    print(tournamentName)
+    print(tournamentType)
+    print(date)
+    print(section)
+    print(bracket)
+
+def basicIslevPairs():
+    (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
+    inputFile  = open(r"..\data\allresults.html",'r')
+    input = inputFile.read()
+    inputFile.close()
+
+    statesManager.advance()
+    parser.feed(input)
+    for l in title:
+        print( l)
+    parseIslevTitle(title[1])
+    #for l in games:
+    #    print(l)
+    #for l in cards:
+    #    print( l)
+
+def basicIslevTeams():
+    (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
+    inputFile  = open(r"..\data\mellemrundehold.http",'r')
+    input = inputFile.read()
+    inputFile.close()
+
+    statesManager.advance()
+    parser.feed(input)
+    for n,l in enumerate(title):
+        print(n, l)
+    parseIslevTitle(title[1])
+    for n,l in enumerate(games):
+        print(l.strip())
+        res = ''
+        #for c in l.strip():
+        #    res = res +'{}.'.format(c)
+        print(res)
+    for l in cards:
+        print( l)
+
+    makeDeals(cards)
+
+    keys = [x for x in allDeals.keys()]
+    keys.sort()
+
+    for n in keys:
+        print(allDeals[n])
+    
+    
+
+
 
         
 if __name__ == '__main__':
+    #print(locale.getlocale())
+    #locale.setlocale(locale.LC_ALL, 'da_dk')
     #largeIslevPairs()
-    basicIslevPairs()
+    basicIslevTeams()
+    #basicIslevPairs()
+    
+    #dateString = '25. oktober 2014'
+    #print(dateString)
+    #date = datetime.datetime.strptime(dateString,'%d. %B %Y')
+    #print(date.year, date.month, date.day)

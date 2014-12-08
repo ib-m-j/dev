@@ -32,7 +32,7 @@ cardActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newDa
 
 oneLineStates = 'oneline ' + '((tr, start, newRow)(td, start, newData)(td, end, flushData)(tr, end, flushRowAndExit))'
 
-oneHeaderStates = 'oneline ' + '((tr, start, newRow)(th, start, newData)(th, end, flushData)(tr, end, flushRowAndExit))'
+oneHeaderStates = 'oneline ' + '((tr, start, newRow)(th, start, newData)(th, end, flushData)(td, start, newData)(td, end, flushData)(tr, end, flushRowAndExit))'
 
 titleStates = 'title' + '((head, start, newRow) (head, end, flushRowAndExit) (title, start, newData) (title, end, flushData))'
 
@@ -88,6 +88,7 @@ class StatesManager:
             self.type = 'tuple'
 
     def advance(self):
+        #print(self.remainingStates)
         if len(self.remainingStates) > 0:
             self.currentState = self.remainingStates[0]
             self.remainingStates = self.remainingStates[1:]
@@ -142,7 +143,7 @@ class State:
 
     def checkExists(self, action):
         res = eval('self.'+action.callBack)
-        print(res)
+        #print(res)
         return res
                
 
@@ -191,6 +192,7 @@ class TableState(State):
         pass
 
     def flushRowAndExit(self):
+        #print('got flushrow and exit')
         self.rows.append(self.currentRow)
         for r in self.rows:
             line = ''
@@ -214,6 +216,7 @@ class TableState(State):
         pass
 
     def flushData(self):
+        #print('got flush data')
         self.currentRow.append(self.currentData)
         #res = ''
         #for d in self.currentRow:
@@ -346,11 +349,14 @@ class HTMLParserTableBased(html.parser.HTMLParser):
 
 
 def setIslevPairResStates():
+    games = []
+    cards = []
+    title = []
     parser = HTMLParserTableBased()
 
     gamesResults = TableState(tournamentActions, parser, games)
     hands = TableState(tournamentActions, parser, cards)
-    tournamentTitle = TableState(oneLineActions, parser, title)
+    tournamentTitle = TableState(oneHeaderActions, parser, title)
     gameNo = TableState(oneHeaderActions, parser, games)
     clubName = TableState(titleActions, parser, title)
 
@@ -360,6 +366,28 @@ def setIslevPairResStates():
                                   gotoTableNo(0, parser), skipRowNo(1, parser), 
                                  gamesResults,gotoTableNo(1, parser),
                                   hands]), None)
+
+
+    return (parser, mgr, games, cards, title)
+
+
+def setIslevTeamResStates():
+    games = []
+    cards = []
+    title = []
+    parser = HTMLParserTableBased()
+
+    gamesResults = TableState(tournamentActions, parser, games)
+    hands = TableState(tournamentActions, parser, cards)
+    tournamentTitle = TableState(oneHeaderActions, parser, title)
+    gameNo = TableState(oneHeaderActions, parser, games)
+    clubName = TableState(titleActions, parser, title)
+
+    mgr = StatesManager(parser, (
+        clubName, gotoTableNo(0, parser), tournamentTitle, 
+        gotoTableNo(6, parser),gotoTableNo(0,parser), 
+        [hands, gotoTableNo(0, parser), skipRowNo(0,parser), gamesResults,
+         gotoTableNo(0,parser)]), None)
 
 
     return (parser, mgr, games, cards, title)
