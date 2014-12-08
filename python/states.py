@@ -30,14 +30,25 @@ coreActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newDa
 
 cardActionElements = '((tr, start, newRow)( tr, end, flushRow)( td, start, newData) ( td, end, flushData)( table, end, flushTable)(img, start, cardColour))'
 
-standardStates = 'standard ' + coreActionElements
-tournamentStates = 'tournament ' + cardActionElements
-
 oneLineStates = 'oneline ' + '((tr, start, newRow)(td, start, newData)(td, end, flushData)(tr, end, flushRowAndExit))'
 
 oneHeaderStates = 'oneline ' + '((tr, start, newRow)(th, start, newData)(th, end, flushData)(tr, end, flushRowAndExit))'
 
 titleStates = 'title' + '((head, start, newRow) (head, end, flushRowAndExit) (title, start, newData) (title, end, flushData))'
+
+#standardStates = 'standard ' + coreActionElements
+tournamentStates = 'tournament ' + cardActionElements
+
+#list of parserdefined statedefinitions to be used
+tournamentActions = pypeg2.parse(tournamentStates, StateDef)
+oneLineActions = pypeg2.parse(oneLineStates, StateDef)
+oneHeaderActions = pypeg2.parse(oneHeaderStates, StateDef)
+titleActions = pypeg2.parse(titleStates, StateDef)
+
+
+
+
+
 
 class Action:
     def __init__(self, definition):
@@ -337,14 +348,10 @@ class HTMLParserTableBased(html.parser.HTMLParser):
 def setIslevPairResStates():
     parser = HTMLParserTableBased()
 
-    tournamentActions = pypeg2.parse(tournamentStates, StateDef)
     gamesResults = TableState(tournamentActions, parser, games)
     hands = TableState(tournamentActions, parser, cards)
-    oneLineActions = pypeg2.parse(oneLineStates, StateDef)
     tournamentTitle = TableState(oneLineActions, parser, title)
-    oneHeaderActions = pypeg2.parse(oneHeaderStates, StateDef)
     gameNo = TableState(oneHeaderActions, parser, games)
-    titleActions = pypeg2.parse(titleStates, StateDef)
     clubName = TableState(titleActions, parser, title)
 
     mgr = StatesManager(parser, (clubName, gotoTableNo(0, parser), 
