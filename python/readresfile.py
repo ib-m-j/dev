@@ -23,7 +23,7 @@ def makeDeals(cards):
             currentDeal = bridgecore.Deal()
             currentDeal.setDealNo(cardElements[0])
             allDeals[int(currentDeal.dealNo)] = currentDeal
-            currentDeal.addCards(
+            currentDeal.addSuit(
                 bridgecore.Seat.fromId('N'),
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
@@ -31,32 +31,32 @@ def makeDeals(cards):
             parts = cardElements[0].split('/')
             currentDeal.setDealer(bridgecore.Seat.fromDKId(parts[0]))
             currentDeal.setZone(bridgecore.Zone.fromDKName(parts[1]))
-            currentDeal.addCards(
+            currentDeal.addSuit(
                 bridgecore.Seat.fromId('N'),
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
         elif n % 12 == 2 or n % 12 == 3:
-            currentDeal.addCards(
+            currentDeal.addSuit(
                 bridgecore.Seat.fromId('N'),
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
         elif 4 <= n%12 and n % 12 < 8:
-            currentDeal.addCards(
+            currentDeal.addSuit(
                 bridgecore.Seat.fromId('W'),
                 bridgecore.Colour.fromId(cardElements[0]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[1]])
             if n%12 == 4:
-                currentDeal.addCards(
+                currentDeal.addSuit(
                     bridgecore.Seat.fromId('E'),
                     bridgecore.Colour.fromId(cardElements[3]),
                     [bridgecore.CardValue.fromSymbol(c) for c in cardElements[4]])
             else:
-                currentDeal.addCards(
+                currentDeal.addSuit(
                     bridgecore.Seat.fromId('E'),
                     bridgecore.Colour.fromId(cardElements[2]),
                     [bridgecore.CardValue.fromSymbol(c) for c in cardElements[3]])
         elif n%12 < 12:
-            currentDeal.addCards(
+            currentDeal.addSuit(
                 bridgecore.Seat.fromId('S'),
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
@@ -176,21 +176,18 @@ def largeIslevPairs():
 
     res = bridgecore.Deal.fromHash(allDeals[n].hash)
     print(res)
-    print('deck',bridgecore.deck)
 
-    connect = sqlite3.connect('..\\database\\tournament.db')
-    cur = connect.cursor()
+    #connect = sqlite3.connect('..\\database\\tournament.db')
+    #cur = connect.cursor()
     #cur.execute('insert into deals values(?,?)', (
     #    allDeals[n].hash, allDeals[n].__str__()))
 
-    cur.execute('select * from deals')
-    (h, d) = cur.fetchone()
-    connect.commit()
-    connect.close()
-    print('unpickled')
-    print("hash: \n",h)
-    print("fromhash: \n",bridgecore.Deal.fromHash(h))
-    print("stored string: \n", d)
+    #cur.execute('select * from deals')
+    #(h, d) = cur.fetchone()
+    #connect.commit()
+    #connect.close()
+    #print("fromhash: \n",bridgecore.Deal.fromHash(h))
+    #print("stored string: \n", d)
     
 
 def searchTournamentType(text):
@@ -269,8 +266,8 @@ def basicIslevTeams():
 if __name__ == '__main__':
     #print(locale.getlocale())
     #locale.setlocale(locale.LC_ALL, 'da_dk')
-    #largeIslevPairs()
-    basicIslevTeams()
+    largeIslevPairs()
+    #basicIslevTeams()
     #basicIslevPairs()
     
     #dateString = '25. oktober 2014'
