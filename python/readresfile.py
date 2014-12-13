@@ -214,27 +214,28 @@ def parseIslevTitle(title):
     print(section)
     print(bracket)
 
-def basicIslevPairs():
+def basicIslevPairs(input):
     (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
-    inputFile  = open(r"..\data\allresults.html",'r')
-    input = inputFile.read()
-    inputFile.close()
+    #inputFile  = open(r"..\data\allresults.html",'r')
+    #input = inputFile.read()
+    #inputFile.close()
 
+    print("doing pairs")
     statesManager.advance()
     parser.feed(input)
-    for l in title:
-        print( l)
-    parseIslevTitle(title[1])
-    #for l in games:
-    #    print(l)
+    #for l in title:
+    #    print( l)
+    #parseIslevTitle(title[1])
+    for l in games:
+        print(l)
     #for l in cards:
     #    print( l)
 
-def basicIslevTeams():
+def basicIslevTeams(input):
     (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
-    inputFile  = open(r"..\data\mellemrundehold.http",'r')
-    input = inputFile.read()
-    inputFile.close()
+    #inputFile  = open(r"..\data\mellemrundehold.http",'r')
+    #input = inputFile.read()
+    #inputFile.close()
 
     statesManager.advance()
     parser.feed(input)
@@ -242,21 +243,22 @@ def basicIslevTeams():
         print(n, l)
     parseIslevTitle(title[1])
     for n,l in enumerate(games):
-        print(l.strip())
+        #print(l.strip())
         res = ''
         #for c in l.strip():
         #    res = res +'{}.'.format(c)
-        print(res)
+        #print(res)
     for l in cards:
-        print( l)
+        pass
+        #print( l)
 
     makeDeals(cards)
 
     keys = [x for x in allDeals.keys()]
     keys.sort()
 
-    for n in keys:
-        print(allDeals[n])
+    #for n in keys:
+    #    print(allDeals[n])
     
     
 

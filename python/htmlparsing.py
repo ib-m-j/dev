@@ -105,9 +105,6 @@ class HTMLParserTableAnalysis(html.parser.HTMLParser):
             HTMLParserTableAnalysis.level = HTMLParserTableAnalysis.level -1
             
 
-
-
-
 class HTMLParserTableBased(html.parser.HTMLParser):
     level = 0
     lastTag = ''
