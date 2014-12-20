@@ -207,12 +207,12 @@ def parseIslevTitle(title):
     tournamentType = searchTournamentType(tournamentName)
     date = elements[1].strip()
     section = elements[2].strip()
-    bracket = elements[3].strip()
+    #bracket = elements[3].strip() not always there
     print(tournamentName)
     print(tournamentType)
     print(date)
     print(section)
-    print(bracket)
+    #print(bracket)
 
 def basicIslevPairs(input):
     (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
@@ -222,14 +222,18 @@ def basicIslevPairs(input):
 
     print("doing pairs")
     statesManager.advance()
-    parser.feed(input)
-    #for l in title:
-    #    print( l)
-    #parseIslevTitle(title[1])
-    for l in games:
-        print(l)
-    #for l in cards:
-    #    print( l)
+    try:
+        parser.feed(input)
+        parseIslevTitle(title[1])
+    except:
+        print('could not read file')
+    else:
+        print('games')
+        for l in games:
+            print(l)
+        print('cards')
+        for l in cards:
+            print( l)
 
 def basicIslevTeams(input):
     (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
@@ -238,24 +242,27 @@ def basicIslevTeams(input):
     #inputFile.close()
 
     statesManager.advance()
-    parser.feed(input)
-    for n,l in enumerate(title):
-        print(n, l)
-    parseIslevTitle(title[1])
-    for n,l in enumerate(games):
-        #print(l.strip())
-        res = ''
-        #for c in l.strip():
-        #    res = res +'{}.'.format(c)
-        #print(res)
-    for l in cards:
-        pass
-        #print( l)
+    try:
+        parser.feed(input)
+    except:
+        print('could not read file')
+    else:
+        parseIslevTitle(title[1])
+        for n,l in enumerate(games):
+            #print(l.strip())
+            res = ''
+            #for c in l.strip():
+            #    res = res +'{}.'.format(c)
+            #print(res)
+        for l in games:
+            print(l)
+        for l in cards:
+            print( l)
 
-    makeDeals(cards)
+        makeDeals(cards)
 
-    keys = [x for x in allDeals.keys()]
-    keys.sort()
+        keys = [x for x in allDeals.keys()]
+        keys.sort()
 
     #for n in keys:
     #    print(allDeals[n])

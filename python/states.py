@@ -197,7 +197,8 @@ class TableState(State):
         for r in self.rows:
             line = ''
             for d in r:
-                line = line + '{}, '.format(d.value)
+                if d:
+                    line = line + '{}, '.format(d.value)
             self.storage.append(line[:-2])
         self.rows = []
         self.mgr.advance()

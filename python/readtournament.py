@@ -31,6 +31,7 @@ class Crawler:
         r1 = self.connection.getresponse()
         #print(r1.status, r1.reason)
         data = codecs.decode(r1.read(),'latin-1')
+        self.connection.close()
         return data
         
     def search(self):
@@ -114,7 +115,9 @@ def getAllFiles():
         conn, "/Resultat/Klub1/KlubTurn.html", resultlink).search()
     #print('found ',len(resultFiles), 'resultFiles')
     resultFiles.sort()
-    resLinks = resultFiles[35:45]
+    #for f in resultFiles[0:100]:
+    #    print(f)
+    resLinks = resultFiles[100:110]
     return resLinks
 
     #tree = []
@@ -156,15 +159,17 @@ def readLog():
     print(len(record))
     for rec in files:
         print(rec)
-                        
-    
-if __name__ == '__main__':
-    #res = readOneTournament(
-    #    'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1042.html')
-    #print(res)
-    
+
+def oneTournament():
+    res = readOneTournament(
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1041.html')
+    print(res)
+            
+
+def largeTest():
     all = getAllFiles()
     for url in all:
+        print(url)
         res = readOneTournament(
             'islevbridge.dk',url)
         #print(res)
@@ -179,7 +184,40 @@ if __name__ == '__main__':
                 readresfile.basicIslevTeams(
                     Crawler.fromServerUrl(
                         'islevbridge.dk',file).getFileContent())
+
+ 
+def onePairTournament():
+    res = readOneTournament('islevbridge.dk',
+                            '/Resultat/Klub1/Turneringer/Resultat1034.html')
+    print(res)
+    if res[0] == 'pair':
+        for file in res[1]:
+            readresfile.basicIslevPairs(
+                Crawler.fromServerUrl(
+                    'islevbridge.dk',file).getFileContent())
+
+def oneTeamTournament():
+    res = readOneTournament('islevbridge.dk',
+                            '/Resultat/Klub1/Turneringer/Resultat1042.html')
+    print(res)
+    if res[0] == 'pair':
+        for file in res[1]:
+            readresfile.basicIslevPairs(
+                Crawler.fromServerUrl(
+                    'islevbridge.dk',file).getFileContent())
+
+    elif res[0] == 'team':
+        for file in res[1]:
+            readresfile.basicIslevTeams(
+                Crawler.fromServerUrl(
+                    'islevbridge.dk',file).getFileContent())
+   
+if __name__ == '__main__':
+    #largeTest()
+    #oneTournament()
+    #onePairTournament()
+    oneTeamTournament()
                 
-        conn.close()
+  
 
 
