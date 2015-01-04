@@ -8,9 +8,9 @@ import sqlite3
 import datetime
 import locale
 
-allDeals = {}
 
 def makeDeals(cards):
+    allDeals = {}
     for (n,l) in enumerate(cards):
         #print(l)
         if n >= 12*(len(cards) //12):
@@ -60,7 +60,8 @@ def makeDeals(cards):
                 bridgecore.Seat.fromId('S'),
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
-    
+
+    return allDeals
 
 
 def largeIslevPairs():
@@ -259,7 +260,7 @@ def basicIslevTeams(input):
         for l in cards:
             print( l)
 
-        makeDeals(cards)
+        allDeals = makeDeals(cards)
 
         keys = [x for x in allDeals.keys()]
         keys.sort()
