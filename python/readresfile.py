@@ -7,6 +7,7 @@ import pickle
 import sqlite3
 import datetime
 import locale
+import tournament
 
 allDeals = {}
 
@@ -247,17 +248,31 @@ def basicIslevTeams(input):
     except:
         print('could not read file')
     else:
-        parseIslevTitle(title[1])
-        for n,l in enumerate(games):
-            #print(l.strip())
-            res = ''
-            #for c in l.strip():
-            #    res = res +'{}.'.format(c)
-            #print(res)
-        for l in games:
-            print(l)
-        for l in cards:
-            print( l)
+        #parseIslevTitle(title[1]) to many changes to thi8s string no parse yet
+        print('title', title)
+        #title = title[1]
+        t = tournament.Tournament()
+        for (n,l) in enumerate(games):
+            if n % 2 == 0:
+                play1Elements = [x.strip() for x in l.split(',')]
+                dealNo = playElements1[0]
+                teamNS = playElements1[1]
+                NPlayer = playElements1[2]
+                teamEW = playElements1[3]
+                EPlayer = playElements1[4]
+                bid = bridgeCore.Bid(playElements1[5])
+                tricks = playElements1[8]
+                NSScore = playElements1[9]
+                IMPScore = playElements1[10]
+            else:
+                SPlayer = playElements1[0]
+                WPlayer = playElements1[1]
+                
+            tournament.addDeal(dealNo)
+            tournament.addPlay(dealNo, [SPlayer. WPlayer, NPlayer. EPlayer],
+                               bid, tricks, NSScore)
+        #for l in cards:
+        #    print( l)
 
         makeDeals(cards)
 
@@ -283,3 +298,4 @@ if __name__ == '__main__':
     #print(dateString)
     #date = datetime.datetime.strptime(dateString,'%d. %B %Y')
     #print(date.year, date.month, date.day)
+    

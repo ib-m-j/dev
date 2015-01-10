@@ -1,4 +1,4 @@
-import bridgecore
+#import bridgecore
 
 def getScore(bidValue, bidStrain, wonTricks, dbl, inZone):
     wonValue = wonTricks - 6 

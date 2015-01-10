@@ -198,7 +198,7 @@ def onePairTournament():
 
 def oneTeamTournament():
     res = readOneTournament('islevbridge.dk',
-                            '/Resultat/Klub1/Turneringer/Resultat1042.html')
+                            '/Resultat/Klub1/Turneringer/Resultat1067.html')
     print(res)
     if res[0] == 'pair':
         for file in res[1]:
@@ -207,7 +207,7 @@ def oneTeamTournament():
                     'islevbridge.dk',file).getFileContent())
 
     elif res[0] == 'team':
-        for file in res[1]:
+        for file in res[1][0]:  #FIX HERE FOR NO TEST
             readresfile.basicIslevTeams(
                 Crawler.fromServerUrl(
                     'islevbridge.dk',file).getFileContent())

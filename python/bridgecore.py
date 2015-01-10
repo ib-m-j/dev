@@ -369,8 +369,6 @@ class Deal:
         deal.sortHands()
         return deal
         
-
-
 class Bid:
     pattern = re.compile(
         "(?P<tricks>[1-7])(?P<strain>NT|S|H|D|C)(?P<dbl>[PDR])")
@@ -392,7 +390,18 @@ class Bid:
     def getTricks(self):
         return int(self.tricks)
 
+    def getNSResult(self, bidderTricks, zone):
+        bidderScore = bridgescore.getScore(
+            self.tricks, self.strain, bidderTricks, self.dbl, 
+            zone.inZone(self.bidder)) 
+        if self.bidder.getPair() == 'NS':
+            return bidderScore
+        else:
+            return -bidderScore
+        
 deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours.values()])
+
+
 
 class Seat:
     all = []
