@@ -8,10 +8,9 @@ import sqlite3
 import datetime
 import locale
 import tournament
+import sys
 
-allDeals = {}
-
-def makeDeals(cards):
+def makeDeals(cards, allDeals):
     for (n,l) in enumerate(cards):
         #print(l)
         if n >= 12*(len(cards) //12):
@@ -158,7 +157,8 @@ def largeIslevPairs():
     for l in title:
         print("title ", l)
 
-    makeDeals(cards)
+    allDeals = {}
+    makeDeals(cards, allDeals)
 
     keys = [x for x in allDeals.keys()]
     keys.sort()
@@ -236,7 +236,7 @@ def basicIslevPairs(input):
         for l in cards:
             print( l)
 
-def basicIslevTeams(input):
+def basicIslevTeams(input, t):
     (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
     #inputFile  = open(r"..\data\mellemrundehold.http",'r')
     #input = inputFile.read()
@@ -249,35 +249,46 @@ def basicIslevTeams(input):
         print('could not read file')
     else:
         #parseIslevTitle(title[1]) to many changes to thi8s string no parse yet
-        print('title', title)
-        #title = title[1]
-        t = tournament.Tournament()
+        t.setName(title[1]) #gets set twice but should be ok
+        dealNo = t.getNextDeal()
+        
         for (n,l) in enumerate(games):
             if n % 2 == 0:
-                play1Elements = [x.strip() for x in l.split(',')]
-                dealNo = playElements1[0]
+                playElements1 = [x.strip() for x in l.split(',')]
+            else:
+                playElements2 = [x.strip() for x in l.split(',')]
+                tableNo = int(playElements1[0])
                 teamNS = playElements1[1]
                 NPlayer = playElements1[2]
                 teamEW = playElements1[3]
                 EPlayer = playElements1[4]
-                bid = bridgeCore.Bid(playElements1[5])
-                tricks = playElements1[8]
-                NSScore = playElements1[9]
-                IMPScore = playElements1[10]
-            else:
-                SPlayer = playElements1[0]
-                WPlayer = playElements1[1]
+                bid = bridgecore.Bid.fromIslevString(playElements1[5])
+                if not(bid.isPlayedBid()):
+                    tricks = int(playElements1[7])
+                    NSScore = int(playElements1[8])
+                    IMPScore = int(playElements1[9])
+                else:
+                    tricks = int(playElements1[8])
+                    NSScore = int(playElements1[9])
+                    IMPScore = int(playElements1[10])
+                SPlayer = playElements2[0]
+                WPlayer = playElements2[1]
                 
-            tournament.addDeal(dealNo)
-            tournament.addPlay(dealNo, [SPlayer. WPlayer, NPlayer. EPlayer],
-                               bid, tricks, NSScore)
-        #for l in cards:
-        #    print( l)
+                if tableNo == 1:
+                    dealNo = dealNo + 1
 
-        makeDeals(cards)
+                t.addPlay(dealNo, [
+                    (teamNS, SPlayer), 
+                    (teamEW, WPlayer), 
+                    (teamNS, NPlayer), 
+                    (teamEW, EPlayer)],
+                          bid, tricks, NSScore)
 
-        keys = [x for x in allDeals.keys()]
-        keys.sort()
+        allDeals = {}
+
+        makeDeals(cards, allDeals)
+        for (id, deal) in allDeals.items():
+            t.addDeal(id, deal)
 
     #for n in keys:
     #    print(allDeals[n])

@@ -161,7 +161,7 @@ class Table:
         (bestSeat, bestLength, bestColour) = \
         cardevaluation.getBestHandAndColour(self.play.dealt)
         self.play.setFinalBid(
-            bridgecore.Bid(bestSeat, "3NTP"))
+            bridgecore.BidDeprecated(bestSeat, "3NTP"))
 #            bridgecore.Bid(bestSeat, "4{}P".format(bestColour.id)))
 
     def playATrick(self):

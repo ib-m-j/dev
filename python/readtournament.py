@@ -3,6 +3,8 @@ import codecs
 import re
 import os.path
 import readresfile
+import tournament
+import display
 
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
@@ -207,17 +209,45 @@ def oneTeamTournament():
                     'islevbridge.dk',file).getFileContent())
 
     elif res[0] == 'team':
-        for file in res[1][0]:  #FIX HERE FOR NO TEST
+        t = tournament.Tournament()
+        for file in res[1]: 
             readresfile.basicIslevTeams(
                 Crawler.fromServerUrl(
-                    'islevbridge.dk',file).getFileContent())
+                    'islevbridge.dk',file).getFileContent(), t)
    
+    return t
+
 if __name__ == '__main__':
     #largeTest()
     #oneTournament()
     #onePairTournament()
-    oneTeamTournament()
-                
-  
+    t = oneTeamTournament()
+    print(len(t.teams), len(t.deals))
+    for team in t.teams:
+        print(team)
+        for p in t.teams[team].teamPlayers:
+            print('\t',p)
+    focus = ('Orion','Einar Poulsen')
+    relevant = t.getPlayedBy(focus)
+    
 
+    for play in relevant:
+        print(play.deal)
+        for p in t.plays:
+            if p.deal == play.deal:
+                if p.playedBy() == focus:
+                    mark = '*'
+                else:
+                    mark = ''
+                print(mark, p.bid,p.tricks,p.NSResult)
+            print
 
+    for play in relevant:
+        d = display.Display(play.deal)
+        for p in t.plays:
+            if p.deal == play.deal:
+                d.addElement(p, p.playedBy() == focus)
+        
+        d.print()
+    
+        

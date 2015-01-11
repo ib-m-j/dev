@@ -5,6 +5,8 @@ import collections
 import random
 import re
 import functools
+import parsing
+from pypeg2 import parse
 
 coloursInput = [("Spades", "S", u"\x50", 4),
                 ("Hearts", "H", u"\x50", 3),
@@ -368,13 +370,81 @@ class Deal:
             
         deal.sortHands()
         return deal
-        
+
 class Bid:
     pattern = re.compile(
         "(?P<tricks>[1-7])(?P<strain>NT|S|H|D|C)(?P<dbl>[PDR])")
 
+    def __init__(self, bidder = None, tricks = None, strain= None, dbl = None):
+        self.bidder = bidder
+        self.tricks = tricks
+        self.strain = strain
+        self.dbl = dbl
+    
+    @staticmethod
+    def fromIslevString(bidstring):
+        #pattern = re.compile(
+        #    "(?P<bidder>V|Ø|N|S) (?P<tricks>[1-7])(?P<strain>UT|SP|HJ|RU|KL) *(?P<dbl>[PDR]*)")
+        #match = pattern.match(bidstring)
+        #print('bidstring >{}<'.format(bidstring))
+        #if match:
+        #    player = Seat.fromDKId(match.group("bidder"))
+        #    tricks = match.group("tricks")
+        #    strain = Strain.fromDKString(match.group("strain"))
+        #    if not(match.group("dbl")):
+        #        dbl = 'P'
+        #    else:
+        #        dbl = match.group("dbl")
+        #else:
+        #    raise (BaseException("bid exception"))
+        #print(bidstring)
+        res = parse(bidstring, parsing.Bid)
+        if hasattr(res, 'passed'):
+            return Bid()
+        else:
+            res = res.played
+            player = Seat.fromDKId(res.seat)
+            tricks = int(res.tricks)
+            strain = Strain.fromDKString(res.strain)
+            if res.dbl == '':
+                dbl = 'P'
+            else:
+                dbl = res.dbl
+            return Bid(player, tricks, strain, dbl)
+
+    def isPlayedBid(self):
+        if not(self.bidder):
+            return False
+        return True
+
+    def __str__(self):
+        return("{} {} {} by {}".format(
+            self.tricks,self.strain.name,self.dbl,self.bidder))
+
+    def getTricks(self):
+        return int(self.tricks)
+
+    def getNSResult(self, bidderTricks, zone):
+        if self.bidder == None:
+            return 0
+
+        bidderScore = bridgescore.getScore(
+            self.tricks, self.strain, bidderTricks, self.dbl, 
+            zone.inZone(self.bidder)) 
+        if self.bidder.getPair() == 'NS':
+            return bidderScore
+        else:
+            return -bidderScore
+
+
+
+        
+class BidDeprecated:
+    pattern = re.compile(
+        "(?P<tricks>[1-7])(?P<strain>NT|S|H|D|C)(?P<dbl>[PDR])")
+
     def __init__(self, bidder, bidstring):
-        match = Bid.pattern.match(bidstring)
+        match = BidDeprecated.pattern.match(bidstring)
         if match:
             self.tricks = match.group("tricks")
             self.strain = Strain.fromId(match.group("strain"))
@@ -546,7 +616,7 @@ if __name__ == '__main__':
 
     for t in range(1,8):
         for s in Strain.strains.keys():
-            print(Bid(Seat.fromId('N'),'{}{}P'.format(t,s)))
+            print(BidDeprecated(Seat.fromId('N'),'{}{}P'.format(t,s)))
 
     print("N", Seat.fromId("N"))
                        
