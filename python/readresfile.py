@@ -60,7 +60,8 @@ def makeDeals(cards, allDeals):
                 bridgecore.Seat.fromId('S'),
                 bridgecore.Colour.fromId(cardElements[1]),
                 [bridgecore.CardValue.fromSymbol(c) for c in cardElements[2]])
-    
+
+    return allDeals
 
 
 def largeIslevPairs():

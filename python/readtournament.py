@@ -10,8 +10,9 @@ import display
 resultlink = re.compile(
     '<a href="([a-zA-Z/]+Resultat[0-9]+.html)"',re.IGNORECASE)
 
-anylink = re.compile('<a href="([\w]+.html)',re.IGNORECASE)
 
+#observe finds all a-zA-Z0-9_ or '/' - not . so cannot go to parent folder
+anylink = re.compile('<a href="([\w/]+.html)',re.IGNORECASE)
 
 class Crawler:
     def __init__(self, connection, url, searchFor = anylink):
@@ -51,6 +52,7 @@ class Crawler:
                 os.path.join(self.path, link)).replace('\\','/')
             res.append(newLink)
         self.children =  res
+        #print (res)
         return res
         
     def getChildTree(self, taken):
