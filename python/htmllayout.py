@@ -23,7 +23,10 @@ class HtmlTable:
         res = res + '</table>\n</html>\n'
         return res
 
-
+    def writeAsFile(self, name):
+        f = open(name, 'w')
+        f.write(self.render())
+        f.close()
 
 if __name__ == '__main__':
     rows = []

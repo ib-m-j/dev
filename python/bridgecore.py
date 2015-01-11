@@ -380,7 +380,7 @@ class Bid:
         self.tricks = tricks
         self.strain = strain
         self.dbl = dbl
-    
+
     @staticmethod
     def fromIslevString(bidstring):
         #pattern = re.compile(
@@ -418,8 +418,11 @@ class Bid:
         return True
 
     def __str__(self):
-        return("{} {} {} by {}".format(
-            self.tricks,self.strain.name,self.dbl,self.bidder))
+        if self.bidder:
+            return("{} {} {} by {}".format(
+                self.tricks,self.strain.name,self.dbl,self.bidder))
+        else:
+            return("Pass")
 
     def getTricks(self):
         return int(self.tricks)

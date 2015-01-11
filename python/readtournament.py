@@ -5,6 +5,7 @@ import os.path
 import readresfile
 import tournament
 import display
+import htmllayout
 
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
@@ -230,26 +231,20 @@ if __name__ == '__main__':
         for p in t.teams[team].teamPlayers:
             print('\t',p)
     focus = ('Orion','Einar Poulsen')
-    relevant = t.getPlayedBy(focus)
+    relevant = t.getPlayedByTeam(focus)
     
-
+    print(relevant)
+    sys.exit()
+    layout = htmllayout.HtmlTable()
     for play in relevant:
-        print(play.deal)
+        d = display.Display(t, play.deal)
         for p in t.plays:
             if p.deal == play.deal:
-                if p.playedBy() == focus:
-                    mark = '*'
-                else:
-                    mark = ''
-                print(mark, p.bid,p.tricks,p.NSResult)
-            print
-
-    for play in relevant:
-        d = display.Display(play.deal)
-        for p in t.plays:
-            if p.deal == play.deal:
-                d.addElement(p, p.playedBy() == focus)
+                d.addElement(p, p.hasParticipant(focus))
         
-        d.print()
+        lines = d.print()
+        lines.extend([[''],['']])
+        layout.addRows(lines)
     
-        
+    layout.writeAsFile('..\\data\\einar.html')
+

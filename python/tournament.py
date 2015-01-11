@@ -30,6 +30,13 @@ class Play:
         self.bid = bid
         self.tricks = tricks
         self.NSResult = NSResult
+        if not self.bid.bidder:
+            self.tricks = '-'
+
+    def displayStrainId(self):
+        if self.bid.bidder:
+            return self.bid.strain.id
+        return 'Pass'
 
     def playedBy(self):
         if self.bid.bidder:
@@ -87,12 +94,20 @@ class Tournament:
             self.teams[team].addTeamPlayer(player)
         self.plays.append(Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult))
 
-    def getPlayedBy(self, teamPlayer):
+    def getPlayedByPlayer(self, teamPlayer):
         res = []
         for play in self.plays:
             if play.playedBy() == teamPlayer:
                 res.append(play)
         return res
+
+    def getPlayedByTeam(self, teamPlayer):
+        res = []
+        for play in self.plays:
+            if play.hasParticipant(teamPlayer):
+                res.append(play)
+        return res
+
 
 #        def getPos(teamPlayer, SWNEPlayers):
 #            try:
