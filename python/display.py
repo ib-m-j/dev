@@ -15,11 +15,12 @@ class Display:
         self.tournament = tournament
         self.cells = {}
         
-    def addElement(self, play, focus = None):
-        if focus:
-            self.focus = play
+    def addElement(self, play):
         self.plays.append(play)
-    
+
+    def addFocus(self,focus):
+        self.focus = focus
+
     def print(self):
         if self.focus.bid.bidder.getPair() == 'NS':
             sign = 1
@@ -57,9 +58,9 @@ class Display:
         self.cells[r][c].focus = '*'
 
         lines = []
-        lines.extend([[self.tournament.name],['game: {:d}'.format(self.deal)]])
-        lines.append([self.focus.bid.__str__()])
-        lines.append(['played by {}'.format(self.focus.playedBy()[1])])
+        #lines.extend([[self.tournament.name],['game: {:d}'.format(self.deal)]])
+        #lines.append([self.focus.bid.__str__()])
+        #lines.append(['played by {}'.format(self.focus.playedBy()[1])])
         line =['']
         for cKey in columns:
             line.append('{:d}'.format(sign*cKey))

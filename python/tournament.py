@@ -46,6 +46,11 @@ class Play:
     def hasParticipant(self, teamPlayer):
         return teamPlayer in self.players.values()
 
+    def playedByPair(self):
+        if self.bid.bidder:
+            side = self.bid.bidder.getPair()
+            return [self.players[bridgecore.Seat.fromId(x)] for x in side]
+        return []
 
 class Team:
     def __init__(self, localId):
@@ -93,6 +98,14 @@ class Tournament:
                 self.teams[team]=Team(team)
             self.teams[team].addTeamPlayer(player)
         self.plays.append(Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult))
+
+    def getPlayedByPair(self, teamPlayer):
+        res = []
+        for play in self.plays:
+            if teamPlayer in play.playedByPair():
+                res.append(play)
+        return res
+            
 
     def getPlayedByPlayer(self, teamPlayer):
         res = []

@@ -231,20 +231,41 @@ if __name__ == '__main__':
         for p in t.teams[team].teamPlayers:
             print('\t',p)
     focus = ('Orion','Einar Poulsen')
-    relevant = t.getPlayedByTeam(focus)
+
+    
+    relevant = t.getPlayedByPair(focus)
     
     print(relevant)
-    sys.exit()
-    layout = htmllayout.HtmlTable()
+
+    table = htmllayout.HtmlTable()
+    wrap= htmllayout.HtmlWrapper()
+    wrap.addContent(table)
+
+ 
     for play in relevant:
         d = display.Display(t, play.deal)
+        d.addFocus(play)
         for p in t.plays:
             if p.deal == play.deal:
-                d.addElement(p, p.hasParticipant(focus))
-        
+                d.addElement(p)
+        table.addRowWithCell(t.name)
+        table.addRowWithCell('game: {:d}'.format(play.deal))
+        table.addRowWithCell(play.bid.__str__())
+        table.addRowWithCell('played by {}'.format(play.playedBy()[1]))
+        table1 = htmllayout.HtmlTable()  
+        table.addRowWithCell(table1)
         lines = d.print()
-        lines.extend([[''],['']])
-        layout.addRows(lines)
-    
-    layout.writeAsFile('..\\data\\einar.html')
+        for l in lines:
+            r  = htmllayout.HtmlRow()
+            for ccontent in l:
+                c =htmllayout.HtmlCell(ccontent)
+                r.addCell(c)
+            table1.addRow(r)
+        table1.addRowWithCell('')
+        table1.addRowWithCell('')
+    f = open(os.path.normpath('..\\data\\einar.html'), 'w')
+    f.write(wrap.render())
+    f.close()
+    print(wrap.render())
+
 
