@@ -33,11 +33,11 @@ class Play:
         if not self.bid.bidder:
             self.tricks = '-'
 
-    def displayStrainId(self):
-        if self.bid.bidder:
-            return self.bid.strain.id
-        return 'Pass'
-
+#    def displayStrainId(self):
+#        if self.bid.bidder:
+#            return self.bid.strain.id
+#        return 'Pass'
+#
     def playedBy(self):
         if self.bid.bidder:
             return self.players[self.bid.bidder]

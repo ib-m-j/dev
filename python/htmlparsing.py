@@ -38,13 +38,7 @@ class State:
         if tag == 'tr' and startEnd == 'E':
             self.setCurrentState('getOneRecord')
 
-    
-
-
-
-
 class HtmlTable:
-    
     def __init__(self, name, nr, level):
         self.name = name
         self.nr = nr

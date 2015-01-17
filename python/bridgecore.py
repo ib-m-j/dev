@@ -13,7 +13,7 @@ coloursInput = [("Spades", "S", u"\x50", 4),
                 ("Diamonds", "D", u"\x50", 2),
                 ("Clubs", "C", u"\x50", 1)]
 
-strainsInput = [("Notrump", "NT", u"\x50", 5)]+coloursInput
+strainsInput = [("Pass", "P", "P", 0), ("Notrump", "NT", u"\x50", 5)]+coloursInput
 
 class Colour:
     colours = {}
@@ -51,7 +51,8 @@ class Strain(Colour):
               "S":(30, 0),
               "H":(30, 0),
               "D":(20, 0),
-              "C":(20, 0)}
+              "C":(20, 0),
+              "P":(0,0)}
 
     def __init__(self, name, id, symbol, order):
         self.name = name
@@ -69,15 +70,14 @@ class Strain(Colour):
         #            self.name,self.id,self.baseScore,self.firstScore))
     
 
+    def __lt__(self, other):
+        return self.order < other.order
 
     def getColour(self):
         if self.id in Colour.colours:
             return Colour.colours[self.id]
         else:
             return None
-
-
-    
 
     @staticmethod
     def fromId(id):
@@ -352,6 +352,24 @@ class Deal:
         self.hash = bytes(res)
         return self.hash
 
+    def bridgebaseHand(self):
+        res = ' http://www.bridgebase.com/tools/handviewer.html?{}'
+        cards = ''
+        hand = Seat.fromId('N')
+        for x in range (3):
+            cards = cards + '&{}='.format(hand)
+            suits = [c for c in self.cards[hand].keys()]
+            suits.sort(reverse = True)
+            for suit in suits:
+                symbols = ''.join(
+                    [c.value.symbol for c in self.cards[hand][suit]])
+                cards = cards + '{}{}'.format(suit, symbols)
+            hand = hand.getNext()
+
+        return res.format(cards).lower()
+
+
+
 
     @staticmethod
     def fromHash(hash):
@@ -380,6 +398,18 @@ class Bid:
         self.tricks = tricks
         self.strain = strain
         self.dbl = dbl
+        if not bidder:
+            self.passedHand = True
+        else:
+            self.passedHand = False
+        #will need to extend when handling not played 
+
+    def relevantFor(self, other):
+        if self.passedHand or other.passedHand:
+            return True
+        else:
+            return self.bidder.id in other.bidder.getPair()
+        
 
     @staticmethod
     def fromIslevString(bidstring):
@@ -400,7 +430,7 @@ class Bid:
         #print(bidstring)
         res = parse(bidstring, parsing.Bid)
         if hasattr(res, 'passed'):
-            return Bid()
+            return Bid(strain = Strain.fromId('P'))
         else:
             res = res.played
             player = Seat.fromDKId(res.seat)
@@ -474,8 +504,6 @@ class BidDeprecated:
         
 deck = Cards([Card(colour, value) for value in cardValues for colour in Colour.colours.values()])
 
-
-
 class Seat:
     all = []
     pairs = ["NS", "EW"]
@@ -508,8 +536,10 @@ class Seat:
     def getPair(self):
         if self.id == "N" or self.id == "S":
             return "NS"
-        else:
+        elif self.id == "E" or self.id == "W":
             return "EW"
+        else:
+            return "NSEW" #passed hand
 
     
 

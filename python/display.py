@@ -8,76 +8,103 @@ class Cell:
         for (k,v) in Kwargs.items():
             setattr(self,k,v)
 
-class Display:
-    def __init__(self, tournament, deal):
-        self.deal = deal
+class DisplayFocusResults:
+    def __init__(self, tournament, focus):
+        self.deal = focus.deal
         self.plays = []
+        self.defences = []
         self.tournament = tournament
         self.cells = {}
+        self.focus = focus
         
     def addElement(self, play):
-        self.plays.append(play)
-
-    def addFocus(self,focus):
-        self.focus = focus
-
-    def print(self):
-        if self.focus.bid.bidder.getPair() == 'NS':
-            sign = 1
+        if play.bid.relevantFor(self.focus.bid):
+            self.plays.append(play)
         else:
-            sign = -1
-        
+            self.defences.append(play)
+
+
+    def renderAsHtmlTable(self):
+        self.tableContent = htmllayout.ArrayContent('{:d}'.format)
         columns = []
         rows = []
+        
+
+        sameDirection = []
+        otherDirection = []
         for p in self.plays:
             if not(p.NSResult in columns):
                 columns.append(p.NSResult)
             
-            if not(p.displayStrainId() in rows):
-                rows.append(p.displayStrainId())
+            if not(p.bid.strain in rows):
+                rows.append(p.bid.strain)
 
-        if sign == 1:
-            columns.sort()
-        else:
-            columns.sort(reverse = True)
-        
-        for r in range(len(rows)):
-            if not r in self.cells.keys():
-                self.cells[r] = {}
-            for c in range(len(columns)):
-                self.cells[r][c] = Cell(r,c,value=0,focus='')
-                
-        def getCoord(x, r, c):
-            return (r.index(x.displayStrainId()), c.index(x.NSResult))
-                                        
+
+        self.tableContent.setHeaderRow(columns, '{:d}'.format)
+        self.tableContent.setHeaderColumn(rows)
+        self.tableContent.setFocus(self.focus.bid.strain, self.focus.NSResult)
+
         for p in self.plays:
-            (r,c) = getCoord(p, rows, columns)
-            self.cells[r][c].value = self.cells[r][c].value + 1
-    
-        (r,c) = getCoord(self.focus, rows, columns)
-        self.cells[r][c].focus = '*'
+            (r,c) = self.tableContent.getCoord(p.bid.strain, p.NSResult)
+            if self.tableContent.hasCell(r,c):
+                self.tableContent.setContent(
+                    r, c, self.tableContent.getContent(r,c) + 1)
+            else:
+                self.tableContent.setContent(r, c, 1)
+        self.tableContent.sortRows(True)
 
-        lines = []
-        #lines.extend([[self.tournament.name],['game: {:d}'.format(self.deal)]])
-        #lines.append([self.focus.bid.__str__()])
-        #lines.append(['played by {}'.format(self.focus.playedBy()[1])])
-        line =['']
-        for cKey in columns:
-            line.append('{:d}'.format(sign*cKey))
-        lines.append(line)
+        if len(self.defences) > 0:
+            self.tableContent.addHeaderColumnValue('other direction')
 
-        for r in range(len(rows)):
-            line = [rows[r]]
-            for c in range(len(columns)):
-                cell = self.cells[r][c]
-                if cell.value == 0:
-                    v = ''
+            for p in self.defences:
+                if not(p.NSResult in self.tableContent.headerRow):
+                    self.tableContent.addHeaderRowValue(p.NSResult)
+
+                if not(p.bid.strain in self.tableContent.headerColumn):
+                    self.tableContent.addHeaderColumnValue(p.bid.strain)
+
+            for p in self.defences:
+                (r,c) = self.tableContent.getCoord(p.bid.strain, p.NSResult)
+                if self.tableContent.hasCell(r,c):
+                    self.tableContent.setContent(
+                        r, c, self.tableContent.getContent(r,c) + 1)
                 else:
-                    v = '{:d}'.format(cell.value)
-                line.append(v+cell.focus)
-            lines.append(line)
-             
-        for l in lines:
-            print(l)
-        print()
-        return lines
+                    self.tableContent.setContent(r, c, 1)
+            #self.tableContent.sortRows(True)
+
+
+        if self.focus.bid.bidder.getPair() == 'NS':
+            self.tableContent.sortColumns()
+        else:
+            self.tableContent.sortColumns(True)
+
+
+        res = self.tableContent.makeTable()
+        res.addRowWithCell('')
+        res.addRowWithCell('')
+        res.addRowWithCell('')
+        res.addRowWithCell('')
+        return res
+
+        #(r,c) = getCoord(self.focus, rows, columns)
+        #self.cells[r][c].focus = '*'
+
+        #for cKey in columns:
+        #    line.append('{:d}'.format(sign*cKey))
+        #lines.append(line)
+        #
+        #for r in range(len(rows)):
+        #    line = [rows[r]]
+        #    for c in range(len(columns)):
+        #        cell = self.cells[r][c]
+        #        if cell.value == 0:
+        #            v = ''
+        #        else:
+        #            v = '{:d}'.format(cell.value)
+        #        line.append(v+cell.focus)
+        #    lines.append(line)
+        #     
+        #for l in lines:
+        #    print(l)
+        #print()
+        #return lines

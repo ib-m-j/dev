@@ -9,12 +9,13 @@ import datetime
 import locale
 import tournament
 import sys
+import htmllayout
 
 def makeDeals(cards, allDeals):
     for (n,l) in enumerate(cards):
         #print(l)
         if n >= 12*(len(cards) //12):
-            print('breaking', n, len(cards))
+            #print('breaking', n, len(cards))
             break
 
         cardElements = [x.strip() for x in l.split(',')]
@@ -291,13 +292,15 @@ def basicIslevTeams(input, t):
         for (id, deal) in allDeals.items():
             t.addDeal(id, deal)
 
-    #for n in keys:
-    #    print(allDeals[n])
-    
-    
 
-
-
+#    res = ''
+#    for d in t.deals.values():
+#        res = res + '\n' + d.bridgebaseHand()
+#    
+#    f = open('..\\data\\deals.html', 'w')
+#    f.write(res)
+#    f.close()
+#    
         
 if __name__ == '__main__':
     #print(locale.getlocale())

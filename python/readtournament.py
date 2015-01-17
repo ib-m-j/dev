@@ -203,8 +203,8 @@ def onePairTournament():
 
 def oneTeamTournament():
     res = readOneTournament('islevbridge.dk',
-                            '/Resultat/Klub1/Turneringer/Resultat1067.html')
-    print(res)
+                            '/Resultat/Klub1/Turneringer/Resultat1068.html')
+    #print(res)
     if res[0] == 'pair':
         for file in res[1]:
             readresfile.basicIslevPairs(
@@ -235,37 +235,50 @@ if __name__ == '__main__':
     
     relevant = t.getPlayedByPair(focus)
     
-    print(relevant)
-
     table = htmllayout.HtmlTable()
     wrap= htmllayout.HtmlWrapper()
     wrap.addContent(table)
 
  
     for play in relevant:
-        d = display.Display(t, play.deal)
-        d.addFocus(play)
+        cardsTable = htmllayout.HtmlTable()
+        iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
+        iframe.addAttribute('src', t.deals[play.deal].bridgebaseHand())
+        iframe.addAttribute('width', '400px')
+        iframe.addAttribute('height', '400px')
+        cardsTable.addRow(iframe)
+        print('starting play', play.deal)
+        table.addRowWithCell(t.name)
+        table.addRowWithCell('game: {:d}'.format(play.deal))
+        table.addRow(cardsTable)
+        table.addRowWithCell(play.bid.__str__())
+        table.addRowWithCell('played by {}'.format(play.playedBy()[1]))
+        
+        d = display.DisplayFocusResults(t, play)
         for p in t.plays:
             if p.deal == play.deal:
                 d.addElement(p)
-        table.addRowWithCell(t.name)
-        table.addRowWithCell('game: {:d}'.format(play.deal))
-        table.addRowWithCell(play.bid.__str__())
-        table.addRowWithCell('played by {}'.format(play.playedBy()[1]))
-        table1 = htmllayout.HtmlTable()  
-        table.addRowWithCell(table1)
-        lines = d.print()
-        for l in lines:
-            r  = htmllayout.HtmlRow()
-            for ccontent in l:
-                c =htmllayout.HtmlCell(ccontent)
-                r.addCell(c)
-            table1.addRow(r)
-        table1.addRowWithCell('')
-        table1.addRowWithCell('')
+        res = d.renderAsHtmlTable()
+        table.addRowWithCell(res)
     f = open(os.path.normpath('..\\data\\einar.html'), 'w')
     f.write(wrap.render())
     f.close()
-    print(wrap.render())
+    #print(wrap.render())
+        
+
+
+#lines = d.print()
+#        for l in lines:
+#            r  = htmllayout.HtmlRow()
+#            for ccontent in l:
+#                c =htmllayout.HtmlCell(ccontent)
+#                r.addCell(c)
+#            table1.addRow(r)
+#        table1.addRowWithCell('')
+#        table1.addRowWithCell('')
+#    f = open(os.path.normpath('..\\data\\einar.html'), 'w')
+#    f.write(wrap.render())
+#    f.close()
+#    print(wrap.render())
 
 
