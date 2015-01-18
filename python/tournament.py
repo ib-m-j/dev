@@ -52,6 +52,17 @@ class Play:
             return [self.players[bridgecore.Seat.fromId(x)] for x in side]
         return []
 
+    def pairOf(self, teamPlayer):
+        res = False
+        for (seat, tPlayer) in self.players.items():
+            if (tPlayer) == teamPlayer:
+                res = seat
+                break
+        if res:
+            return seat.getPair()
+        else:
+            return ''
+
 class Team:
     def __init__(self, localId):
         self.localId = localId

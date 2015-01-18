@@ -77,6 +77,10 @@ class DisplayFocusResults:
             self.tableContent.sortColumns()
         else:
             self.tableContent.sortColumns(True)
+            res = []
+            for x in self.tableContent.headerRow:
+                res.append(-x)
+            self.tableContent.headerRow = res
 
 
         res = self.tableContent.makeTable()

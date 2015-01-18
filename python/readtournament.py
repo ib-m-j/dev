@@ -1,3 +1,5 @@
+# -*- coding: iso-8859-1 -*-
+
 import http.client
 import codecs
 import re
@@ -220,7 +222,7 @@ def oneTeamTournament():
    
     return t
 
-if __name__ == '__main__':
+def doRun():
     #largeTest()
     #oneTournament()
     #onePairTournament()
@@ -230,7 +232,8 @@ if __name__ == '__main__':
         print(team)
         for p in t.teams[team].teamPlayers:
             print('\t',p)
-    focus = ('Orion','Einar Poulsen')
+    #focus = ('Orion','Einar Poulsen')
+    focus = ('Lille O','Lars Sørensen')
 
     
     relevant = t.getPlayedByPair(focus)
@@ -244,8 +247,8 @@ if __name__ == '__main__':
         cardsTable = htmllayout.HtmlTable()
         iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
         iframe.addAttribute('src', t.deals[play.deal].bridgebaseHand())
-        iframe.addAttribute('width', '400px')
-        iframe.addAttribute('height', '400px')
+        iframe.addAttribute('width', '300px')
+        iframe.addAttribute('height', '300px')
         cardsTable.addRow(iframe)
         print('starting play', play.deal)
         table.addRowWithCell(t.name)
@@ -253,6 +256,7 @@ if __name__ == '__main__':
         table.addRow(cardsTable)
         table.addRowWithCell(play.bid.__str__())
         table.addRowWithCell('played by {}'.format(play.playedBy()[1]))
+        table.addRowWithCell('Display {} scores'.format(play.pairOf(focus)))
         
         d = display.DisplayFocusResults(t, play)
         for p in t.plays:
@@ -267,18 +271,7 @@ if __name__ == '__main__':
         
 
 
-#lines = d.print()
-#        for l in lines:
-#            r  = htmllayout.HtmlRow()
-#            for ccontent in l:
-#                c =htmllayout.HtmlCell(ccontent)
-#                r.addCell(c)
-#            table1.addRow(r)
-#        table1.addRowWithCell('')
-#        table1.addRowWithCell('')
-#    f = open(os.path.normpath('..\\data\\einar.html'), 'w')
-#    f.write(wrap.render())
-#    f.close()
-#    print(wrap.render())
 
+if __name__ == '__main__':
+    doRun()
 

@@ -58,6 +58,7 @@ class HtmlRow(HtmlTag):
 
     def renderContent(self):
         res = '<div>'
+        #res = ''
         for c in self.cells:
             res = res + c.render()
         return res
@@ -76,6 +77,7 @@ class HtmlTable(HtmlTag):
 
     def renderContent(self):
         res = '<div>'
+        #res = ''
         for r in self.rows:
             res = res + r.render() 
         return res
