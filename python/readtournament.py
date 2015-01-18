@@ -222,7 +222,7 @@ def oneTeamTournament():
    
     return t
 
-def doRun():
+def doPlayerFocus():
     #largeTest()
     #oneTournament()
     #onePairTournament()
@@ -270,8 +270,9 @@ def doRun():
     #print(wrap.render())
         
 
+doDefenderFocus():
 
 
 if __name__ == '__main__':
-    doRun()
+    doPlayerFocus()
 
