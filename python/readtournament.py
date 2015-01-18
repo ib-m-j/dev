@@ -271,7 +271,7 @@ def displayFocus(t, focus, asPlayer, isTeam):
         cardsTable = htmllayout.HtmlTable()
         iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
         iframe.addAttribute('src', t.deals[play.deal].bridgebaseHand())
-        iframe.addAttribute('width', '300px')
+        iframe.addAttribute('width', '330px')
         iframe.addAttribute('height', '300px')
         cardsTable.addRow(iframe)
         print('starting play', play.deal)

@@ -366,7 +366,9 @@ class Deal:
                 cards = cards + '{}{}'.format(suit, symbols)
             hand = hand.getNext()
 
-        return res.format(cards).lower()
+        remaining = '&b={}&v={}&p={}'.format(
+            self.dealNo, self.zone.bridgebaseValue(),'n')
+        return (res.format(cards)+remaining).lower()
 
 
 
@@ -597,7 +599,17 @@ class Zone:
         if self.zone == 'NONE':
             return False
         return seat.id in self.zone
-    
+
+    def bridgebaseValue(self):
+        if self.zone == 'NONE':
+            return '-'
+        elif self.zone == 'ALL':
+            return 'b'
+        elif self.zone == 'NS':
+            return 'n'
+        elif self.zone == 'EW':
+            return 'e'
+
     @staticmethod
     def fromDKName(name):
         if name == 'Ingen':
