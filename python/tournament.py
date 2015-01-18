@@ -117,6 +117,14 @@ class Tournament:
                 res.append(play)
         return res
             
+    def getDefendedByPair(self, teamPlayer):
+        res = []
+        for play in self.plays:
+            if play.hasParticipant(teamPlayer) and not(
+                    teamPlayer in play.playedByPair()):
+                res.append(play)
+        return res
+            
 
     def getPlayedByPlayer(self, teamPlayer):
         res = []

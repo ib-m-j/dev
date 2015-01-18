@@ -222,27 +222,51 @@ def oneTeamTournament():
    
     return t
 
-def doPlayerFocus():
-    #largeTest()
-    #oneTournament()
-    #onePairTournament()
-    t = oneTeamTournament()
+def readTournament(server, url):
+    res = readOneTournament(server, url)
+
+    #print(res)
+    if res[0] == 'pair':
+        for file in res[1]:
+            readresfile.basicIslevPairs(
+                Crawler.fromServerUrl(
+                    'islevbridge.dk',file).getFileContent())
+
+    elif res[0] == 'team':
+        t = tournament.Tournament()
+        for file in res[1]: 
+            readresfile.basicIslevTeams(
+                Crawler.fromServerUrl(
+                    'islevbridge.dk',file).getFileContent(), t)
+   
     print(len(t.teams), len(t.deals))
     for team in t.teams:
         print(team)
         for p in t.teams[team].teamPlayers:
-            print('\t',p)
-    #focus = ('Orion','Einar Poulsen')
-    focus = ('Lille O','Lars Sørensen')
+            print('\t', p, len(p))
 
+    #only team implemented
+
+    return (res[0], t)
+
+def displayFocus(t, focus, asPlayer, isTeam):
+    #largeTest()
+    #oneTournament()
+    #onePairTournament()
     
-    relevant = t.getPlayedByPair(focus)
-    
+    #assumning team for now
+
     table = htmllayout.HtmlTable()
     wrap= htmllayout.HtmlWrapper()
     wrap.addContent(table)
 
- 
+    if asPlayer:
+        relevant = t.getPlayedByPair(focus)
+    else:
+        relevant = t.getDefendedByPair(focus)
+        pass
+
+    print(relevant)
     for play in relevant:
         cardsTable = htmllayout.HtmlTable()
         iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
@@ -254,11 +278,16 @@ def doPlayerFocus():
         table.addRowWithCell(t.name)
         table.addRowWithCell('game: {:d}'.format(play.deal))
         table.addRow(cardsTable)
-        table.addRowWithCell(play.bid.__str__())
-        table.addRowWithCell('played by {}'.format(play.playedBy()[1]))
-        table.addRowWithCell('Display {} scores'.format(play.pairOf(focus)))
+        table.addRowWithCell(
+            '{} .. {} tricks'.format(play.bid.__str__(), play.tricks))
+        table.addRowWithCell('Played by {}'.format(play.playedBy()[1]))
+        table.addRowWithCell('Displaying {} scores'.format(play.pairOf(focus)))
+
+        if asPlayer:
+            d = display.DisplayFocusResults(t, play, None)
+        else:
+            d = display.DisplayFocusResults(t, play, focus)
         
-        d = display.DisplayFocusResults(t, play)
         for p in t.plays:
             if p.deal == play.deal:
                 d.addElement(p)
@@ -270,9 +299,17 @@ def doPlayerFocus():
     #print(wrap.render())
         
 
-doDefenderFocus():
-
+def doDefenderFocus():
+    pass
 
 if __name__ == '__main__':
-    doPlayerFocus()
+    (type, tournament) = readTournament(
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1067.html')
+    focus = ('Orion','Einar Poulsen')
+    #focus = ('Lille O','Lars Sørensen')
+ 
+    
+    displayFocus(tournament, focus, True, True)
+    #asPlayer or asDefender
+    #type = team or pairs
 
