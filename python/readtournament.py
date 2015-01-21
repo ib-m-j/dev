@@ -304,7 +304,7 @@ def doDefenderFocus():
 
 if __name__ == '__main__':
     (type, tournament) = readTournament(
-        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1067.html')
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
     focus = ('Orion','Einar Poulsen')
     #focus = ('Lille O','Lars Sørensen')
  
