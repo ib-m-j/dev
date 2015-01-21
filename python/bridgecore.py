@@ -366,8 +366,8 @@ class Deal:
                 cards = cards + '{}{}'.format(suit, symbols)
             hand = hand.getNext()
 
-        remaining = '&b={}&v={}&p={}'.format(
-            self.dealNo, self.zone.bridgebaseValue(),'n')
+        remaining = '&b={}&v={}&p={}&d={}'.format(
+            self.dealNo, self.zone.bridgebaseValue(),'n', self.dealer.id)
         return (res.format(cards)+remaining).lower()
 
 
