@@ -1,0 +1,1 @@
+python.exe c:/Users/Ib/einarftp/deploy.py
