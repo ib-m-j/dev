@@ -9,32 +9,45 @@ class Cell:
             setattr(self,k,v)
 
 class DisplayFocusResults:
-    def __init__(self, tournament, focus):
+    def __init__(self, tournament, focus, focusOnDefender):
         self.deal = focus.deal
         self.plays = []
         self.defences = []
         self.tournament = tournament
         self.cells = {}
         self.focus = focus
-        
+        if self.focus.bid.bidder.getPair() == 'NS':
+            if focusOnDefender:
+                self.focusDirection == 'EW'
+            else:
+                self.focusDirection = 'NS'
+        else:
+            if focusOnDefender:
+                self.focusDirection == 'NS'
+            else:
+                self.focusDirection = 'EW'
+
     def addElement(self, play):
         if play.bid.relevantFor(self.focus.bid):
             self.plays.append(play)
         else:
             self.defences.append(play)
 
+    def getFocusResult(self, play):
+        if self.focusDirection == 'NS':
+            return play.NSResult
+        else:
+            return -play.NSResult
+    
 
     def renderAsHtmlTable(self):
         self.tableContent = htmllayout.ArrayContent('{:d}'.format)
         columns = []
         rows = []
         
-
-        sameDirection = []
-        otherDirection = []
         for p in self.plays:
-            if not(p.NSResult in columns):
-                columns.append(p.NSResult)
+            if not(self.getFocusResult(p) in columns):
+                    columns.append(self.getFocusResult(p))
             
             if not(p.bid.strain in rows):
                 rows.append(p.bid.strain)
@@ -42,10 +55,12 @@ class DisplayFocusResults:
 
         self.tableContent.setHeaderRow(columns, '{:d}'.format)
         self.tableContent.setHeaderColumn(rows)
-        self.tableContent.setFocus(self.focus.bid.strain, self.focus.NSResult)
+        self.tableContent.setFocus(
+            self.focus.bid.strain, self.getFocusResult(self.focus))
 
         for p in self.plays:
-            (r,c) = self.tableContent.getCoord(p.bid.strain, p.NSResult)
+            (r,c) = self.tableContent.getCoord(p.bid.strain, 
+                                               self.getFocusResult(p))
             if self.tableContent.hasCell(r,c):
                 self.tableContent.setContent(
                     r, c, self.tableContent.getContent(r,c) + 1)
@@ -63,14 +78,15 @@ class DisplayFocusResults:
                 'Spillet af {}'.format(defenceDir))
 
             for p in self.defences:
-                if not(p.NSResult in self.tableContent.headerRow):
-                    self.tableContent.addHeaderRowValue(p.NSResult)
+                if not(self.getFocusResult(p) in self.tableContent.headerRow):
+                    self.tableContent.addHeaderRowValue(self.getFocusResult(p))
 
                 if not(p.bid.strain in self.tableContent.headerColumn):
                     self.tableContent.addHeaderColumnValue(p.bid.strain)
 
             for p in self.defences:
-                (r,c) = self.tableContent.getCoord(p.bid.strain, p.NSResult)
+                (r,c) = self.tableContent.getCoord(
+                    p.bid.strain, self.getFocusResult(p))
                 if self.tableContent.hasCell(r,c):
                     self.tableContent.setContent(
                         r, c, self.tableContent.getContent(r,c) + 1)
@@ -78,15 +94,15 @@ class DisplayFocusResults:
                     self.tableContent.setContent(r, c, 1)
             #self.tableContent.sortRows(True)
 
+        self.tableContent.sortColumns()
 
-        if self.focus.bid.bidder.getPair() == 'NS':
-            self.tableContent.sortColumns()
-        else:
-            self.tableContent.sortColumns(True)
-            res = []
-            for x in self.tableContent.headerRow:
-                res.append(-x)
-            self.tableContent.headerRow = res
+        #if self.focus.bid.bidder.getPair() == 'NS' and not FocusOnDefender:
+        #else:
+        #    self.tableContent.sortColumns(True)
+        #    res = []
+        #    for x in self.tableContent.headerRow:
+        #        res.append(-x)
+        #    self.tableContent.headerRow = res
 
 
         res = self.tableContent.makeTable()

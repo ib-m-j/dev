@@ -49,7 +49,7 @@ def makeTournamentHtml(server, tournament, focus):
         iframe.addAttribute('width', '600px')
         iframe.addAttribute('height', '600px')
         #table = htmllayout.HtmlTable()
-        d = display.DisplayFocusResults(t, play)
+        d = display.DisplayFocusResults(t, play, None)
         for p in t.plays:
             if p.deal == play.deal:
                 d.addElement(p)

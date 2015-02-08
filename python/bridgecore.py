@@ -379,8 +379,6 @@ class Deal:
         return res.format(cards).lower()
 
 
-
-
     @staticmethod
     def fromHash(hash):
         deal = Deal()
