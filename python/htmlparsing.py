@@ -90,7 +90,8 @@ class HTMLParserTableAnalysis(html.parser.HTMLParser):
         if tag == 'tr':
             HTMLParserTableAnalysis.allTables[-1].addRow()
 
-        if tag == 'th':            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
+        if tag == 'th':            
+            HTMLParserTableAnalysis.allTables[-1].addHeader('header')
             
 
 

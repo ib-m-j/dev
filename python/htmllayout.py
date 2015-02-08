@@ -1,6 +1,8 @@
+# -*- coding: iso-8859-1 -*-
 import html
 import os
 import itertools
+import bridgecore
 
 class HtmlTag:
     def __init__(self, start, end = None, content = None):
@@ -9,23 +11,28 @@ class HtmlTag:
             self.end = self.start[0]+'/'+self.start[1:]
         else:
             self.end = end
-        self.content = content
+        self.content = []
+        if content:
+            self.content.append(content)
         self.attributes = []
-
+        
     def addAttribute(self, attr, value):
         self.attributes.append((attr, value))
 
     def addContent(self, content):
-        self.content = content
+        self.content.append(content)
 
     def renderContent(self):
-        if isinstance(self.content, str):
-            contentStr = html.escape(self.content)
-        elif self.content:
-            contentStr = self.content.render()
-        else:
-            contentStr = ''
-        return contentStr
+        res = ''
+        for c in self.content:
+            if isinstance(c, str):
+                contentStr = html.escape(c)
+            elif c:
+                contentStr = c.render()
+            else:
+                contentStr = ''
+            res = res + contentStr
+        return res
 
     def renderAttrs(self):
         endAt = self.start.find('>')
@@ -39,10 +46,15 @@ class HtmlTag:
         contentStr = self.renderContent()
         return self.renderAttrs() + contentStr + self.end 
 
+    def saveToFile(self, filename):
+        f = open(filename, 'w')
+        f.write(self.render())
+        f.close()
+
 class HtmlCell(HtmlTag):
     def __init__(self, content):
         HtmlTag.__init__(self, '<td>')
-        self.content = content
+        self.content.append(content)
         
 class HtmlRow(HtmlTag):
     def __init__(self):
@@ -57,8 +69,8 @@ class HtmlRow(HtmlTag):
         return self
 
     def renderContent(self):
-        res = '<div>'
-        #res = ''
+        #res = '<div>'
+        res = ''
         for c in self.cells:
             res = res + c.render()
         return res
@@ -76,8 +88,8 @@ class HtmlTable(HtmlTag):
         self.rows.extend(rows)
 
     def renderContent(self):
-        res = '<div>'
-        #res = ''
+        #res = '<div>'
+        res = ''
         for r in self.rows:
             res = res + r.render() 
         return res
@@ -250,7 +262,12 @@ class ArrayContent:
         for (r,v) in enumerate(self.headerColumn):
             #print("starting row", r)
             if includeHeaderRow:
-                row = [HtmlCell(self.columnFormatter(v))]
+                if isinstance(v, bridgecore.Strain):
+                    vStr = v.dkName()
+                else:
+                    vStr = v
+
+                row = [HtmlCell(self.columnFormatter(vStr))]
             else:
                 row = []
             for c in range(len(self.headerRow)):
@@ -271,32 +288,106 @@ class ArrayContent:
                 row.append(cell)
 
             res.addRow(HtmlRow().addCells(row))
-                #amend with focus
             
         return res
             
-        
-
-
 class HtmlWrapper(HtmlTag):
     def __init__(self):
         HtmlTag.__init__(self,'''<!doctype html public "-//W3C//DTD HTML 4.0//EN">
 <html>\n''', '</html>')
+
+class HtmlLink(HtmlTag):
+    def __init__(self, text, link):
+        HtmlTag.__init__(self,'<a>')
+        self.addContent(text)
+        self.addAttribute('href', link)
+
+    def render(self):
+        return '\n' + HtmlTag.render(self)
     
+class HtmlBreak(HtmlTag):
+    def __init__(self):
+        HtmlTag.__init__(self, '<br>')
+        self.end = ''
+
 #    def writeAsFile(self, name):
 #        f = open(name, 'w')
 #        f.write(self.render())
 #        f.close()
 #
 
-if __name__ == '__main__':
- 
+class HtmlList(HtmlTag):
+    def __init__(self, basedAt, masterName, header):
+        self.basedAt = basedAt
+        self.masterName = masterName
+        self.list = []
+        self.header = header
+        self.linkTemplate = '{}{}.html'
 
-#    table = HtmlTable()
-#    table.addRowWithCell('aaaÃ¸')
-#    print(table.rows)
-#    print(table.render())
-#       
+    def addElement(self, relListName):
+        self.list.append(relListName)
+
+    def getMasterName(self):
+        return os.path.join(self.masterName + '.html')
+
+    def getLinkFileName(self, n):
+        return os.path.join(self.linkTemplate.format(
+                self.masterName, self.list[n].replace(' ','')))
+
+    def getFileNameAtBase(self, fileName):
+        return os.path.join(self.basedAt, fileName)
+
+    def getPreviousName(self, n):
+        if n == 0:
+            return self.getMasterName()
+        else:
+            return self.getLinkFileName(n-1)
+
+    def getNextName(self, n):
+        if n == len(self.list) - 1:
+            return self.getMasterName()
+        else:
+            return self.getLinkFileName(n+1)
+                    
+    def getPreviousLink(self, n):
+        if n == 0:
+            previousLink = HtmlLink('forrige', self.getMasterName())
+        else:
+            previousLink = HtmlLink('forrige', self.getPreviousName(n))
+        return previousLink
+
+    def getNextLink(self, n):
+        if n == len(self.list) - 1:
+            nextLink = HtmlLink('næste', self.getMasterName())
+        else:
+            nextLink = HtmlLink('næste', self.getNextName(n))
+        return nextLink
+
+
+    def render(self):
+        br = HtmlBreak() #same break for all breaks
+        masterFileName = os.path.join(self.basedAt, self.masterName )
+        header = HtmlTag('<h2>',None, self.header)
+        body = HtmlTag('<body>')
+        body.addAttribute("style","font-size:18pt")
+        wrap= HtmlWrapper()
+        wrap.addContent(body)
+        body.addContent(header)
+
+        last = None
+        for n in range(len(self.list)):
+            link = HtmlLink(self.list[n], self.getLinkFileName(n))
+            body.addContent(link)
+            body.addContent(br)
+        return wrap.render()    
+            
+
+def renderTable():
+    table = HtmlTable()
+    table.addRowWithCell('aaaÃ¸')
+    print(table.rows)
+    print(table.render())
+       
     table = HtmlTable()
     table1 = HtmlTable()
     table2 = HtmlTable()
@@ -323,3 +414,61 @@ if __name__ == '__main__':
     f.write(wrap.render())
     f.close()
     print(wrap.render())
+
+
+def renderLinks():
+    links = ['1', '2', '3']
+    br = HtmlBreak() #same break for all breaks
+
+    masterFileName = os.path.normpath('..\\data\\testlinks.html')
+    header = HtmlTag('<th>',None, 'Tableheader')
+    body = HtmlTag('<body>')
+    wrap= HtmlWrapper()
+    wrap.addContent(body)
+    body.addContent(header)
+    body.addContent(br)
+    linkTemplate = '{}.html'
+    last = None
+    
+    for n in range(len(links)):
+        wrap1 = HtmlWrapper()
+        body1 = HtmlTag('<body>')
+        wrap1.addContent(body1)
+        linkFileName = linkTemplate.format(links[n])
+        if n == 0:
+            previousLink = HtmlLink('previous', masterFileName)
+        else:
+            previousLink = HtmlLink('previous', linkTemplate.format(links[n-1]))
+        if n == len(links) - 1:
+            nextLink = HtmlLink('nest', masterFileName)
+        else:
+            nextLink = HtmlLink('next', linkTemplate.format(links[n+1]))
+            
+        link = HtmlLink(links[n], linkFileName)
+        body1.addContent('this is number ' + links[n])
+        body1.addContent(br)
+        body1.addContent(previousLink)
+        body1.addContent(br)
+        body1.addContent(nextLink)
+
+        f = open(os.path.normpath('..\\data\\{}'.format(linkFileName)), 'w')
+        f.write(wrap1.render())
+        f.close()
+        
+        body.addContent(link)
+        body.addContent(br)
+
+    f = open(masterFileName, 'w')
+    f.write(wrap.render())
+    f.close()
+
+
+if __name__ == '__main__':
+    #renderTable()
+    #renderLinks()
+    list = HtmlList(os.path.normpath('..\\data\\'), 'testlinks', 'title')
+    for n in range(5):
+        list.addElement('Game {:d}'.format(n))
+    
+    list.saveToFile(list.getMasterName())
+

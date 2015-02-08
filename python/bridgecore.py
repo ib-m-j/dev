@@ -79,6 +79,10 @@ class Strain(Colour):
         else:
             return None
 
+    def dkName(self):
+        map = {'NT':'Sans','S':'Spar','H':'Hjerter','D':'Ruder','C':'Klør'}
+        return map[self.id]
+
     @staticmethod
     def fromId(id):
         return Strain.strains[id]
@@ -352,7 +356,7 @@ class Deal:
         self.hash = bytes(res)
         return self.hash
 
-    def bridgebaseHand(self):
+    def bridgebaseHand(self, playerList, bid):
         res = ' http://www.bridgebase.com/tools/handviewer.html?{}'
         cards = ''
         hand = Seat.fromId('N')
@@ -365,7 +369,13 @@ class Deal:
                     [c.value.symbol for c in self.cards[hand][suit]])
                 cards = cards + '{}{}'.format(suit, symbols)
             hand = hand.getNext()
-
+        res = res + '&v={}&d={}&b={}&p=s'.format(
+            self.zone.bridgebaseZone(), 's', self.dealNo) 
+        #the p parameter above is required but does not show the player
+        for (s,name) in playerList:
+            res = res + '&{}n={}'.format(s,name)
+        #the bid destroys other display
+        #res = res + '&a=-{}'.format(bid)
         return res.format(cards).lower()
 
 
@@ -409,7 +419,19 @@ class Bid:
             return True
         else:
             return self.bidder.id in other.bidder.getPair()
-        
+
+    def bridgebaseBid(self):
+        if self.dbl == 'P':
+            dblStr = ''
+        else:
+            dblStr = self.dbl
+        if self.strain.id == 'NT':
+            strainStr = 'n'
+        else:
+            strainStr = self.strain.id
+
+        return '{:d}{}{}{}'.format(
+            self.tricks, strainStr, dblStr,self.bidder).lower()
 
     @staticmethod
     def fromIslevString(bidstring):
@@ -448,9 +470,14 @@ class Bid:
         return True
 
     def __str__(self):
+        if self.dbl == 'P':
+            dblStr = ''
+        else:
+            dblStr = self.dbl
+
         if self.bidder:
-            return("{} {} {} by {}".format(
-                self.tricks,self.strain.name,self.dbl,self.bidder))
+            return("{} {} {} i {}".format(
+                self.tricks,self.strain.dkName(),dblStr,self.bidder))
         else:
             return("Pass")
 
@@ -487,7 +514,7 @@ class BidDeprecated:
         self.bidder = bidder
 
     def __str__(self):
-        return("{} {} {} by {}".format(
+        return("{} {} {} i {}".format(
             self.tricks,self.strain.name,self.dbl,self.bidder))
 
     def getTricks(self):
@@ -541,7 +568,15 @@ class Seat:
         else:
             return "NSEW" #passed hand
 
-    
+    def getOtherPair(self):
+        temp = self.getPair()
+        if temp == "NS":
+            return "EW"
+        elif temp == "EW":
+            return "NS"
+        else:
+            print("passed hand")
+            return "--"
 
     @staticmethod
     def fromId(id):
@@ -597,7 +632,17 @@ class Zone:
         if self.zone == 'NONE':
             return False
         return seat.id in self.zone
-    
+
+    def bridgebaseZone(self):
+        if self.zone == 'ALL':
+            return 'b'
+        elif self.zone == 'EW':
+            return 'e'
+        elif self.zone == 'NS':
+            return 'n'
+        else:
+            return '-'
+
     @staticmethod
     def fromDKName(name):
         if name == 'Ingen':

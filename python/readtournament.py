@@ -203,11 +203,11 @@ def onePairTournament():
                 Crawler.fromServerUrl(
                     'islevbridge.dk',file).getFileContent())
 
-def oneTeamTournament():
-    res = readOneTournament('islevbridge.dk',
-                            '/Resultat/Klub1/Turneringer/Resultat1068.html')
+def oneTournament(server, file):
+    res = readOneTournament(server, file)
     #print(res)
     if res[0] == 'pair':
+        #not developed
         for file in res[1]:
             readresfile.basicIslevPairs(
                 Crawler.fromServerUrl(
@@ -226,14 +226,15 @@ def doPlayerFocus():
     #largeTest()
     #oneTournament()
     #onePairTournament()
-    t = oneTeamTournament()
+    t = oneTournament('islevbridge.dk',
+                          '/Resultat/Klub1/Turneringer/Resultat1082.html')
     print(len(t.teams), len(t.deals))
     for team in t.teams:
         print(team)
         for p in t.teams[team].teamPlayers:
             print('\t',p)
-    #focus = ('Orion','Einar Poulsen')
-    focus = ('Lille O','Lars Sørensen')
+    focus = ('Orion','Einar Poulsen')
+    #focus = ('Lille O','Lars Sørensen')
 
     
     relevant = t.getPlayedByPair(focus)
@@ -244,6 +245,7 @@ def doPlayerFocus():
 
  
     for play in relevant:
+        wrapper = htmllayout.HtmlWrapper()
         cardsTable = htmllayout.HtmlTable()
         iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
         iframe.addAttribute('src', t.deals[play.deal].bridgebaseHand())
@@ -264,13 +266,14 @@ def doPlayerFocus():
                 d.addElement(p)
         res = d.renderAsHtmlTable()
         table.addRowWithCell(res)
-    f = open(os.path.normpath('..\\data\\einar.html'), 'w')
+    fileName = os.path.normpath('..\\..\\..\\einarftp\\pagaten\\einar.html')
+    f = open(fileName, 'w')
     f.write(wrap.render())
     f.close()
-    #print(wrap.render())
+    print('wrote file: ' + fileName)
         
 
-doDefenderFocus():
+#doDefenderFocus():
 
 
 if __name__ == '__main__':

@@ -53,8 +53,14 @@ class DisplayFocusResults:
                 self.tableContent.setContent(r, c, 1)
         self.tableContent.sortRows(True)
 
+        #this does not work must be passed as parameter to makeTable
+        #dirText = 'Viser {} scoren'.format( self.focus.bid.bidder.getPair())
+        #self.tableContent.headerColumn[0] ='xxxxx' # dirText
+
         if len(self.defences) > 0:
-            self.tableContent.addHeaderColumnValue('other direction')
+            defenceDir = self.focus.bid.bidder.getOtherPair()
+            self.tableContent.addHeaderColumnValue(
+                'Spillet af {}'.format(defenceDir))
 
             for p in self.defences:
                 if not(p.NSResult in self.tableContent.headerRow):
@@ -84,10 +90,6 @@ class DisplayFocusResults:
 
 
         res = self.tableContent.makeTable()
-        res.addRowWithCell('')
-        res.addRowWithCell('')
-        res.addRowWithCell('')
-        res.addRowWithCell('')
         return res
 
         #(r,c) = getCoord(self.focus, rows, columns)
