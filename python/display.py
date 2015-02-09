@@ -33,6 +33,13 @@ class DisplayFocusResults:
         else:
             self.defences.append(play)
 
+
+    def addTeamFocus(self, play):
+        self.teamFocusPlay = play
+
+    def getTeamFocusPlay(self):
+        return self.teamFocusPlay
+
     def getFocusResult(self, play):
         if self.focusDirection == 'NS':
             return play.NSResult
@@ -93,6 +100,10 @@ class DisplayFocusResults:
                 else:
                     self.tableContent.setContent(r, c, 1)
             #self.tableContent.sortRows(True)
+
+        self.tableContent.setTeamFocus(
+            self.teamFocusPlay.bid.strain, self.getFocusResult(self.teamFocusPlay))
+        #print('team bid:', self.teamFocusPlay.bid, self.teamFocusPlay.NSResult)
 
         self.tableContent.sortColumns()
 

@@ -46,6 +46,14 @@ class Play:
     def hasParticipant(self, teamPlayer):
         return teamPlayer in self.players.values()
 
+    def hasTeamParticipant(self, team):
+        found = False
+        for teamPlayer in self.players.values():
+            if team == teamPlayer[0]:
+                found = True
+                break
+        return found
+
     def playedByPair(self):
         if self.bid.bidder:
             side = self.bid.bidder.getPair()
@@ -116,7 +124,7 @@ class Tournament:
             if teamPlayer in play.playedByPair():
                 res.append(play)
         return res
-            
+    
     def getDefendedByPair(self, teamPlayer):
         res = []
         for play in self.plays:

@@ -125,6 +125,11 @@ class ArrayContent:
         self.focusResult = self.headerRow.index(result)
         self.focusStrain = self.headerColumn.index(strain)
 
+    def setTeamFocus(self, strain, result):
+        self.teamFocusResult = self.headerRow.index(result)
+        self.teamFocusStrain = self.headerColumn.index(strain)
+
+
     def getCoord(self, rValue, cValue):
         #print('getcoord', cValue, self.headerRow, rValue, self.headerColumn)
         if cValue in self.headerRow and rValue in self.headerColumn:
@@ -223,6 +228,7 @@ class ArrayContent:
         self.headerRow = newHeader
         self.cells = newCells
         self.focusResult = map[self.focusResult]
+        self.teamFocusResult = map[self.teamFocusResult]
 
     def sortRows(self, reverseValue = False):
         map = {}
@@ -285,6 +291,8 @@ class ArrayContent:
                 cell.addAttribute('align', 'center')
                 if r == self.focusStrain and c == self.focusResult:
                     cell.addAttribute('bgcolor','#AAFFAA')
+                if r == self.teamFocusStrain and c == self.teamFocusResult:
+                    cell.addAttribute('bgcolor','#FFAAAA')
                 row.append(cell)
 
             res.addRow(HtmlRow().addCells(row))
@@ -321,11 +329,13 @@ class HtmlList(HtmlTag):
         self.basedAt = basedAt
         self.masterName = masterName
         self.list = []
+        self.displayList = []
         self.header = header
         self.linkTemplate = '{}{}.html'
 
-    def addElement(self, relListName):
+    def addElement(self, relListName, displayName):
         self.list.append(relListName)
+        self.displayList.append(displayName)
 
     def getMasterName(self):
         return os.path.join(self.masterName + '.html')
@@ -376,7 +386,7 @@ class HtmlList(HtmlTag):
 
         last = None
         for n in range(len(self.list)):
-            link = HtmlLink(self.list[n], self.getLinkFileName(n))
+            link = HtmlLink(self.displayList[n], self.getLinkFileName(n))
             body.addContent(link)
             body.addContent(br)
         return wrap.render()    

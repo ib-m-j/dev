@@ -20,10 +20,9 @@ def makeTournamentHtml(server, tournament, focus):
     listElements = []
     for play in relevant:
         print('starting play', play.deal)
-        list.addElement('spil{:d}'.format(play.deal))
         wrap1 = htmllayout.HtmlWrapper()
         body1 = htmllayout.HtmlTag('<body>')
-        body1.addAttribute("style","font-size:36pt")
+        body1.addAttribute("style","font-size:24pt")
         server = htmllayout.HtmlTag('<div>','', server)
         header = htmllayout.HtmlTag('','', t.name)
         space = htmllayout.HtmlTag('<div>','')
@@ -46,15 +45,22 @@ def makeTournamentHtml(server, tournament, focus):
         iframe.addAttribute(
             'src', t.deals[play.deal].bridgebaseHand(
                 playerList, play.bid.bridgebaseBid()))
-        iframe.addAttribute('width', '600px')
-        iframe.addAttribute('height', '600px')
+        iframe.addAttribute('width', '400px')
+        iframe.addAttribute('height', '400px')
         #table = htmllayout.HtmlTable()
         d = display.DisplayFocusResults(t, play, None)
         for p in t.plays:
             if p.deal == play.deal:
                 d.addElement(p)
+                if p.hasTeamParticipant(play.playedBy()[0]) and p.playedBy() != play.playedBy():
+                    d.addTeamFocus(p)
+
+        list.addElement(
+            'spil{:d}'.format(play.deal), 'Spil {:d} Svingscore  {:d}'.format(
+                play.deal, d.getFocusResult(d.focus) - d.getFocusResult(d.teamFocusPlay)))
+
         resTable = d.renderAsHtmlTable()
-        resTable.addAttribute('cellpadding','24')
+        resTable.addAttribute('cellspacing','5px')
         
         wrap1.addContent(body1)
         #body1.addContent(header)
