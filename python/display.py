@@ -18,6 +18,8 @@ class DisplayFocusResults:
         self.focusPlay = focusPlay
         self.focusTeamPlayer = focusTeamPlayer
         self.focusDirection = self.focusPlay.pairOf(focusTeamPlayer)
+        self.otherDirection = self.focusPlay.seatOf(
+            focusTeamPlayer).getOtherPairDK()
 
         #if self.focus.bid.bidder.getPair() == 'NS':
         #    if focusOnDefender:
@@ -132,29 +134,34 @@ class DisplayFocusResults:
         #        self.getFocusResult(self.teamFocusPlay))
             
 
-        for p in self.primary:
-            (r,c) = self.primaryTableContent.getCoord(p.bid.strain, 
+        if len(self.primary) > 0:
+            self.primaryTableContent.addFirstHeaderColumnValue(
+                'Spillet af {}'.format(self.focusDirection))
+            for p in self.primary:
+                (r,c) = self.primaryTableContent.getCoord(p.bid.strain, 
                                                self.getFocusResult(p))
-            if self.primaryTableContent.hasCell(r,c):
-                self.primaryTableContent.setContent(
-                    r, c, self.primaryTableContent.getContent(r,c) + 1)
-            else:
-                self.primaryTableContent.setContent(r, c, 1)
+                if self.primaryTableContent.hasCell(r,c):
+                    self.primaryTableContent.setContent(
+                        r, c, self.primaryTableContent.getContent(r,c) + 1)
+                else:
+                    self.primaryTableContent.setContent(r, c, 1)
 
-        if self.teamFocusIsPrimary:
-            (r, c) = self.primaryTableContent.getCoord(
-                self.teamFocusPlay.bid.strain, 
-                self.getFocusResult(self.teamFocusPlay))
-            self.primaryTableContent.setAttributes(r,c,[('bgcolor','#FFAAAA')])
-        if self.focusIsPrimary:
-            (r, c) = self.primaryTableContent.getCoord(
-                self.focusPlay.bid.strain, self.getFocusResult(self.focusPlay))
-            self.primaryTableContent.setAttributes(r,c,[('bgcolor','#AAFFAA')])
+            if self.teamFocusIsPrimary:
+                (r, c) = self.primaryTableContent.getCoord(
+                    self.teamFocusPlay.bid.strain, 
+                    self.getFocusResult(self.teamFocusPlay))
+                self.primaryTableContent.setAttributes(
+                    r,c,[('bgcolor','#FFAAAA')])
+            if self.focusIsPrimary:
+                (r, c) = self.primaryTableContent.getCoord(
+                    self.focusPlay.bid.strain, 
+                    self.getFocusResult(self.focusPlay))
+                self.primaryTableContent.setAttributes(
+                    r,c,[('bgcolor','#AAFFAA')])
 
         if len(self.secondary) > 0:
-            defenceDir = self.focusPlay.bid.bidder.getOtherPair()
             self.secondaryTableContent.addFirstHeaderColumnValue(
-                'Spillet af {}'.format(defenceDir))
+                'Spillet af {}'.format(self.otherDirection))
 
             for p in self.secondary:
                 (r,c) = self.secondaryTableContent.getCoord(

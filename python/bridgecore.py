@@ -583,6 +583,12 @@ class Seat:
             print("passed hand")
             return "--"
 
+    def getOtherPairDK(self):
+        temp = self.getOtherPair()
+        if temp == "EW":
+            return "ØV"
+        return temp
+
     @staticmethod
     def fromId(id):
         for x in Seat.all:

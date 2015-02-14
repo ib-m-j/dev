@@ -71,6 +71,16 @@ class Play:
         else:
             return ''
 
+    def seatOf(self, teamPlayer):
+        for (seat, tPlayer) in self.players.items():
+            if (tPlayer) == teamPlayer:
+                res = seat
+                break
+        if res:
+            return seat
+        else:
+            return ''
+
     def getResult(self, direction):
         if direction == 'NS':
             return self.NSResult
