@@ -246,6 +246,8 @@ def readTournament(server, url):
                 Crawler.fromServerUrl(
                     'islevbridge.dk',file).getFileContent(), t)
    
+        t.addOrigin(server, url)
+
     print(len(t.teams), len(t.deals))
     for team in t.teams:
         print(team)

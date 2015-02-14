@@ -15,7 +15,7 @@ class HtmlTag:
         if content:
             self.content.append(content)
         self.attributes = []
-        
+
     def addAttribute(self, attr, value):
         self.attributes.append((attr, value))
 
@@ -105,7 +105,13 @@ class ArrayContent:
         self.headerRow = []
         self.headerColumn = []
         self.cells = {} #cells contains content indexed by coordinates
+        self.attributes = {}
         self.cellFormatter = cellFormatter
+        self.teamFocusStrain = None
+        self.teamFocusResult = None
+        self.focusStrain = None
+        self.focusResult = None
+
 
     def setHeaderRow(self, headerRow, formatter = str):
         self.headerRow = headerRow
@@ -118,20 +124,28 @@ class ArrayContent:
     def addHeaderRowValue(self, headerRowValue):
         self.headerRow.append(headerRowValue)
 
+    def addFirstHeaderColumnValue(self, headerValue):
+        self.headerColumn = [headerValue] + self.headerColumn
+
     def addHeaderColumnValue(self, headerColumnValue):
         self.headerColumn.append(headerColumnValue)
 
-    def setFocus(self, strain, result):
-        self.focusResult = self.headerRow.index(result)
-        self.focusStrain = self.headerColumn.index(strain)
-
-    def setTeamFocus(self, strain, result):
-        self.teamFocusResult = self.headerRow.index(result)
-        self.teamFocusStrain = self.headerColumn.index(strain)
+    #def setFocus(self, strain, result):
+    #    self.focusResult = self.headerRow.index(result)
+    #    self.focusStrain = self.headerColumn.index(strain)
+    #
+    #def setTeamFocus(self, strain, result):
+    #    self.teamFocusResult = result #self.headerRow.index(result)
+    #    self.teamFocusStrain = strain #self.headerColumn.index(strain)
+    #
+    #def getTeamFocusIndexes(self):
+    #    if self.teamFocusResult:
+    #        return (self.headerRow.index(self.teamFocusResult),
+    #                self.headerColumn.index(self.teamFocusStrain))
+    #    return None
 
 
     def getCoord(self, rValue, cValue):
-        #print('getcoord', cValue, self.headerRow, rValue, self.headerColumn)
         if cValue in self.headerRow and rValue in self.headerColumn:
             return (self.headerColumn.index(rValue),
                     self.headerRow.index(cValue))
@@ -147,6 +161,7 @@ class ArrayContent:
                 self.cells[rIndex] = {}
             self.cells[rIndex][cIndex] = content
         else:
+            print(self.headerRow, self.headerColumn, rIndex, cIndex)
             raise Exception(
                 'could not set content {},{}'.format(rIndex, cIndex))
 
@@ -157,8 +172,51 @@ class ArrayContent:
             raise Exception(
                 'could not get content {},{}'.format(rIndex, cIndex))
 
+    def setAttributes(self, rIndex, cIndex, attributes):
+        if cIndex < len(self.headerRow) and rIndex < len(self.headerColumn):
+            if not rIndex in self.attributes:
+                self.attributes[rIndex] = {}
+            self.attributes[rIndex][cIndex] = attributes
+        else:
+            print(self.headerRow, self.headerColumn, rIndex, cIndex)
+            raise Exception(
+                'could not set attributes {},{}'.format(rIndex, cIndex))
+
+    def addAttribute(self, rIndex, cIndex, attribute):
+        if cIndex < len(self.headerRow) and rIndex < len(self.headerColumn):
+            if not rIndex in self.cells:
+                self.attriutes[rIndex] = {}
+            if not cIndex in self.sells[rIndex]:
+                self.attributes[rIndex][cIndex] =[]
+            self.attributes[rIndex][cIndex].append(attribute)
+        else:
+            print(self.headerRow, self.headerColumn, rIndex, cIndex)
+            raise Exception(
+                'could not set content {},{}'.format(rIndex, cIndex))
+
+    def getAttributes(self, rIndex, cIndex):
+        if cIndex < len(self.headerRow) and rIndex < len(self.headerColumn):
+            if self.hasAttributes(rIndex, cIndex):
+                return self.attributes[rIndex][cIndex]
+            else: 
+                return []
+        else:
+            return []
+
     def hasCell(self, r,c):
         return (r in self.cells.keys() and c in self.cells[r].keys())
+
+    def hasAttributes(self, r,c):
+        return (r in self.attributes.keys() and c in self.attributes[r].keys())
+
+    def getCell(self, r,c):
+        if self.hasCell(r, c):
+            return self.cells[r][c] 
+
+    def getAttribue(self, r,c):
+        if self.hasAttribute(r, c):
+            return self.attributes[r][c] 
+        return None
 
     def __iter__(self):
         self.rIndex = -1
@@ -181,23 +239,27 @@ class ArrayContent:
             
     def merge(self, other):
         pass
-        #merge by adding column and rows to create large table
-        
+
     def expandRows(self, other):
-        #result will contain sum of rows columns will be joined
-        res = ArrayContent()
-        res.setHeaderRow(self.headerRow + other.headerRow)
+        #result will contain sum of rows columns assumed identical
+        res = ArrayContent('{:d}'.format)
+        res.setHeaderRow(self.headerRow)
         res.setHeaderColumn(self.headerColumn)
         for (r,c,v) in self:
                 res.setContent(r,c,v)
         
-        columnMap = {}
-        for (n,x) in enumerate(other.headerRow):
-            if x in self.headerRow:
-                columnMap[n] = self.headerRow.index(x)
-            else:
-                res.headerRow.append(x)
-                columnMap[n] = len(res.headerRow) - 1
+        for r in self.attributes.keys():
+            for c in self.attributes[r].keys():
+                res.setAttributes(r,c,self.getAttributes(r,c))
+
+        #columnMap = {}
+        #for (n,x) in enumerate(other.headerRow):
+        #    if x in self.headerRow:
+        #        columnMap[n] = self.headerRow.index(x)
+        #    else:
+        #        res.headerRow.append(x)
+        #        columnMap[n] = len(res.headerRow) - 1
+        #not needed for identical columns
 
         rowMap = {}
         for (n,x) in enumerate(other.headerColumn):
@@ -205,7 +267,15 @@ class ArrayContent:
             rowMap[n] = len(res.headerColumn) - 1
 
         for (r,c,v) in other:
-            res.setContent(rowMap[r], columnMap[c], v)
+            res.setContent(rowMap[r], c, v)
+            #if colulmns also change use this
+            #res.setContent(rowMap[r], columnMap[c], v)
+
+        for r in other.attributes.keys():
+            for c in other.attributes[r].keys():
+                res.setAttributes(rowMap[r],c,other.getAttributes(r,c))
+
+        return res
 
     def sortColumns(self, reverseValue = False):
         map = {}
@@ -289,11 +359,20 @@ class ArrayContent:
                 cell = HtmlCell(toDisplay)
                 cell.addAttribute('width', '50px')
                 cell.addAttribute('align', 'center')
-                if r == self.focusStrain and c == self.focusResult:
-                    cell.addAttribute('bgcolor','#AAFFAA')
-                if r == self.teamFocusStrain and c == self.teamFocusResult:
-                    cell.addAttribute('bgcolor','#FFAAAA')
+                
+                for (a,b) in self.getAttributes(r,c):
+                    cell.addAttribute(a,b)
+                #if r == self.teamFocusStrain and c == self.teamFocusResult:
+                #    cell.addAttribute('bgcolor','#FFAAAA')
                 row.append(cell)
+
+            #print(self.cells)
+            #teamFocus = self.getTeamFocusIndexes()
+            #if teamFocus:
+            #    c = self.getCell(teamFocus[0], teamFocus[1])
+            #    if c:
+            #        print("thsi should be a cell:", c)
+            #        c.addAttribute('bgcolor','#FFAAAA')
 
             res.addRow(HtmlRow().addCells(row))
             
@@ -331,7 +410,7 @@ class HtmlList(HtmlTag):
         self.list = []
         self.displayList = []
         self.header = header
-        self.linkTemplate = '{}{}.html'
+        self.linkTemplate = '{}.html'
 
     def addElement(self, relListName, displayName):
         self.list.append(relListName)
@@ -342,7 +421,7 @@ class HtmlList(HtmlTag):
 
     def getLinkFileName(self, n):
         return os.path.join(self.linkTemplate.format(
-                self.masterName, self.list[n].replace(' ','')))
+            self.list[n].replace(' ','')))
 
     def getFileNameAtBase(self, fileName):
         return os.path.join(self.basedAt, fileName)
@@ -391,6 +470,12 @@ class HtmlList(HtmlTag):
             body.addContent(br)
         return wrap.render()    
             
+def getHtmlStart():
+    br = HtmlBreak() #same break for all breaks
+    body = HtmlTag('<body>')
+    wrap= HtmlWrapper()
+    wrap.addContent(body)
+    return (wrap, body, br)
 
 def renderTable():
     table = HtmlTable()

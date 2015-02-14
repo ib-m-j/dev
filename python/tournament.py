@@ -41,7 +41,7 @@ class Play:
     def playedBy(self):
         if self.bid.bidder:
             return self.players[self.bid.bidder]
-        return None
+        return ('-', '-')
 
     def hasParticipant(self, teamPlayer):
         return teamPlayer in self.players.values()
@@ -71,6 +71,13 @@ class Play:
         else:
             return ''
 
+    def getResult(self, direction):
+        if direction == 'NS':
+            return self.NSResult
+        else:
+            return -self.NSResult
+
+
 class Team:
     def __init__(self, localId):
         self.localId = localId
@@ -94,6 +101,10 @@ class Tournament:
 
     def setName(self, name):
         self.name = name
+        
+    def addOrigin(self, server, url):
+        self.server = server
+        self.url = url
 
     def getTeam(self, teamLocalId):
         if not teamLocalId in self.teams:
@@ -119,11 +130,14 @@ class Tournament:
         self.plays.append(Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult))
 
     def getPlayedByPair(self, teamPlayer):
-        res = []
+        playedBy  = []
+        defendedBy = []
         for play in self.plays:
             if teamPlayer in play.playedByPair():
-                res.append(play)
-        return res
+                playedBy.append(play)
+            elif play.hasParticipant(teamPlayer):
+                defendedBy.append(play)
+        return (playedBy, defendedBy)
     
     def getDefendedByPair(self, teamPlayer):
         res = []
@@ -141,12 +155,32 @@ class Tournament:
                 res.append(play)
         return res
 
-    def getPlayedByTeam(self, teamPlayer):
-        res = []
+    #played means particpated in play
+    def isPlayedByTeamOther(self, play, teamPlayer):
+        if play.hasTeamParticipant(teamPlayer[0]) and not play.hasParticipant(
+                teamPlayer):
+            return  True
+        return False
+
+    def getPlayedByTeamOther(self, teamPlayer):
         for play in self.plays:
-            if play.hasParticipant(teamPlayer):
-                res.append(play)
-        return res
+            if self.isPlayedByTeamOther(play, teamPlayer):
+                return play
+        return None
+
+    def getRank(self, play, direction):
+        rank = 1
+        total = 0
+        myScore = play.getResult(direction)
+        for p in self.plays:
+            if p.deal == play.deal:
+                total = total + 2
+                if p.players != play.players:
+                    if p.getResult(direction) < play.getResult(direction):
+                        rank = rank + 2
+                    elif p.getResult(direction)== play.getResult(direction):
+                        rank = rank + 1
+        return (rank, total)
 
 
 #        def getPos(teamPlayer, SWNEPlayers):

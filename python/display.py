@@ -9,36 +9,80 @@ class Cell:
             setattr(self,k,v)
 
 class DisplayFocusResults:
-    def __init__(self, tournament, focus, focusOnDefender):
-        self.deal = focus.deal
-        self.plays = []
-        self.defences = []
+    def __init__(self, tournament, focusPlay, focusTeamPlayer):
+        self.deal = focusPlay.deal
+        self.primary = []
+        self.secondary = []
         self.tournament = tournament
         self.cells = {}
-        self.focus = focus
-        if self.focus.bid.bidder.getPair() == 'NS':
-            if focusOnDefender:
-                self.focusDirection == 'EW'
-            else:
-                self.focusDirection = 'NS'
-        else:
-            if focusOnDefender:
-                self.focusDirection == 'NS'
-            else:
-                self.focusDirection = 'EW'
+        self.focusPlay = focusPlay
+        self.focusTeamPlayer = focusTeamPlayer
+        self.focusDirection = self.focusPlay.pairOf(focusTeamPlayer)
+
+        #if self.focus.bid.bidder.getPair() == 'NS':
+        #    if focusOnDefender:
+        #        self.focusDirection == 'EW'
+        #    else:
+        #        self.focusDirection = 'NS'
+        #else:
+        #    if focusOnDefender:
+        #        self.focusDirection == 'NS'
+        #    else:
+        #        self.focusDirection = 'EW'
 
     def addElement(self, play):
-        if play.bid.relevantFor(self.focus.bid):
-            self.plays.append(play)
+        if (play.hasTeamParticipant(self.focusTeamPlayer[0]) and 
+            not play.hasParticipant(self.focusTeamPlayer)):
+            isTeamPlay = True
+        else: 
+            isTeamPlay = False
+
+        if (play.hasParticipant(self.focusTeamPlayer)):
+            isFocusPlay = True
         else:
-            self.defences.append(play)
+            isFocusPlay = False
+
+        if (play.bid.isPassedBid() or 
+            play.bid.bidder.getPair() == self.focusDirection):
+            self.primary.append(play)
+            if isTeamPlay:
+                self.addTeamFocus(play, True)
+            if isFocusPlay:
+                self.focusIsPrimary = True
+        else:
+            self.secondary.append(play)
+            if isTeamPlay:
+                self.addTeamFocus(play, False)
+            if isFocusPlay:
+                self.focusIsPrimary = False
 
 
-    def addTeamFocus(self, play):
+
+        #if play.hasTeamParticipant(
+        #        self.focusPlay.playedBy()[0]) and play.playedBy(
+        #        ) != self.focusPlay.playedBy():
+        #    isTeamPlay = True
+        #else:
+        #    isTeamPlay = False
+
+        #
+        #if play.bid.relevantFor(self.focusPlay.bid):
+        #    self.primary.append(play)
+        #    if isTeamPlay:
+        #        self.addTeamFocus(play, True)
+        #else:
+        #    self.secondary.append(play)
+        #    self.addTeamFocus(play, False)
+        #        #if p.hasTeamParticipant(play.playedBy()[0]) and p.playedBy() != play.playedBy():
+        #        #    d.addTeamFocus(p)
+
+
+    def addTeamFocus(self, play, isPrimary):
         self.teamFocusPlay = play
-
-    def getTeamFocusPlay(self):
-        return self.teamFocusPlay
+        self.teamFocusIsPrimary = isPrimary
+    
+    #def getTeamFocusPlay(self):
+    #    return self.teamFocusPlay
 
     def getFocusResult(self, play):
         if self.focusDirection == 'NS':
@@ -48,96 +92,97 @@ class DisplayFocusResults:
     
 
     def renderAsHtmlTable(self):
-        self.tableContent = htmllayout.ArrayContent('{:d}'.format)
+        self.primaryTableContent = htmllayout.ArrayContent('{:d}'.format)
+        self.secondaryTableContent = htmllayout.ArrayContent('{:d}'.format)
         columns = []
-        rows = []
+        playerRows = []
+        defenderRows = []
         
-        for p in self.plays:
+        for p in self.primary:
             if not(self.getFocusResult(p) in columns):
                     columns.append(self.getFocusResult(p))
             
-            if not(p.bid.strain in rows):
-                rows.append(p.bid.strain)
+            if not(p.bid.strain in playerRows):
+                playerRows.append(p.bid.strain)
 
 
-        self.tableContent.setHeaderRow(columns, '{:d}'.format)
-        self.tableContent.setHeaderColumn(rows)
-        self.tableContent.setFocus(
-            self.focus.bid.strain, self.getFocusResult(self.focus))
+        for p in self.secondary:
+            if not(self.getFocusResult(p) in columns):
+                    columns.append(self.getFocusResult(p))
 
-        for p in self.plays:
-            (r,c) = self.tableContent.getCoord(p.bid.strain, 
+            if not(p.bid.strain in defenderRows):
+                defenderRows.append(p.bid.strain)
+
+        columns.sort()
+        playerRows.sort()
+        defenderRows.sort()
+
+        self.primaryTableContent.setHeaderRow(columns, '{:d}'.format)
+        self.primaryTableContent.setHeaderColumn(playerRows)
+        self.secondaryTableContent.setHeaderRow(columns, '{:d}'.format)
+        self.secondaryTableContent.setHeaderColumn(defenderRows)
+
+        #if self.teamFocusIsPrimary:
+        #    self.primaryTableContent.setTeamFocus(
+        #        self.teamFocusPlay.bid.strain, 
+        #        self.getFocusResult(self.teamFocusPlay))
+        #else:
+        #    self.secondaryTableContent.setTeamFocus(
+        #        self.teamFocusPlay.bid.strain, 
+        #        self.getFocusResult(self.teamFocusPlay))
+            
+
+        for p in self.primary:
+            (r,c) = self.primaryTableContent.getCoord(p.bid.strain, 
                                                self.getFocusResult(p))
-            if self.tableContent.hasCell(r,c):
-                self.tableContent.setContent(
-                    r, c, self.tableContent.getContent(r,c) + 1)
+            if self.primaryTableContent.hasCell(r,c):
+                self.primaryTableContent.setContent(
+                    r, c, self.primaryTableContent.getContent(r,c) + 1)
             else:
-                self.tableContent.setContent(r, c, 1)
-        self.tableContent.sortRows(True)
+                self.primaryTableContent.setContent(r, c, 1)
 
-        #this does not work must be passed as parameter to makeTable
-        #dirText = 'Viser {} scoren'.format( self.focus.bid.bidder.getPair())
-        #self.tableContent.headerColumn[0] ='xxxxx' # dirText
+        if self.teamFocusIsPrimary:
+            (r, c) = self.primaryTableContent.getCoord(
+                self.teamFocusPlay.bid.strain, 
+                self.getFocusResult(self.teamFocusPlay))
+            self.primaryTableContent.setAttributes(r,c,[('bgcolor','#FFAAAA')])
+        if self.focusIsPrimary:
+            (r, c) = self.primaryTableContent.getCoord(
+                self.focusPlay.bid.strain, self.getFocusResult(self.focusPlay))
+            self.primaryTableContent.setAttributes(r,c,[('bgcolor','#AAFFAA')])
 
-        if len(self.defences) > 0:
-            defenceDir = self.focus.bid.bidder.getOtherPair()
-            self.tableContent.addHeaderColumnValue(
+        if len(self.secondary) > 0:
+            defenceDir = self.focusPlay.bid.bidder.getOtherPair()
+            self.secondaryTableContent.addFirstHeaderColumnValue(
                 'Spillet af {}'.format(defenceDir))
 
-            for p in self.defences:
-                if not(self.getFocusResult(p) in self.tableContent.headerRow):
-                    self.tableContent.addHeaderRowValue(self.getFocusResult(p))
-
-                if not(p.bid.strain in self.tableContent.headerColumn):
-                    self.tableContent.addHeaderColumnValue(p.bid.strain)
-
-            for p in self.defences:
-                (r,c) = self.tableContent.getCoord(
+            for p in self.secondary:
+                (r,c) = self.secondaryTableContent.getCoord(
                     p.bid.strain, self.getFocusResult(p))
-                if self.tableContent.hasCell(r,c):
-                    self.tableContent.setContent(
-                        r, c, self.tableContent.getContent(r,c) + 1)
+                if self.secondaryTableContent.hasCell(r,c):
+                    self.secondaryTableContent.setContent(
+                        r, c, self.secondaryTableContent.getContent(r,c) + 1)
                 else:
-                    self.tableContent.setContent(r, c, 1)
-            #self.tableContent.sortRows(True)
-
-        self.tableContent.setTeamFocus(
-            self.teamFocusPlay.bid.strain, self.getFocusResult(self.teamFocusPlay))
-        #print('team bid:', self.teamFocusPlay.bid, self.teamFocusPlay.NSResult)
-
-        self.tableContent.sortColumns()
-
-        #if self.focus.bid.bidder.getPair() == 'NS' and not FocusOnDefender:
-        #else:
-        #    self.tableContent.sortColumns(True)
-        #    res = []
-        #    for x in self.tableContent.headerRow:
-        #        res.append(-x)
-        #    self.tableContent.headerRow = res
+                    self.secondaryTableContent.setContent(r, c, 1)
+            if not(self.teamFocusIsPrimary):
+                (r, c) = self.secondaryTableContent.getCoord(
+                    self.teamFocusPlay.bid.strain, 
+                    self.getFocusResult(self.teamFocusPlay))
+                self.secondaryTableContent.setAttributes(
+                    r,c,[('bgcolor','#FFAAAA')])
+            if not(self.focusIsPrimary):
+                (r, c) = self.secondaryTableContent.getCoord(
+                    self.focusPlay.bid.strain, 
+                    self.getFocusResult(self.focusPlay))
+                self.secondaryTableContent.setAttributes(
+                    r,c,[('bgcolor','#AAFFAA')])
 
 
-        res = self.tableContent.makeTable()
-        return res
 
-        #(r,c) = getCoord(self.focus, rows, columns)
-        #self.cells[r][c].focus = '*'
+            merged = self.primaryTableContent.expandRows(
+                self.secondaryTableContent)
+            return merged.makeTable()
 
-        #for cKey in columns:
-        #    line.append('{:d}'.format(sign*cKey))
-        #lines.append(line)
-        #
-        #for r in range(len(rows)):
-        #    line = [rows[r]]
-        #    for c in range(len(columns)):
-        #        cell = self.cells[r][c]
-        #        if cell.value == 0:
-        #            v = ''
-        #        else:
-        #            v = '{:d}'.format(cell.value)
-        #        line.append(v+cell.focus)
-        #    lines.append(line)
-        #     
-        #for l in lines:
-        #    print(l)
-        #print()
-        #return lines
+        return self.primaryTableContent.makeTable()
+
+

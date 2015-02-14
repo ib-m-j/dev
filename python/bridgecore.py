@@ -80,7 +80,7 @@ class Strain(Colour):
             return None
 
     def dkName(self):
-        map = {'NT':'Sans','S':'Spar','H':'Hjerter','D':'Ruder','C':'Klør'}
+        map = {'P':'Pas', 'NT':'Sans','S':'Spar','H':'Hjerter','D':'Ruder','C':'Klør'}
         return map[self.id]
 
     @staticmethod
@@ -407,16 +407,20 @@ class Bid:
         self.strain = strain
         self.dbl = dbl
         if not bidder:
-            self.passedHand = True
+            self.passedBid = True
         else:
-            self.passedHand = False
+            self.passedBid = False
         #will need to extend when handling not played 
 
-    def relevantFor(self, other):
-        if self.passedHand or other.passedHand:
-            return True
-        else:
-            return self.bidder.id in other.bidder.getPair()
+    #def relevantFor(self, other):
+    #    if self.passedBid or other.passedBid:
+    #        return True
+    #    else:
+    #        return self.bidder.id in other.bidder.getPair()
+
+
+    def isPassedBid(self):
+        return self.passedBid
 
     def bridgebaseBid(self):
         if self.dbl == 'P':
@@ -427,9 +431,12 @@ class Bid:
             strainStr = 'n'
         else:
             strainStr = self.strain.id
-
-        return '{:d}{}{}{}'.format(
-            self.tricks, strainStr, dblStr,self.bidder).lower()
+        
+        if self.tricks:
+            return '{:d}{}{}{}'.format(
+                self.tricks, strainStr, dblStr,self.bidder).lower()
+        else:
+            return 'p'
 
     @staticmethod
     def fromIslevString(bidstring):
