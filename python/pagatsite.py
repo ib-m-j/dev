@@ -76,10 +76,12 @@ def makeTeamTournamentHtml(t):
     
     (playedByFocus, defendedByFocus) = t.getPlayedByPair(focusTeamPlayer)
     
-    (wrap1, body1, br1) = htmllayout.getHtmlStart()
+    #(wrap1, body1, br1) = htmllayout.getHtmlStart()
 
     list = htmllayout.HtmlList(
-        os.path.normpath('..\\..\\..\\einarftp\\pagaten'), 'index', t.name)
+        os.path.normpath(
+            '..\\..\\..\\einarftp\\pagaten'), 
+        'index', t.name, 'Played by pair with {}'.format(focusTeamPlayer[1]))
     listElements = []
 
     for play in playedByFocus:

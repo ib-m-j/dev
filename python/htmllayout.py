@@ -404,13 +404,14 @@ class HtmlBreak(HtmlTag):
 #
 
 class HtmlList(HtmlTag):
-    def __init__(self, basedAt, masterName, header):
+    def __init__(self, basedAt, masterName, header, details):
         self.basedAt = basedAt
         self.masterName = masterName
         self.list = []
         self.displayList = []
         self.header = header
         self.linkTemplate = '{}.html'
+        self.details = details
 
     def addElement(self, relListName, displayName):
         self.list.append(relListName)
@@ -457,11 +458,13 @@ class HtmlList(HtmlTag):
         br = HtmlBreak() #same break for all breaks
         masterFileName = os.path.join(self.basedAt, self.masterName )
         header = HtmlTag('<h2>',None, self.header)
+        details = HtmlTag('<div>','</div>', self.details)
         body = HtmlTag('<body>')
         body.addAttribute("style","font-size:18pt")
         wrap= HtmlWrapper()
         wrap.addContent(body)
         body.addContent(header)
+        body.addContent(details)
 
         last = None
         for n in range(len(self.list)):
