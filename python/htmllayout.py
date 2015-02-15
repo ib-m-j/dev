@@ -404,14 +404,14 @@ class HtmlBreak(HtmlTag):
 #
 
 class HtmlList(HtmlTag):
-    def __init__(self, basedAt, masterName, header, details):
+    def __init__(self, basedAt, masterName, header):
         self.basedAt = basedAt
         self.masterName = masterName
         self.list = []
         self.displayList = []
         self.header = header
         self.linkTemplate = '{}.html'
-        self.details = details
+        HtmlTag.__init__(self, '', '', '')
 
     def addElement(self, relListName, displayName):
         self.list.append(relListName)
@@ -453,25 +453,33 @@ class HtmlList(HtmlTag):
             nextLink = HtmlLink('næste', self.getNextName(n))
         return nextLink
 
-
-    def render(self):
+    def getTag(self):
         br = HtmlBreak() #same break for all breaks
-        masterFileName = os.path.join(self.basedAt, self.masterName )
-        header = HtmlTag('<h2>',None, self.header)
-        details = HtmlTag('<div>','</div>', self.details)
-        body = HtmlTag('<body>')
-        body.addAttribute("style","font-size:18pt")
-        wrap= HtmlWrapper()
-        wrap.addContent(body)
-        body.addContent(header)
-        body.addContent(details)
-
-        last = None
+        header = HtmlTag('<h3>','</h3>', self.header)
+        
+        self.content = [br, header ]
         for n in range(len(self.list)):
             link = HtmlLink(self.displayList[n], self.getLinkFileName(n))
-            body.addContent(link)
-            body.addContent(br)
-        return wrap.render()    
+            self.content.append(link)
+            self.content.append(br)
+        return self
+
+    #def render(self):
+    #    br = HtmlBreak() #same break for all breaks
+    #    masterFileName = os.path.join(self.basedAt, self.masterName )
+    #    #header = HtmlTag('<div>','</div>', self.header)
+    #    #body = HtmlTag('<body>')
+    #    #body.addAttribute("style","font-size:18pt")
+    #    #wrap= HtmlWrapper()
+    #    #wrap.addContent(body)
+    #    #body.addContent(header)
+    #    container = HtmlTag('','','')
+    #    last = None
+    #    for n in range(len(self.list)):
+    #        link = HtmlLink(self.displayList[n], self.getLinkFileName(n))
+    #        container.addContent(link)
+    #        container.addContent(br)
+    #    return wrap.render()    
             
 def getHtmlStart():
     br = HtmlBreak() #same break for all breaks

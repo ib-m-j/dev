@@ -1,6 +1,7 @@
 import re
 import bridgecore
 import sys
+import os.path
 
 #use Deal from  bridgecore
 #class Deal:
@@ -115,6 +116,13 @@ class Tournament:
     def addOrigin(self, server, url):
         self.server = server
         self.url = url
+
+    def getId(self):
+        base = os.path.splitext(os.path.basename(self.url))[0]
+        return '{}{}'.format(
+            self.server.split('.')[0],
+            base[len(base)- 4:])
+            
 
     def getTeam(self, teamLocalId):
         if not teamLocalId in self.teams:
