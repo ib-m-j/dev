@@ -1,1 +1,1 @@
-python.exe c:/Users/Ib/einarftp/deploy.py
+python.exe c:\Users\Ib\einarftp\deploy.py

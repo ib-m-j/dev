@@ -1,5 +1,6 @@
 import itertools
 import htmllayout
+import bridgecore
 
 class Cell:
     def __init__(self, row, col, **Kwargs):
@@ -9,7 +10,7 @@ class Cell:
             setattr(self,k,v)
 
 class DisplayFocusResults:
-    def __init__(self, tournament, focusPlay, focusTeamPlayer):
+    def __init__(self, tournament, focusPlay, focusTeamPlayer, caption):
         self.deal = focusPlay.deal
         self.primary = []
         self.secondary = []
@@ -20,17 +21,8 @@ class DisplayFocusResults:
         self.focusDirection = self.focusPlay.pairOf(focusTeamPlayer)
         self.otherDirection = self.focusPlay.seatOf(
             focusTeamPlayer).getOtherPairDK()
+        self.caption = caption
 
-        #if self.focus.bid.bidder.getPair() == 'NS':
-        #    if focusOnDefender:
-        #        self.focusDirection == 'EW'
-        #    else:
-        #        self.focusDirection = 'NS'
-        #else:
-        #    if focusOnDefender:
-        #        self.focusDirection == 'NS'
-        #    else:
-        #        self.focusDirection = 'EW'
 
     def addElement(self, play):
         if (play.hasTeamParticipant(self.focusTeamPlayer[0]) and 
@@ -188,8 +180,52 @@ class DisplayFocusResults:
 
             merged = self.primaryTableContent.expandRows(
                 self.secondaryTableContent)
-            return merged.makeTable()
+            return merged.makeTable(self.caption)
 
-        return self.primaryTableContent.makeTable()
+        return self.primaryTableContent.makeTable(self.caption)
 
 
+class ScoreOverview:
+    def __init__(self, t):
+        self.tournament = t
+        self.array = htmllayout.ArrayContent('{}'.format)
+        self.array.setHeaderRow(['Svingscore', 'CrossImps', 'Rang'])
+        strains = [x for x in bridgecore.Strain.strains.values()]
+        strains.sort(reverse = True)
+        self.array.setHeaderColumn([x.dkName() for x in strains])
+        self.countArray = htmllayout.ArrayContent(str)
+        self.countArray.setHeaderRow(self.array.headerRow)
+        self.countArray.setHeaderColumn(self.array.headerColumn)
+
+    def addPlay(self, focusPlay, focusPair, focusTeamPlayer):
+        for column in self.array.headerRow:
+            if column == 'CrossImps':
+                toAdd = self.tournament.getCrossImps(focusPlay, focusPair)
+            elif column == 'Rang':
+                toAdd = self.tournament.getRank(focusPlay, focusPair)[0]
+            else:
+                toAdd = focusPlay.getResult(focusPair)- \
+                self.tournament.getPlayedByTeamOther(
+                    focusTeamPlayer).getResult(focusPair)
+
+            (r,c) = self.array.getCoord(
+                focusPlay.bid.strain.dkName(), column)
+
+            if self.array.hasCell(r,c):
+                self.array.setContent(r,c, self.array.getContent(r,c) + toAdd)
+                self.countArray.setContent(r,c, self.countArray.getContent(r,c) + 1)
+            else:
+                self.array.setContent(r,c, toAdd)
+                self.countArray.setContent(r,c, 1)
+
+            
+    def makeTable(self):
+        for r in range(len(self.array.headerColumn)):
+            for c in range(len(self.array.headerRow)):
+                if self.array.hasCell(r,c):
+                    self.array.setContent(r,c,
+                        '{:.1f}'.format(
+                    self.array.getContent(r,c)/self.countArray.getContent(r,c)))
+        
+        return self.array.makeTable('Oversigt')
+                        

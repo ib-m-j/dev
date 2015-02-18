@@ -1,5 +1,6 @@
 import re
 import bridgecore
+import bridgescore
 import sys
 import os.path
 
@@ -187,19 +188,30 @@ class Tournament:
         return None
 
     def getRank(self, play, direction):
-        rank = 1
-        total = 0
+        rank = -1
+        total = -2
         myScore = play.getResult(direction)
         for p in self.plays:
             if p.deal == play.deal:
                 total = total + 2
-                if p.players != play.players:
-                    if p.getResult(direction) < play.getResult(direction):
-                        rank = rank + 2
-                    elif p.getResult(direction)== play.getResult(direction):
-                        rank = rank + 1
+                if p.getResult(direction) < play.getResult(direction):
+                    rank = rank + 2
+                elif p.getResult(direction)== play.getResult(direction):
+                    rank = rank + 1
         return (rank, total)
 
+        
+    def getCrossImps(self, play, direction):
+        res = 0
+        count = 0
+        myScore = play.getResult(direction)
+        for p in self.plays:
+            if p.deal == play.deal:
+                if p.players != play.players:
+                    count = count + 1
+                    res = res + bridgescore.impScore(myScore - p.getResult(direction))
+
+        return res/count
 
 #        def getPos(teamPlayer, SWNEPlayers):
 #            try:

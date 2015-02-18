@@ -23,6 +23,7 @@ class HtmlTag:
         self.content.append(content)
 
     def renderContent(self):
+        #print('rendercontent', self)
         res = ''
         for c in self.content:
             if isinstance(c, str):
@@ -322,8 +323,12 @@ class ArrayContent:
         self.focusStrain = map[self.focusStrain]
 
     def makeTable(
-            self, includeHeaderColumn = True, includeHeaderRow = True):
+            self, caption, includeHeaderColumn = True, includeHeaderRow = True):
         res = HtmlTable()
+        res.addAttribute('rules','all')
+        res.addAttribute('frame','border')
+        caption = HtmlTag('<caption>','</caption>', caption)
+        res.addRow(caption)
         if includeHeaderRow:
             row = []
             for x in self.headerRow:
@@ -453,7 +458,11 @@ class HtmlList(HtmlTag):
             nextLink = HtmlLink('næste', self.getNextName(n))
         return nextLink
 
-    def getTag(self):
+    def getMasterLink(self):
+        masterLink = HtmlLink('op', self.getMasterName())
+        return masterLink
+
+    def getAsTag(self):
         br = HtmlBreak() #same break for all breaks
         header = HtmlTag('<h3>','</h3>', self.header)
         

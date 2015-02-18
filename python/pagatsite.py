@@ -21,8 +21,8 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
         bidString = htmllayout.HtmlTag('<div>','', play.bid.__str__())
         playedBy =  htmllayout.HtmlTag(
             '<div>','','Spillet af {}'.format(play.playedBy()[1]))
-        scoreType = htmllayout.HtmlTag(
-            '<div>','', 'Viser {} scoren'.format(play.pairOf(focusTeamPlayer)))
+        #coreType = htmllayout.HtmlTag(
+        #   '<div>','', 'Viser {} scoren'.format(play.pairOf(focusTeamPlayer)))
         iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
 
         playerList = []
@@ -40,7 +40,10 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
         iframe.addAttribute('width', '400px')
         iframe.addAttribute('height', '400px')
         #table = htmllayout.HtmlTable()
-        d = display.DisplayFocusResults(t, play, focusTeamPlayer)
+        d = display.DisplayFocusResults(
+            t, play, focusTeamPlayer, 
+            'Viser {} scoren'.format(play.pairOf(focusTeamPlayer)))
+
         for p in t.plays:
             if p.deal == play.deal:
                 d.addElement(p)
@@ -57,7 +60,7 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
         body1.addContent(br1)
         body1.addContent(bidString)
         #body1.addContent(playedBy)
-        body1.addContent(scoreType)
+        #ody1.addContent(scoreType)
         body1.addContent(resulttable)
 
         return (
@@ -77,42 +80,45 @@ def makeTeamTournamentHtml(t, root):
     #(wrap1, body1, br1) = htmllayout.getHtmlStart()
 
 
-    list1 = htmllayout.HtmlList(root, 
-        t.getId(), 'Spillet af par med {}'.format(focusTeamPlayer[1]))
-    list2 = htmllayout.HtmlList(
-        os.path.normpath(
-            '..\\..\\..\\einarftp\\pagaten'), 
-        t.getId(), 
-        'Forsvaret af par med {}'.format(focusTeamPlayer[1]))
+    list1 = htmllayout.HtmlList(root, t.getId(), 
+                    'Spillet af par med {}'.format(focusTeamPlayer[1]))
+    list2 = htmllayout.HtmlList(root, t.getId(), 
+                    'Forsvaret af par med {}'.format(focusTeamPlayer[1]))
     listElements1 = []
     listElements2 = []
+    scoreOverview1 = display.ScoreOverview(t)
+    scoreOverview2 = display.ScoreOverview(t)
 
     for play in playedByFocus:
         (eventId, gameNo, focusPair, wrap1, body1) = makeTeamFocusPlay(
             t, play, focusTeamPlayer)
         list1.addElement(
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
-            'Spil {:d} Svingscore  {:d} Rang {:d} af {:d}'.format(
+            'Spil {:d} Svingscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
                 play.getResult(focusPair)- \
                 t.getPlayedByTeamOther(focusTeamPlayer).getResult(focusPair),
+                t.getCrossImps(play, focusPair),
                 t.getRank(play, focusPair)[0], t.getRank(play, focusPair)[1]))
 
         
         listElements1.append((wrap1, body1))
+        scoreOverview1.addPlay(play, focusPair, focusTeamPlayer)
 
     for play in defendedByFocus:
         (eventId, gameNo, focusPair, wrap1, body1) = makeTeamFocusPlay(
             t, play, focusTeamPlayer)
         list2.addElement(
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
-            'Spil {:d} Svingscore  {:d} Rang {:d} af {:d}'.format(
+            'Spil {:d} Svingscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
                 play.getResult(focusPair)- \
                 t.getPlayedByTeamOther(focusTeamPlayer).getResult(focusPair),
+                t.getCrossImps(play, focusPair),
                 t.getRank(play, focusPair)[0], t.getRank(play, focusPair)[1]))
 
         listElements2.append((wrap1, body1))
+        scoreOverview2.addPlay(play, focusPair, focusTeamPlayer)
 
 
     header = htmllayout.HtmlTag('<h2>','</h2>', t.name)
@@ -121,24 +127,27 @@ def makeTeamTournamentHtml(t, root):
     wrap= htmllayout.HtmlWrapper()
     wrap.addContent(body)
     body.addContent(header)
-    body.addContent(list1.getTag())
-    body.addContent(list2.getTag())
-    url = list1.getFileNameAtBase(list1.getMasterName())
-    wrap.saveToFile(url)
+    body.addContent(list1.getAsTag())
+    body.addContent(scoreOverview1.makeTable())
+    body.addContent(list2.getAsTag())
+    body.addContent(scoreOverview2.makeTable())
+    wrap.saveToFile(list1.getFileNameAtBase(list1.getMasterName()))
     
     #list1.render()
     for (n, (wrap, body)) in enumerate(listElements1):
         body.addContent(list1.getPreviousLink(n))
         body.addContent(list1.getNextLink(n))
+        body.addContent(list1.getMasterLink())
         wrap.saveToFile(list1.getFileNameAtBase(list1.getLinkFileName(n)))
 
     #list2.render()
     for (n, (wrap, body)) in enumerate(listElements2):
         body.addContent(list2.getPreviousLink(n))
         body.addContent(list2.getNextLink(n))
+        body.addContent(list1.getMasterLink())
         wrap.saveToFile(list2.getFileNameAtBase(list2.getLinkFileName(n)))
 
-    return url
+    return (t.name, list1.getMasterName())
 
     
 def makePairTournament(t):
@@ -154,6 +163,8 @@ def makeTournamentHtml(server, url, root):
 
         
 
+
+
 if __name__ == '__main__':
     
     url1 = makeTournamentHtml('islevbridge.dk',
@@ -163,21 +174,21 @@ if __name__ == '__main__':
     url2 = makeTournamentHtml('islevbridge.dk',
                               '/Resultat/Klub1/Turneringer/Resultat1067.html',
                               os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
-
+    
     url3 = makeTournamentHtml('islevbridge.dk',
                               '/Resultat/Klub1/Turneringer/Resultat1068.html',
                               os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
-
+    
     url4 = makeTournamentHtml('islevbridge.dk',
                               '/Resultat/Klub1/Turneringer/Resultat1069.html',
                               os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
 
     wrap, body, br = htmllayout.getHtmlStart()
     header = htmllayout.HtmlTag('<H2>','</H2>','Pagat hold 2014-2015')
-    urlRef1 = htmllayout.HtmlLink('1', url1)
-    urlRef2 = htmllayout.HtmlLink('2', url2)
-    urlRef3 = htmllayout.HtmlLink('3', url3)
-    urlRef4 = htmllayout.HtmlLink('4', url4)
+    urlRef1 = htmllayout.HtmlLink(url1[0], url1[1])
+    urlRef2 = htmllayout.HtmlLink(url2[0], url2[1])
+    urlRef3 = htmllayout.HtmlLink(url3[0], url3[1])
+    urlRef4 = htmllayout.HtmlLink(url4[0], url4[1])
     body.addContent(urlRef1)
     body.addContent(br)
     body.addContent(urlRef2)
@@ -186,5 +197,6 @@ if __name__ == '__main__':
     body.addContent(br)
     body.addContent(urlRef4)
     body.addContent(br)
-    wrap.saveToFile(os.path.normpath('..\\..\\..\\einarftp\\pagaten\\index.html'))
+    wrap.saveToFile(
+        os.path.normpath('..\\..\\..\\einarftp\\pagaten\\index.html'))
     
