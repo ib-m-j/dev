@@ -25,14 +25,15 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
         #   '<div>','', 'Viser {} scoren'.format(play.pairOf(focusTeamPlayer)))
         iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
 
-        playerList = []
-        #print(play.players)
-        for seat in ['S','W','N','E']:
-            playerList.append(
-                (seat.lower(), play.players[bridgecore.Seat.fromId(seat)][1]))
+        ##playerList = []
+        ##print(play.players)
+        #for seat in ['S','W','N','E']:
+        #    playerList.append(
+        #        (seat.lower(), play.players[bridgecore.Seat.fromId(seat)][1]))
             
         #print(playerList)
-            
+
+        playerList = play.getBridgeBasePlayers()
 
         iframe.addAttribute(
             'src', t.deals[play.deal].bridgebaseHand(
@@ -94,10 +95,10 @@ def makeTeamTournamentHtml(t, root):
             t, play, focusTeamPlayer)
         list1.addElement(
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
-            'Spil {:d} Svingscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
+            'Spil {:d} Holdscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
                 play.getResult(focusPair)- \
-                t.getPlayedByTeamOther(focusTeamPlayer).getResult(focusPair),
+                t.getPlayedByTeamOther(play.deal, focusTeamPlayer).getResult(focusPair),
                 t.getCrossImps(play, focusPair),
                 t.getRank(play, focusPair)[0], t.getRank(play, focusPair)[1]))
 
@@ -113,7 +114,8 @@ def makeTeamTournamentHtml(t, root):
             'Spil {:d} Svingscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
                 play.getResult(focusPair)- \
-                t.getPlayedByTeamOther(focusTeamPlayer).getResult(focusPair),
+                t.getPlayedByTeamOther(
+                    play.deal, focusTeamPlayer).getResult(focusPair),
                 t.getCrossImps(play, focusPair),
                 t.getRank(play, focusPair)[0], t.getRank(play, focusPair)[1]))
 

@@ -74,6 +74,7 @@ class Play:
             return ''
 
     def seatOf(self, teamPlayer):
+        res = ''
         for (seat, tPlayer) in self.players.items():
             if (tPlayer) == teamPlayer:
                 res = seat
@@ -88,6 +89,13 @@ class Play:
             return self.NSResult
         else:
             return -self.NSResult
+
+    def getBridgeBasePlayers(self):
+        playerList = []
+        for seat in ['S','W','N','E']:
+            playerList.append(
+                (seat.lower(), self.players[bridgecore.Seat.fromId(seat)][1]))
+        return playerList
 
 
 class Team:
@@ -176,14 +184,15 @@ class Tournament:
 
     #played means particpated in play
     def isPlayedByTeamOther(self, play, teamPlayer):
-        if play.hasTeamParticipant(teamPlayer[0]) and not play.hasParticipant(
+        if play.hasTeamParticipant(
+                teamPlayer[0]) and not play.hasParticipant(
                 teamPlayer):
             return  True
         return False
 
-    def getPlayedByTeamOther(self, teamPlayer):
+    def getPlayedByTeamOther(self, deal, teamPlayer):
         for play in self.plays:
-            if self.isPlayedByTeamOther(play, teamPlayer):
+            if play.deal == deal and self.isPlayedByTeamOther(play, teamPlayer):
                 return play
         return None
 

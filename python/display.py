@@ -10,16 +10,16 @@ class Cell:
             setattr(self,k,v)
 
 class DisplayFocusResults:
-    def __init__(self, tournament, focusPlay, focusTeamPlayer, caption):
-        self.deal = focusPlay.deal
+    def __init__(self, tournament, play, focusTeamPlayer, caption):
+        self.deal = play.deal
         self.primary = []
         self.secondary = []
         self.tournament = tournament
         self.cells = {}
-        self.focusPlay = focusPlay
+        self.play = play
         self.focusTeamPlayer = focusTeamPlayer
-        self.focusDirection = self.focusPlay.pairOf(focusTeamPlayer)
-        self.otherDirection = self.focusPlay.seatOf(
+        self.focusDirection = self.play.pairOf(focusTeamPlayer)
+        self.otherDirection = self.play.seatOf(
             focusTeamPlayer).getOtherPairDK()
         self.caption = caption
 
@@ -53,14 +53,14 @@ class DisplayFocusResults:
 
 
         #if play.hasTeamParticipant(
-        #        self.focusPlay.playedBy()[0]) and play.playedBy(
-        #        ) != self.focusPlay.playedBy():
+        #        self.play.playedBy()[0]) and play.playedBy(
+        #        ) != self.play.playedBy():
         #    isTeamPlay = True
         #else:
         #    isTeamPlay = False
 
         #
-        #if play.bid.relevantFor(self.focusPlay.bid):
+        #if play.bid.relevantFor(self.play.bid):
         #    self.primary.append(play)
         #    if isTeamPlay:
         #        self.addTeamFocus(play, True)
@@ -146,8 +146,8 @@ class DisplayFocusResults:
                     r,c,[('bgcolor','#FFAAAA')])
             if self.focusIsPrimary:
                 (r, c) = self.primaryTableContent.getCoord(
-                    self.focusPlay.bid.strain, 
-                    self.getFocusResult(self.focusPlay))
+                    self.play.bid.strain, 
+                    self.getFocusResult(self.play))
                 self.primaryTableContent.setAttributes(
                     r,c,[('bgcolor','#AAFFAA')])
 
@@ -171,8 +171,8 @@ class DisplayFocusResults:
                     r,c,[('bgcolor','#FFAAAA')])
             if not(self.focusIsPrimary):
                 (r, c) = self.secondaryTableContent.getCoord(
-                    self.focusPlay.bid.strain, 
-                    self.getFocusResult(self.focusPlay))
+                    self.play.bid.strain, 
+                    self.getFocusResult(self.play))
                 self.secondaryTableContent.setAttributes(
                     r,c,[('bgcolor','#AAFFAA')])
 
@@ -206,7 +206,7 @@ class ScoreOverview:
             else:
                 toAdd = focusPlay.getResult(focusPair)- \
                 self.tournament.getPlayedByTeamOther(
-                    focusTeamPlayer).getResult(focusPair)
+                    focusPlay.deal, focusTeamPlayer).getResult(focusPair)
 
             (r,c) = self.array.getCoord(
                 focusPlay.bid.strain.dkName(), column)

@@ -257,7 +257,7 @@ def readTournament(server, url):
 
     return (res[0], t)
 
-def displayFocus(t, focus, asPlayer, isTeam):
+def displayFocus(t, focusTeamPlayer, asPlayer, isTeam):
     #largeTest()
     #oneTournament()
     #onePairTournament()
@@ -268,46 +268,19 @@ def displayFocus(t, focus, asPlayer, isTeam):
     wrap= htmllayout.HtmlWrapper()
     wrap.addContent(table)
 
+    all = t.getPlayedByPair(focus)
     if asPlayer:
-        relevant = t.getPlayedByPair(focus)
+        relevant=all[0]
     else:
-        relevant = t.getDefendedByPair(focus)
-        pass
-
+        relevant = all[1]
     print(relevant)
-    for play in relevant:
-        wrapper = htmllayout.HtmlWrapper()
-        cardsTable = htmllayout.HtmlTable()
-        iframe = htmllayout.HtmlTag('<iframe>','</iframe>')
-        iframe.addAttribute('src', t.deals[play.deal].bridgebaseHand())
-        iframe.addAttribute('width', '330px')
-        iframe.addAttribute('height', '300px')
-        cardsTable.addRow(iframe)
-        print('starting play', play.deal)
-        table.addRowWithCell(t.name)
-        table.addRowWithCell('game: {:d}'.format(play.deal))
-        table.addRow(cardsTable)
-        table.addRowWithCell(
-            '{} .. {} tricks'.format(play.bid.__str__(), play.tricks))
-        table.addRowWithCell('Played by {}'.format(play.playedBy()[1]))
-        table.addRowWithCell('Displaying {} scores'.format(play.pairOf(focus)))
-
-        if asPlayer:
-            d = display.DisplayFocusResults(t, play, None)
-        else:
-            d = display.DisplayFocusResults(t, play, focus)
-        
-        for p in t.plays:
-            if p.deal == play.deal:
-                d.addElement(p)
-        res = d.renderAsHtmlTable()
-        table.addRowWithCell(res)
-    fileName = os.path.normpath('..\\..\\..\\einarftp\\pagaten\\einar.html')
-    f = open(fileName, 'w')
-    f.write(wrap.render())
-    f.close()
-    print('wrote file: ' + fileName)
-        
+    for play in relevant[:3]:
+        d = display.DisplayFocusResults(
+            t, play, focusTeamPlayer, 
+            'Viser {} scoren'.format(play.pairOf(focusTeamPlayer)))
+        print(play.deal,t.getPlayedByTeamOther(play.deal, focusTeamPlayer).deal)
+        print(play.getResult('NS'))
+        print(t.getPlayedByTeamOther(play.deal, focusTeamPlayer).getResult('NS'))
 
 def doDefenderFocus():
     pass
@@ -322,4 +295,3 @@ if __name__ == '__main__':
     displayFocus(tournament, focus, True, True)
     #asPlayer or asDefender
     #type = team or pairs
-
