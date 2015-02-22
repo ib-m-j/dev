@@ -98,16 +98,16 @@ class Play:
         return playerList
 
 
-class Team:
-    def __init__(self, localId):
-        self.localId = localId
-        self.globalId = self.localId
-        self.teamPlayers = []
-    
-    def addTeamPlayer(self, teamPlayer):
-        if not(teamPlayer in self.teamPlayers):
-            self.teamPlayers.append(teamPlayer)
-
+#class Team:
+#    def __init__(self, localId):
+#        self.localId = localId
+#        self.globalId = self.localId
+#        self.teamPlayers = []
+#    
+#    def addTeamPlayer(self, teamPlayer):
+#        if not(teamPlayer in self.teamPlayers):
+#            self.teamPlayers.append(teamPlayer)
+#
 
 class Tournament:
     playerKey = re.compile('\s*(?P<name>\w+)@(?P<team>\w+)\s*$')
@@ -118,6 +118,7 @@ class Tournament:
         self.teams = {}
         self.deals = {}
         self.plays = [] #dealid, players, deal, bid, NSresult
+        self.teamPlayers = bridgecore.TeamPlayers('TeamPlayers')
 
     def setName(self, name):
         self.name = name
@@ -133,10 +134,10 @@ class Tournament:
             base[len(base)- 4:])
             
 
-    def getTeam(self, teamLocalId):
-        if not teamLocalId in self.teams:
-            self.teams[teamLocalId] = Team(teamLocalId)
-        return self.teams[teamLocalId]
+    #def getTeam(self, teamLocalId):
+    #    if not teamLocalId in self.teams:
+    #        self.teams[teamLocalId] = Team(teamLocalId)
+    #    return self.teams[teamLocalId]
         
     def getNextDeal(self):
         return len(self.deals)
@@ -151,9 +152,7 @@ class Tournament:
         #One Player: (TeamName, OwnName)
         #bid bidder, bid
         for (team, player) in SWNEPlayers:
-            if not(team in self.teams):
-                self.teams[team]=Team(team)
-            self.teams[team].addTeamPlayer(player)
+            self.teamPlayers.addValue((team, player))
         self.plays.append(Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult))
 
     def getPlayedByPair(self, teamPlayer):
@@ -222,19 +221,28 @@ class Tournament:
 
         return res/count
 
-#        def getPos(teamPlayer, SWNEPlayers):
-#            try:
-#                res = ['S','W','N','E'][SWNEPlayers.index(teamPlayer)]
-#            except:
-#                return None
-#            else:
-#                return res
-#    
-#        res = []
-#        for play in self.plays:
-#            player = play[2].bidder
-#            pos = getPos(teamPlayer, play[1])
-#            if pos and pos in player.getPair():
-#                    res.append(play)
-#        return res
+    def makeTableInput(self, focusTeamPlayer):
+        (playedByFocus, defendedByFocus) = self.getPlayedByPair(
+            focusTeamPlayer)
+        
+        focusType = bridgecore.IdList('focusType', ['playedBy', 'defendedBy'])
+        tableHeader = bridgecore.IdList(
+            'teamOverviewTable',['dealNo', 
+                'focusType', 'focusDirection', 'bonusType',
+                'teamScore', 'crossImps', 'rank'])
+        tableData = []
+        for (n, list) in enumerate([playedByFocus, defendedByFocus]):
+            for p in list:
+                focusDirection = p.pairOf(focusTeamPlayer)
+                teamScore = p.getResult(
+                    focusDirection)- self.getPlayedByTeamOther(
+                    p.deal, focusTeamPlayer).getResult(focusDirection)
+                crossImps =  self.getCrossImps(p, focusDirection)
+                (rank, maxRank) = self.getRank(p, focusDirection)
+                tableData.append(
+                    [p.deal, focusType.getValue(n), focusDirection, 
+                     p.bid.getBidBonusType(), teamScore, 
+                     round(crossImps,1), rank, maxRank])
 
+        return (tableHeader, tableData)
+             

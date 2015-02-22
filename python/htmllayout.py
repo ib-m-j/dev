@@ -15,6 +15,7 @@ class HtmlTag:
         if content:
             self.content.append(content)
         self.attributes = []
+        self.escape = True
 
     def addAttribute(self, attr, value):
         self.attributes.append((attr, value))
@@ -22,12 +23,18 @@ class HtmlTag:
     def addContent(self, content):
         self.content.append(content)
 
+    def dontEscape(self):
+        self.escape = False
+
     def renderContent(self):
         #print('rendercontent', self)
         res = ''
         for c in self.content:
             if isinstance(c, str):
-                contentStr = html.escape(c)
+                if self.escape:
+                    contentStr = html.escape(c)
+                else:
+                    contentStr = c
             elif c:
                 contentStr = c.render()
             else:
@@ -51,6 +58,13 @@ class HtmlTag:
         f = open(filename, 'w')
         f.write(self.render())
         f.close()
+
+class DivTag(HtmlTag):
+    def __init__(self, name):
+        HtmlTag.__init__(self, '<div>')
+        self.addAttribute('id', name)
+
+    
 
 class HtmlCell(HtmlTag):
     def __init__(self, content):
@@ -323,7 +337,7 @@ class ArrayContent:
         self.focusStrain = map[self.focusStrain]
 
     def makeTable(
-            self, caption, includeHeaderColumn = True, includeHeaderRow = True):
+        self, caption, includeHeaderColumn = True, includeHeaderRow = True):
         res = HtmlTable()
         res.addAttribute('rules','all')
         res.addAttribute('frame','border')
@@ -382,11 +396,52 @@ class ArrayContent:
             res.addRow(HtmlRow().addCells(row))
             
         return res
+
+
+    #not completed    
+    def makeGoogleTable(self, divTag, caption):
+        div = DivTag(divTag)
+        
+        rows = [['']+[x for x in self.headerRow]]
+        
+        for (r,v) in enumerate(self.headerColumn):
+            row = [v]
+            for c in range(len(self.headerRow)):
+                if self.hasCell(r,c):
+                    toDisplay = self.getContent(r,c)
+                else:
+                    toDisplay = ''
+                row.append(toDisplay)
+                
+                #for (a,b) in self.getAttributes(r,c):
+                #    cell.addAttribute(a,b)
+                #if r == self.teamFocusStrain and c == self.teamFocusResult:
+                #    cell.addAttribute('bgcolor','#FFAAAA')
+                
+        chartDef = GoogleChart(divTag, caption, rows)
+        chartDef.setupData()
+        return (chartDef, divTag)
+
+
             
 class HtmlWrapper(HtmlTag):
     def __init__(self):
-        HtmlTag.__init__(self,'''<!doctype html public "-//W3C//DTD HTML 4.0//EN">
-<html>\n''', '</html>')
+        HtmlTag.__init__(
+            self,'''<!doctype html public "-//W3C//DTD HTML 4.0//EN">
+            <html>\n''', '</html>')
+        self.setHead()
+
+    def setHead(self, head = None):
+        if head:
+            self.head = head
+        else:
+            self.head = HtmlTag('<head>')
+        
+    def setBody(self, body):
+        self.body = body
+
+    def renderContent(self):
+        return self.head.render()+self.body.render()
 
 class HtmlLink(HtmlTag):
     def __init__(self, text, link):
@@ -494,7 +549,7 @@ def getHtmlStart():
     br = HtmlBreak() #same break for all breaks
     body = HtmlTag('<body>')
     wrap= HtmlWrapper()
-    wrap.addContent(body)
+    wrap.setBody(body)
     return (wrap, body, br)
 
 def renderTable():
@@ -578,12 +633,114 @@ def renderLinks():
     f.close()
 
 
+class GoogleChart(HtmlTag):
+    def __init__(self, divTag, title, rows, subTitle = ''):
+        self.divTag = divTag
+        self.title = title
+        HtmlTag.__init__(self, '<head>')
+        self.apiScript = HtmlTag('<script>',)
+        self.apiScript.addAttribute('type', "text/javascript")
+        self.apiScript.addAttribute('src', "https://www.google.com/jsapi")
+        self.tableScript = HtmlTag('<script>',)
+        self.tableScript.addAttribute('type', 'text/javascript')
+        self.tableScript.dontEscape()
+        self.rows = rows
+        self.subTitle = subTitle 
+        self.googleCore = '''
+      google.load("visualization", "1.1", {packages:["bar"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([尸ows;]);
+
+        var options = {
+          chart: {
+            title: '川itle;',
+            subtitle: '山ubtitle;',
+          }
+        };
+
+        var chart = new google.charts.Bar(document.getElementById('千ivtag;'));
+
+        chart.draw(data, options);
+      }
+'''
+        self.googleCore1 = '''
+      google.load("visualization", "1.1", {packages:["bar"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([尸ows;]);
+
+        var options = {
+          chart: {
+            title: '川itle;',
+            subtitle: '山ubtitle;',
+          },
+          series: {
+            0: { axis: 'distance' }, // Bind series 0 to an axis named 'distance'.
+            1: { axis: 'brightness' } // Bind series 1 to an axis named 'brightness'.
+          },
+          axes: {
+            y: {
+              distance: {label: 'parsecs'}, // Left y-axis.
+              brightness: {side: 'right', label: 'apparent magnitude'} // Right y-axis.
+            }
+          }
+        };
+        var chart = new google.charts.Bar(document.getElementById('千ivtag;'));
+        chart.draw(data, options);
+    };
+'''
+
+
+    def setupData(self):
+        res = self.googleCore
+        res = res.replace('尸ows;', self.rows)
+        res = res.replace('千ivtag;', self.divTag)
+        res = res.replace('川itle;', self.title)
+        res = res.replace('山ubtitle;', self.subTitle)
+        self.tableScript.addContent(res)
+
+    def renderContent(self):
+        res = self.apiScript.render()
+        res = res + self.tableScript.render()
+        return res
+      
+    def getDivTag(self):
+        tag =  DivTag(self.divTag)
+        tag.addAttribute('style', 'width: 900px; height: 500px;')
+        return tag
+
 if __name__ == '__main__':
     #renderTable()
     #renderLinks()
-    list = HtmlList(os.path.normpath('..\\data\\'), 'testlinks', 'title')
-    for n in range(5):
-        list.addElement('Game {:d}'.format(n))
+    #list = HtmlList(os.path.normpath('..\\data\\'), 'testlinks', 'title')
+    #for n in range(5):
+    #    list.addElement('Game {:d}'.format(n))
+    #
+    #list.saveToFile(list.getMasterName())
     
-    list.saveToFile(list.getMasterName())
+
+    rows = '''
+    ['Year', 'Sales', 'Expenses', 'Profit'],
+    ['2014', 1000, 400, 200],
+    ['2015', 1170, 460, 250],
+    ['2016', 660, 1120, 300],
+    ['2017', 1030, 540, 350]
+'''
+
+    body = HtmlTag('<body>')
+    div = DivTag('test-chart')
+    div.addAttribute('style', 'width: 900px; height: 500px;')
+    body.addContent(div)
+    
+    chartDef = GoogleChart('test-chart', 'title', rows)
+    chartDef.setupData()
+
+    
+    wrap= HtmlWrapper()
+    wrap.setHead(chartDef)
+    wrap.setBody(body)
+
+    print(wrap.render())
+    wrap.saveToFile('../data/testChart.html')
 

@@ -189,43 +189,53 @@ class ScoreOverview:
     def __init__(self, t):
         self.tournament = t
         self.array = htmllayout.ArrayContent('{}'.format)
-        self.array.setHeaderRow(['Svingscore', 'CrossImps', 'Rang'])
-        strains = [x for x in bridgecore.Strain.strains.values()]
-        strains.sort(reverse = True)
-        self.array.setHeaderColumn([x.dkName() for x in strains])
+        self.array.setHeaderRow(
+            ['Antal spil', 'Holdscore', 'KrydsImps', 'Rang'])
+        #strains = [x for x in bridgecore.Strain.strains.values()]
+        #strains.sort(reverse = True)
+        #self.array.setHeaderColumn([x.dkName() for x in strains])
+        self.array.setHeaderColumn(
+            [x for x in bridgecore.Bid.getBidBonusTypes()])
         self.countArray = htmllayout.ArrayContent(str)
         self.countArray.setHeaderRow(self.array.headerRow)
         self.countArray.setHeaderColumn(self.array.headerColumn)
 
     def addPlay(self, focusPlay, focusPair, focusTeamPlayer):
         for column in self.array.headerRow:
-            if column == 'CrossImps':
+            if column == 'KrydsImps':
                 toAdd = self.tournament.getCrossImps(focusPlay, focusPair)
             elif column == 'Rang':
                 toAdd = self.tournament.getRank(focusPlay, focusPair)[0]
+            elif column == 'Antal spil':
+                toAdd = 1
             else:
                 toAdd = focusPlay.getResult(focusPair)- \
                 self.tournament.getPlayedByTeamOther(
                     focusPlay.deal, focusTeamPlayer).getResult(focusPair)
 
+            #(r,c) = self.array.getCoord(
+            #    focusPlay.bid.strain.dkName(), column)
+
             (r,c) = self.array.getCoord(
-                focusPlay.bid.strain.dkName(), column)
+                focusPlay.bid.getBidBonusType(), column)
+
 
             if self.array.hasCell(r,c):
                 self.array.setContent(r,c, self.array.getContent(r,c) + toAdd)
-                self.countArray.setContent(r,c, self.countArray.getContent(r,c) + 1)
+                self.countArray.setContent(
+                    r,c, self.countArray.getContent(r,c) + 1)
             else:
                 self.array.setContent(r,c, toAdd)
                 self.countArray.setContent(r,c, 1)
 
+            print("setting values",r,c,self.array.getContent(r,c), self.countArray.getContent(r,c))
             
     def makeTable(self):
         for r in range(len(self.array.headerColumn)):
-            for c in range(len(self.array.headerRow)):
+            for c in range(1, len(self.array.headerRow)):
                 if self.array.hasCell(r,c):
                     self.array.setContent(r,c,
                         '{:.1f}'.format(
                     self.array.getContent(r,c)/self.countArray.getContent(r,c)))
-        
         return self.array.makeTable('Oversigt')
                         

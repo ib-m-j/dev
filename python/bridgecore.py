@@ -501,7 +501,19 @@ class Bid:
         else:
             return -bidderScore
 
+    def getBidBonusType(self):
+        if not self.isPlayedBid():
+            return 'game kontrakt'
+        if (self.tricks*self.strain.baseScore + self.strain.firstScore) >= 100:
+            return 'game kontrakt'
+        elif self.tricks >= 6:
+            return 'slem kontrakt'
+        else:
+            return 'delkontrakt'
 
+    @staticmethod
+    def getBidBonusTypes():
+        return ('delkontrakt', 'game kontrakt', 'slem kontrakt')
 
         
 class BidDeprecated:
@@ -679,6 +691,54 @@ class Zone:
             return Zone.all[x]
         
         raise (BaseException("zone exception"))
+    
+
+class IdList:
+    allTerms = {}
+
+    def __init__(self, name, values = []):
+        self.name = name
+        self.values = values
+        IdList.allTerms[name] = self
+        
+    def getId(self, value):
+        try:
+            return(self.values.index(value))
+        except:
+            raise(BaseException(
+                "idterm failed name {}, value {}".format(name, value)))
+        
+    def getValue(self, index):
+        try:
+            return self.values[index]
+        except:
+            raise(BaseException(
+                "idterm failed name {}, index {}".format(name, index)))
+                   
+    def addValue(self, value):
+        if not value in self.values:
+            self.values.append(value)
+
+    def __str__(self):
+        res = ''
+        for (n,x) in enumerate(self.values):
+            res = res + '{}:{}\n'.format(n,x)
+        return res
+
+class TeamPlayers(IdList):
+    def getTeams(self):
+        res = []
+        for (t,p) in self.values:
+            if not t in res:
+                t.append(res)
+        return res
+
+    def getPlayer(self, index):
+        return self.values[index][1]
+
+    def getTeam(self, index):
+        return self.values[index][0]
+
     
 
 if __name__ == '__main__':

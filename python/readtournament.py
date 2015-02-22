@@ -8,6 +8,7 @@ import readresfile
 import tournament
 import display
 import htmllayout
+import sys
 
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
@@ -264,23 +265,82 @@ def displayFocus(t, focusTeamPlayer, asPlayer, isTeam):
     
     #assumning team for now
 
-    table = htmllayout.HtmlTable()
-    wrap= htmllayout.HtmlWrapper()
-    wrap.addContent(table)
-
     all = t.getPlayedByPair(focus)
     if asPlayer:
         relevant=all[0]
     else:
         relevant = all[1]
-    print(relevant)
-    for play in relevant[:3]:
+    for play in relevant[:1]:
         d = display.DisplayFocusResults(
             t, play, focusTeamPlayer, 
             'Viser {} scoren'.format(play.pairOf(focusTeamPlayer)))
         print(play.deal,t.getPlayedByTeamOther(play.deal, focusTeamPlayer).deal)
         print(play.getResult('NS'))
         print(t.getPlayedByTeamOther(play.deal, focusTeamPlayer).getResult('NS'))
+        for p in t.plays:
+            if p.deal == play.deal:
+                d.addElement(p)
+    
+def displayRanks(t, focusTeamPlayer, asPlayer):
+    all = t.getPlayedByPair(focusTeamPlayer)
+    if asPlayer:
+        relevant=all[0]
+    else:
+        relevant = all[1]
+
+    ranks = {}
+    crossImps = {}
+    for play in relevant:
+        direction = play.pairOf(focusTeamPlayer)
+        
+        (r, total) = t.getRank(play, direction)
+        cI  = t.getCrossImps(play, direction)
+        if r in ranks.keys():
+            ranks[r] = ranks[r] + 1
+            crossImps[r] = crossImps[r] + cI
+        else:
+            crossImps[r] = cI
+            ranks[r] = 1
+        print(r, cI, crossImps[r])
+
+    googleRows = ["\n['rang', 'antal', 'krydsImps'],"]
+    for x in range(total + 1):
+        row = "\n['{}'".format(x)
+        if x in ranks:
+            val = ranks[x]
+            cIVal = crossImps[x]/val
+        else:
+            val = 0
+            cIVal = 0
+
+        row = row + ",{},{:.2f}".format(val, cIVal)
+        row = row + '],'
+        googleRows.append(row)
+    res = ''
+    for r in googleRows:
+        res = res + r
+    res = res[:-1]
+    chartDef = htmllayout.GoogleChart(
+        'rang', t.name, res, 'Antal spil med rang for {}'.format(
+            focusTeamPlayer[1]))
+    
+    divtag = htmllayout.DivTag('rang')
+    divtag.addAttribute('style',"width: 400px; height: 300px;")
+    body = htmllayout.HtmlTag('<body>')
+    body.addContent(divtag)
+    
+    chartDef.setupData()
+
+    
+    wrap= htmllayout.HtmlWrapper()
+    wrap.setHead(chartDef)
+    wrap.setBody(body)
+
+    print(wrap.render())
+    wrap.saveToFile('../data/testChart.html')
+   
+
+
 
 def doDefenderFocus():
     pass
@@ -292,6 +352,11 @@ if __name__ == '__main__':
     #focus = ('Lille O','Lars Sørensen')
  
     
-    displayFocus(tournament, focus, True, True)
+    #displayFocus(tournament, focus, True, True)
     #asPlayer or asDefender
     #type = team or pairs
+    #displayRanks(tournament, focus, False)
+    (a,b) = tournament.makeTableInput(focus)
+    print(a)
+    for r in b:
+        print(r)

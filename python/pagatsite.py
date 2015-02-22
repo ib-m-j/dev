@@ -53,7 +53,7 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
     
         resulttable  = d.renderAsHtmlTable()
 
-        wrap1.addContent(body1)
+        wrap1.setBody(body1)
         #body1.addContent(header)
         #body1.addContent(server)
         body1.addContent(space)
@@ -75,7 +75,7 @@ def makeTeamTournamentHtml(t, root):
         for p in t.teams[team].teamPlayers:
             print('\t',p)
     
-    print("eventid ", t.getId())
+    print("eventidxx ", t.getId())
     (playedByFocus, defendedByFocus) = t.getPlayedByPair(focusTeamPlayer)
     
     #(wrap1, body1, br1) = htmllayout.getHtmlStart()
@@ -95,7 +95,7 @@ def makeTeamTournamentHtml(t, root):
             t, play, focusTeamPlayer)
         list1.addElement(
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
-            'Spil {:d} Holdscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
+            'Spil {:d} Holdscore  {:d} KrydsImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
                 play.getResult(focusPair)- \
                 t.getPlayedByTeamOther(play.deal, focusTeamPlayer).getResult(focusPair),
@@ -111,7 +111,7 @@ def makeTeamTournamentHtml(t, root):
             t, play, focusTeamPlayer)
         list2.addElement(
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
-            'Spil {:d} Svingscore  {:d} CrossImps {:.2f} Rang {:d} af {:d}'.format(
+            'Spil {:d} Holdscore  {:d} KrydsImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
                 play.getResult(focusPair)- \
                 t.getPlayedByTeamOther(
@@ -127,7 +127,7 @@ def makeTeamTournamentHtml(t, root):
     body = htmllayout.HtmlTag('<body>')
     body.addAttribute("style","font-size:12pt")
     wrap= htmllayout.HtmlWrapper()
-    wrap.addContent(body)
+    wrap.setBody(body)
     body.addContent(header)
     body.addContent(list1.getAsTag())
     body.addContent(scoreOverview1.makeTable())
@@ -173,32 +173,32 @@ if __name__ == '__main__':
                               '/Resultat/Klub1/Turneringer/Resultat1082.html',
                               os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
     
-    url2 = makeTournamentHtml('islevbridge.dk',
-                              '/Resultat/Klub1/Turneringer/Resultat1067.html',
-                              os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
-    
-    url3 = makeTournamentHtml('islevbridge.dk',
-                              '/Resultat/Klub1/Turneringer/Resultat1068.html',
-                              os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
-    
-    url4 = makeTournamentHtml('islevbridge.dk',
-                              '/Resultat/Klub1/Turneringer/Resultat1069.html',
-                              os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+    #url2 = makeTournamentHtml('islevbridge.dk',
+    #                          '/Resultat/Klub1/Turneringer/Resultat1067.html',
+    #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+    #
+    #url3 = makeTournamentHtml('islevbridge.dk',
+    #                          '/Resultat/Klub1/Turneringer/Resultat1068.html',
+    #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+    #
+    #url4 = makeTournamentHtml('islevbridge.dk',
+    #                          '/Resultat/Klub1/Turneringer/Resultat1069.html',
+    #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
 
     wrap, body, br = htmllayout.getHtmlStart()
     header = htmllayout.HtmlTag('<H2>','</H2>','Pagat hold 2014-2015')
     urlRef1 = htmllayout.HtmlLink(url1[0], url1[1])
-    urlRef2 = htmllayout.HtmlLink(url2[0], url2[1])
-    urlRef3 = htmllayout.HtmlLink(url3[0], url3[1])
-    urlRef4 = htmllayout.HtmlLink(url4[0], url4[1])
+    #urlRef2 = htmllayout.HtmlLink(url2[0], url2[1])
+    #urlRef3 = htmllayout.HtmlLink(url3[0], url3[1])
+    #urlRef4 = htmllayout.HtmlLink(url4[0], url4[1])
     body.addContent(urlRef1)
     body.addContent(br)
-    body.addContent(urlRef2)
-    body.addContent(br)
-    body.addContent(urlRef3)
-    body.addContent(br)
-    body.addContent(urlRef4)
-    body.addContent(br)
+    #body.addContent(urlRef2)
+    #body.addContent(br)
+    #body.addContent(urlRef3)
+    #body.addContent(br)
+    #body.addContent(urlRef4)
+    #body.addContent(br)
     wrap.saveToFile(
         os.path.normpath('..\\..\\..\\einarftp\\pagaten\\index.html'))
     
