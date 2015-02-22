@@ -9,6 +9,7 @@ import tournament
 import display
 import htmllayout
 import sys
+import javascriptdata
 
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
@@ -288,35 +289,59 @@ def displayRanks(t, focusTeamPlayer, asPlayer):
     else:
         relevant = all[1]
 
-    ranks = {}
-    crossImps = {}
-    for play in relevant:
-        direction = play.pairOf(focusTeamPlayer)
-        
-        (r, total) = t.getRank(play, direction)
-        cI  = t.getCrossImps(play, direction)
-        if r in ranks.keys():
-            ranks[r] = ranks[r] + 1
-            crossImps[r] = crossImps[r] + cI
-        else:
-            crossImps[r] = cI
-            ranks[r] = 1
-        print(r, cI, crossImps[r])
+    playRanks = {}
+    defendRanks = {}
+    countPlays = 0
+    countDefends = 0
+    #crossImps = {}
+    print(all)
+    for (n, inputList) in enumerate(list(all)):
+        for play in inputList:
+            direction = play.pairOf(focusTeamPlayer)
+            if n == 0:
+                target = playRanks
+                countPlays += 1
+            else:
+                target = defendRanks
+                countDefends += 1
 
-    googleRows = ["\n['rang', 'antal', 'krydsImps'],"]
+            (r, total) = t.getRank(play, direction)
+            if r in target.keys():
+                target[r] = target[r] + 1
+            else:
+                target[r] = 1
+            print(n, r, target[r])
+
+
+    header1 = javascriptdata.GoogleHeader('rang')
+    header2 = javascriptdata.GoogleHeader(
+        'som spiller: {} i alt'.format(countPlays), 'number')
+    header3 = javascriptdata.GoogleHeader(
+        'som forsvarer: {} i alt'.format(countDefends), 'number')
+
+    headers = [header1, header2, header3]
+    googleRows = [javascriptdata.makeGoogleHeaderRow(headers)]
+
     for x in range(total + 1):
-        row = "\n['{}'".format(x)
-        if x in ranks:
-            val = ranks[x]
-            cIVal = crossImps[x]/val
+        values = []
+        values.append(javascriptdata.GoogleValue('{:.0f}%'.format(x*100/total)))
+        if x in playRanks:
+            player =  playRanks[x]
         else:
-            val = 0
-            cIVal = 0
+            player = 0
+        if x in defendRanks:
+            defender = defendRanks[x]
+        else:
+            defender = 0
+        values.extend([javascriptdata.GoogleValue(player),
+                       javascriptdata.GoogleValue(defender)])
+        
+        googleRows.append(
+            javascriptdata.makeGoogleDataRow(headers, values))
+                           
 
-        row = row + ",{},{:.2f}".format(val, cIVal)
-        row = row + '],'
-        googleRows.append(row)
     res = ''
+    print(googleRows)
     for r in googleRows:
         res = res + r
     res = res[:-1]
@@ -325,7 +350,7 @@ def displayRanks(t, focusTeamPlayer, asPlayer):
             focusTeamPlayer[1]))
     
     divtag = htmllayout.DivTag('rang')
-    divtag.addAttribute('style',"width: 400px; height: 300px;")
+    divtag.addAttribute('style',"width: 40%; height: 400px;")
     body = htmllayout.HtmlTag('<body>')
     body.addContent(divtag)
     
@@ -355,8 +380,8 @@ if __name__ == '__main__':
     #displayFocus(tournament, focus, True, True)
     #asPlayer or asDefender
     #type = team or pairs
-    #displayRanks(tournament, focus, False)
-    (a,b) = tournament.makeTableInput(focus)
-    print(a)
-    for r in b:
-        print(r)
+    displayRanks(tournament, focus, False)
+    #(a,b) = tournament.makeTableInput(focus)
+    #print(a)
+    #for r in b:
+    #    print(r)

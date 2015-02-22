@@ -64,7 +64,21 @@ class DivTag(HtmlTag):
         HtmlTag.__init__(self, '<div>')
         self.addAttribute('id', name)
 
-    
+
+class JsScriptTag(HtmlTag):
+    def __init__(self, fileName):
+        HtmlTag.__init__(self, '<script>')
+        self.addAttribute('type', "text/javascript")
+        self.fileName = fileName
+
+    def getPreContent(self):
+        res = ''
+        if self.fileName:
+            f = open(self.fileName, 'r')
+            res = f.read()
+            f.close()
+        return res
+
 
 class HtmlCell(HtmlTag):
     def __init__(self, content):
@@ -457,12 +471,6 @@ class HtmlBreak(HtmlTag):
         HtmlTag.__init__(self, '<br>')
         self.end = ''
 
-#    def writeAsFile(self, name):
-#        f = open(name, 'w')
-#        f.write(self.render())
-#        f.close()
-#
-
 class HtmlList(HtmlTag):
     def __init__(self, basedAt, masterName, header):
         self.basedAt = basedAt
@@ -528,22 +536,6 @@ class HtmlList(HtmlTag):
             self.content.append(br)
         return self
 
-    #def render(self):
-    #    br = HtmlBreak() #same break for all breaks
-    #    masterFileName = os.path.join(self.basedAt, self.masterName )
-    #    #header = HtmlTag('<div>','</div>', self.header)
-    #    #body = HtmlTag('<body>')
-    #    #body.addAttribute("style","font-size:18pt")
-    #    #wrap= HtmlWrapper()
-    #    #wrap.addContent(body)
-    #    #body.addContent(header)
-    #    container = HtmlTag('','','')
-    #    last = None
-    #    for n in range(len(self.list)):
-    #        link = HtmlLink(self.displayList[n], self.getLinkFileName(n))
-    #        container.addContent(link)
-    #        container.addContent(br)
-    #    return wrap.render()    
             
 def getHtmlStart():
     br = HtmlBreak() #same break for all breaks
@@ -638,62 +630,16 @@ class GoogleChart(HtmlTag):
         self.divTag = divTag
         self.title = title
         HtmlTag.__init__(self, '<head>')
-        self.apiScript = HtmlTag('<script>',)
-        self.apiScript.addAttribute('type', "text/javascript")
+        self.apiScript = JsScriptTag(None)
         self.apiScript.addAttribute('src', "https://www.google.com/jsapi")
-        self.tableScript = HtmlTag('<script>',)
-        self.tableScript.addAttribute('type', 'text/javascript')
+        self.tableScript = JsScriptTag(os.path.join(
+            '..','javascript','tablescript.js'))
         self.tableScript.dontEscape()
         self.rows = rows
         self.subTitle = subTitle 
-        self.googleCore = '''
-      google.load("visualization", "1.1", {packages:["bar"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([尸ows;]);
-
-        var options = {
-          chart: {
-            title: '川itle;',
-            subtitle: '山ubtitle;',
-          }
-        };
-
-        var chart = new google.charts.Bar(document.getElementById('千ivtag;'));
-
-        chart.draw(data, options);
-      }
-'''
-        self.googleCore1 = '''
-      google.load("visualization", "1.1", {packages:["bar"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([尸ows;]);
-
-        var options = {
-          chart: {
-            title: '川itle;',
-            subtitle: '山ubtitle;',
-          },
-          series: {
-            0: { axis: 'distance' }, // Bind series 0 to an axis named 'distance'.
-            1: { axis: 'brightness' } // Bind series 1 to an axis named 'brightness'.
-          },
-          axes: {
-            y: {
-              distance: {label: 'parsecs'}, // Left y-axis.
-              brightness: {side: 'right', label: 'apparent magnitude'} // Right y-axis.
-            }
-          }
-        };
-        var chart = new google.charts.Bar(document.getElementById('千ivtag;'));
-        chart.draw(data, options);
-    };
-'''
-
 
     def setupData(self):
-        res = self.googleCore
+        res = self.tableScript.getPreContent()
         res = res.replace('尸ows;', self.rows)
         res = res.replace('千ivtag;', self.divTag)
         res = res.replace('川itle;', self.title)
