@@ -632,18 +632,20 @@ class GoogleChart(HtmlTag):
         HtmlTag.__init__(self, '<head>')
         self.apiScript = JsScriptTag(None)
         self.apiScript.addAttribute('src', "https://www.google.com/jsapi")
+        #self.tableScript = JsScriptTag(os.path.join(
+        #    '..','javascript','tablescript.js'))
         self.tableScript = JsScriptTag(os.path.join(
-            '..','javascript','tablescript.js'))
+            '..','javascript','viewscript.js'))
         self.tableScript.dontEscape()
         self.rows = rows
         self.subTitle = subTitle 
 
     def setupData(self):
         res = self.tableScript.getPreContent()
-        res = res.replace('¤rows;', self.rows)
-        res = res.replace('¤divtag;', self.divTag)
-        res = res.replace('¤title;', self.title)
-        res = res.replace('¤subtitle;', self.subTitle)
+        res = res.replace('¤rows¤', self.rows)
+        res = res.replace('¤divtag¤', self.divTag)
+        res = res.replace('¤title¤', self.title)
+        res = res.replace('¤subtitle¤', self.subTitle)
         self.tableScript.addContent(res)
 
     def renderContent(self):

@@ -6,11 +6,11 @@ class GoogleHeader:
         self.elements['id']= id
         self.formatter = formatter
 
-    def getRowPart(self):
+    def getRowCell(self):
         res = '{'
         for (key, value) in self.elements.items():
             if value:
-                res = res + "{} : '{}',".format(key, value)
+                res = res + " {}: '{}',".format(key, value) 
         res = res[:-1]+'},'
         return res
 
@@ -39,24 +39,29 @@ class GoogleValue:
                 
             for (key, info) in self.elements.items():
                 if info != None:
-                    res = res + "{}: '{}',".format(key, info)
-            res = res[:-1]+'},'
+                    if header.elements['type'] == 'string':
+                        formatter = "{}: '{}',"
+                    else:
+                       formatter = "{}: {},"
+                    res = res + formatter.format(key, info)
+
+            res = res[:-1] + "},"
             return res
         else:
             return 'null,'
 
 
 def makeGoogleHeaderRow(listOfHeaderElements):
-    res = '\n['
+    res = '\n{\ncols: ['
     for value in listOfHeaderElements:
-        res = res + value.getRowPart()
+        res = res + value.getRowCell()
     res = res[:-1]+'],'
     return res
 
 def makeGoogleDataRow(headers, listOfValues):
-    res = '\n['
+    res = '\n{c: ['
     for (v, h) in zip(listOfValues, headers):
         res = res + v.getRowPart(h)
-    res = res[:-1]+'],'
+    res = res[:-1]+']},'
     return res
 

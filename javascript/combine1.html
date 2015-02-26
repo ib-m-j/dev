@@ -1,0 +1,123 @@
+<!doctype html public "-//W3C//DTD HTML 4.0//EN" >
+<html>
+	<head >
+		<style>
+		.minklasse {
+			background-color: linen;
+		}
+</style>
+		<script  type = "text/javascript"  src = "https://www.google.com/jsapi" ></script>
+		<script  type = "text/javascript" >
+		google.load("visualization", "1.1", {packages:["table","bar", "scatter"]});
+		google.setOnLoadCallback(drawTable);
+		function drawTable() 
+		{
+			var data = new google.visualization.DataTable(
+				{  
+					cols: [{type : 'number',label : 'rang',p:{style:'width:20%;'}},
+						{type : 'number',label : 'spil',p:{style:'width:20%;'}},
+						{type : 'string',label : 'type',p:{style:'width:40%;'}}
+					],
+					rows: [{c:[{v: 6},{v: 1},{v: 'play'}]},
+						{c:[{v: 5},{v: 4},{v: 'play'}]},
+						{c:[{v: 1},{v: 5},{v: 'play',p:{'class':'minklasse'}}]},
+						{c:[{v: 4},{v: 6},{v: 'play'}]},
+						{c:[{v: 6,p:{style:'background-color : #AAFFAA' }},
+							{v: 8, p:{style:'text-align:center'}},{v: 'play'}]},
+						{c:[{v: 6},{v: 10},{v: 'play'}]},
+						{c:[{v: 4, p:{width:'20px'}},{v: 12},{v: 'play'}]},
+						{c:[{v: 4},{v: 13},{v: 'play'}]},
+						{c:[{v: 5},{v: 19},{v: 'play',p:{style: 'border: 2px solid green;background-color:#aaaaff'}}]},
+						{c:[{v: 0},{v: 21},{v: 'play'}]},
+						{c:[{v: 5},{v: 22},{v: 'play'}]},
+						{c:[{v: 1},{v: 24},{v: 'play'}]},
+						{c:[{v: 1},{v: 26},{v: 'play'}]},
+						{c:[{v: 6},{v: 27},{v: 'play'}]},
+						{c:[{v: 6},{v: 28},{v: 'play'}]},
+						{c:[{v: 2},{v: 30},{v: 'play'}]},
+						{c:[{v: 6},{v: 32},{v: 'play'}]},
+						{c:[{v: 2},{v: 2},{v: 'defend'}]},
+						{c:[{v: 6},{v: 3},{v: 'defend'}]},
+						{c:[{v: 1},{v: 7},{v: 'defend'}]},
+						{c:[{v: 6},{v: 9},{v: 'defend'}]},
+						{c:[{v: 0},{v: 11},{v: 'defend'}]},
+						{c:[{v: 2},{v: 14},{v: 'defend'}]},
+						{c:[{v: 4},{v: 15},{v: 'defend'}]},
+						{c:[{v: 2},{v: 16},{v: 'defend'}]},
+						{c:[{v: 4},{v: 17},{v: 'defend'}]},
+						{c:[{v: 5},{v: 18},{v: 'defend'}]},
+            {c:[{v: 2},{v: 20},{v: 'defend'}]},
+            {c:[{v: 2},{v: 23},{v: 'defend'}]},
+            {c:[{v: 4},{v: 25},{v: 'defend'}]},
+            {c:[{v: 5},{v: 29},{v: 'defend'}]},
+            {c:[{v: 0},{v: 31},{v: 'defend'}]}
+          ], 
+				});
+			
+			var reduced = google.visualization.data.group(
+				data, [0,2], [{column:1, aggregation:google.visualization.data.count, type:'number'}]);
+			
+			data.setProperty(1,1,'style', 'background-color : green');
+			var json = data.toJSON();
+			var scatterView = new google.visualization.DataView(data);
+			scatterView.setColumns([0,1]);
+      var defendOnly = new google.visualization.DataView(reduced);
+      var playOnly = new google.visualization.DataView(reduced);
+      var defendOnlyRows = reduced.getFilteredRows([{column:1, value:'defend'}]);
+      var playOnlyRows = reduced.getFilteredRows([{column:1, value:'play'}]);
+			defendOnly.setRows(defendOnlyRows);
+			defendOnly.setColumns([0,2]);
+			playOnly.setRows(playOnlyRows);
+			playOnly.setColumns([0,2]);
+			
+			
+			// does not work on viewsvar combine = new google.visualization.data.join(playOnly, defendOnly, 'inner', [0,0], [1],[1]);
+			
+			
+			
+      var table = new google.charts.Scatter(document.getElementById('table_div'));
+      table.draw(scatterView, {showRowNumber: true, allowHtml: true});
+			
+      //var table = new google.visualization.Table(document.getElementById('table_div'));
+      //table.draw(data, {showRowNumber: true, allowHtml: true});
+			
+			//        var defendTag = new google.visualization.Table(document.getElementById('rank_defend'));
+			//        var playTag = new google.visualization.Table(document.getElementById('rank_play'));
+			
+			var defendTag = new google.charts.Bar(document.getElementById('rank_defend'));
+			var playTag = new google.charts.Bar(document.getElementById('rank_play'));
+			
+			//        defendTag.draw(defendOnly);
+			//        playTag.draw(playOnly);
+			//
+			
+			var options = {
+        chart: {
+          title: 'Semifinale hold, Tuesday, January 20, 2015, 3. sektion, A-rkken',
+            subtitle: 'Antal spil med rang for Einar Poulsen',
+        }
+			};
+			
+			
+			defendTag.draw(defendOnly, options);
+			playTag.draw(playOnly, options);
+			
+
+			
+			
+			
+    }
+		
+		
+		
+    </script>
+  </head>
+  <body>
+		a
+    <div id="table_div"  style = "width: 40%; height: 10cm;" ></div>
+		b
+		<div id="rank_play"  style = "width: 40%; height: 200px;" ></div>
+		c
+    <div id="rank_defend"  style = "width: 40%; height: 200px;" ></div>
+  </body>
+</html>
