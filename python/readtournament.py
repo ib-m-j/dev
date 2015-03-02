@@ -10,6 +10,7 @@ import display
 import htmllayout
 import sys
 import javascriptdata
+import json
 
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
@@ -289,23 +290,33 @@ def makeTestRows(playRankList, defendRankList):
 
     headers = [header1, header2, header3]
     tableDataString = javascriptdata.makeGoogleHeaderRow(headers)
-    tableDataString = tableDataString + '\nrows: [ '
+    tableDataString = tableDataString  + '\nrows: '
 
+    #    for (r,p) in playRankList:
+    #        tableDataString = tableDataString + javascriptdata.makeGoogleDataRow(
+    #                [javascriptdata.makeGoogleValue(r), 
+    #                javascriptdata.makeGoogleValue(p), 
+    #                javascriptdata.makeGoogleValue('play')])
+    #    for (r,p) in defendRankList:
+    #        tableDataString = tableDataString + javascriptdata.makeGoogleDataRow(
+    #            #headers, [
+    #            [javascriptdata.makeGoogleValue(r), 
+    #            javascriptdata.makeGoogleValue(p), 
+    #            javascriptdata.makeGoogleValue('defend')])
+    
+    rows = []
     for (r,p) in playRankList:
-        tableDataString = tableDataString + javascriptdata.makeGoogleDataRow(
-            headers, [
-                javascriptdata.GoogleValue(r), 
-                javascriptdata.GoogleValue(p), 
-                javascriptdata.GoogleValue('play')])
+        rows.append([javascriptdata.makeGoogleValue(r), 
+                     javascriptdata.makeGoogleValue(p), 
+                     javascriptdata.makeGoogleValue('play')])
     for (r,p) in defendRankList:
-        tableDataString = tableDataString + javascriptdata.makeGoogleDataRow(
-            headers, [
-            javascriptdata.GoogleValue(r), 
-            javascriptdata.GoogleValue(p), 
-            javascriptdata.GoogleValue('defend')])
+        rows.append([javascriptdata.makeGoogleValue(r), 
+                     javascriptdata.makeGoogleValue(p), 
+                     javascriptdata.makeGoogleValue('defend')])
         
+    tableDataString = tableDataString + javascriptdata.makeGoogleDataRows(rows) 
                            
-    tableDataString = tableDataString[:-1] + ']'
+    tableDataString = tableDataString[:-1] + ']}'
     return tableDataString
 
 def displayRanks(t, focusTeamPlayer, asPlayer):
@@ -372,6 +383,8 @@ def displayRanks(t, focusTeamPlayer, asPlayer):
 #        tableDataString = tableDataString[:-1] + '}'
 #
 #    #trying with test res
+
+
     res = makeTestRows(playRanksList,defendRanksList)
 
 
@@ -395,8 +408,73 @@ def displayRanks(t, focusTeamPlayer, asPlayer):
     wrap.saveToFile('../data/testChart.html')
    
 
+def makeFocusViewTeam(tournament, focusTeamPlayer):
+    (playedBy, defendedBy) = tournament.getParticipatedByPlayer(focusTeamPlayer)
 
+    playRanks = {}
+    defendRanks = {}
 
+    playRanksList = []
+    defendRanksList = []
+
+    #crossImps = {}
+    for play in playedBy:
+        direction = play.pairOf(focusTeamPlayer)
+        (r, total) = tournament.getRank(play, direction)
+        playRanksList.append((r, play.deal))
+        playRanks[r] = playRanks.get(r, 0) + 1
+        
+    for play in defendedBy:
+        direction = play.pairOf(focusTeamPlayer)
+        (r, total) = tournament.getRank(play, direction)
+        defendRanksList.append((r, play.deal))
+        defendRanks[r] = defendRanks.get(r, 0) + 1
+        res = makeTestRows(playRanksList,defendRanksList)
+
+    playRows = []
+    defendRows = []
+    ticks = []
+    for r in range(total + 1):
+        played = playRanks.get(r, 0)
+        defended = defendRanks.get(r, 0)
+        tick = round(r/total, 2) 
+        tickFormat = '{:.0f}%'.format(tick*100) 
+        googleTick = javascriptdata.makeGoogleValue(tick, tickFormat)
+        ticks.append(googleTick)
+        playRows.append([googleTick, 
+                         javascriptdata.makeGoogleValue(played),
+                         javascriptdata.makeGoogleValue('{:d}'.format(played))])
+        defendRows.append([googleTick, 
+                           javascriptdata.makeGoogleValue(defended),
+                           javascriptdata.makeGoogleValue('{:d}'.format(defended))] )
+        
+    playRowsString =  javascriptdata.makeGoogleDataRows(playRows) 
+    defendRowsString =  javascriptdata.makeGoogleDataRows(defendRows) 
+    ticksString = json.dumps(ticks)
+
+    chartDef = htmllayout.GoogleChart(
+        'play', 'def', 'TITLE', playRowsString, defendRowsString, ticksString)
+    
+    (playTag, defTag) = chartDef.getDivTags()
+
+    body = htmllayout.HtmlTag('<body>')
+    table = htmllayout.HtmlTable()
+    table.addAttribute('width', '500px')
+    (r,c) = table.addRowWithCell('Played by xxx')
+    c.addAttribute('style','center')
+    table.addRowWithCell(playTag)
+    table.addRowWithCell('Defended by xxx')
+    table.addRowWithCell(defTag)
+    body.addContent(table)
+    #body.addContent(playTag)
+    #body.addContent(defTag)
+    chartDef.setupData()
+    wrap= htmllayout.HtmlWrapper()
+    wrap.setHead(chartDef)
+    wrap.setBody(body)
+    wrap.saveToFile('../data/testChart.html')
+    print("wrote file ../data/testChart.html");
+    
 def doDefenderFocus():
     pass
 
@@ -404,13 +482,15 @@ if __name__ == '__main__':
     (type, tournament) = readTournament(
         'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
     focus = ('Orion','Einar Poulsen')
+    makeFocusViewTeam(tournament, focus)
+
     #focus = ('Lille O','Lars Sørensen')
  
     
     #displayFocus(tournament, focus, True, True)
     #asPlayer or asDefender
     #type = team or pairs
-    displayRanks(tournament, focus, False)
+    #displayRanks(tournament, focus, False)
     #(a,b) = tournament.makeTableInput(focus)
     #print(a)
     #for r in b:

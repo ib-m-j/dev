@@ -1,7 +1,7 @@
 google.load("visualization", "1.1", {packages:["bar"]});
 google.setOnLoadCallback(drawChart);
 function drawChart() {
-    var data = google.visualization.arrayToDataTable({¤rows¤});
+    var data = new google.visualization.DataTable(¤rows¤);
     
     var options = {
         chart: {

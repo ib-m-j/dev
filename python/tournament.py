@@ -155,7 +155,8 @@ class Tournament:
             self.teamPlayers.addValue((team, player))
         self.plays.append(Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult))
 
-    def getPlayedByPair(self, teamPlayer):
+    #depreateddef getPlayedByPair(self, teamPlayer):
+    def getParticipatedByPlayer(self, teamPlayer):
         playedBy  = []
         defendedBy = []
         for play in self.plays:

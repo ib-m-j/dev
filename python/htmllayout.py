@@ -128,6 +128,7 @@ class HtmlTable(HtmlTag):
         r = HtmlRow()
         r.addCell(c)
         self.addRow(r)
+        return(r,c)
 
 class ArrayContent:
     def __init__(self, cellFormatter):
@@ -626,37 +627,40 @@ def renderLinks():
 
 
 class GoogleChart(HtmlTag):
-    def __init__(self, divTag, title, rows, subTitle = ''):
-        self.divTag = divTag
+    def __init__(self, playDivTag, defDivTag, 
+                 title, playRows, defendRows, ticks):
+        self.playDivTag = playDivTag
+        self.defDivTag = defDivTag
         self.title = title
+        self.ticks = ticks
         HtmlTag.__init__(self, '<head>')
-        self.apiScript = JsScriptTag(None)
-        self.apiScript.addAttribute('src', "https://www.google.com/jsapi")
-        #self.tableScript = JsScriptTag(os.path.join(
-        #    '..','javascript','tablescript.js'))
+        self.loadLibsScript = JsScriptTag(None)
+        self.loadLibsScript.addAttribute(
+            'src', 
+            "https://www.google.com/jsapi?autoload={ \
+            'modules':[{'name':'visualization','version':'1'}]}")
         self.tableScript = JsScriptTag(os.path.join(
-            '..','javascript','viewscript.js'))
+            '..','javascript','showFocusViewTeam.js'))
         self.tableScript.dontEscape()
-        self.rows = rows
-        self.subTitle = subTitle 
-
+        self.playRows = playRows
+        self.defendRows = defendRows
+        
     def setupData(self):
         res = self.tableScript.getPreContent()
-        res = res.replace('¤rows¤', self.rows)
-        res = res.replace('¤divtag¤', self.divTag)
-        res = res.replace('¤title¤', self.title)
-        res = res.replace('¤subtitle¤', self.subTitle)
+        res = res.replace('¤defrows¤', self.playRows)
+        res = res.replace('¤playrows¤', self.defendRows)
+        res = res.replace('¤playdivtag¤', self.playDivTag)
+        res = res.replace('¤defdivtag¤', self.defDivTag)
+        res = res.replace('¤ticks¤', self.ticks.__str__())
         self.tableScript.addContent(res)
 
     def renderContent(self):
-        res = self.apiScript.render()
+        res = self.loadLibsScript.render()
         res = res + self.tableScript.render()
         return res
       
-    def getDivTag(self):
-        tag =  DivTag(self.divTag)
-        tag.addAttribute('style', 'width: 900px; height: 500px;')
-        return tag
+    def getDivTags(self):
+        return (DivTag(self.playDivTag), DivTag(self.defDivTag))
 
 if __name__ == '__main__':
     #renderTable()
@@ -688,7 +692,7 @@ if __name__ == '__main__':
     wrap= HtmlWrapper()
     wrap.setHead(chartDef)
     wrap.setBody(body)
-
+    
     print(wrap.render())
     wrap.saveToFile('../data/testChart.html')
 

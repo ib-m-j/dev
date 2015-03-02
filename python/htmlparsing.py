@@ -39,7 +39,7 @@ class State:
             self.setCurrentState('getOneRecord')
 
 class HtmlTable:
-    def __init__(self, name, nr, level):
+    def __init__(self, name='', nr=0, level=0):
         self.name = name
         self.nr = nr
         self.level = level
