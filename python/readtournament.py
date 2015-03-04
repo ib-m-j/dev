@@ -456,21 +456,35 @@ def makeFocusViewTeam(tournament, focusTeamPlayer):
         'play', 'def', 'TITLE', playRowsString, defendRowsString, ticksString)
     
     (playTag, defTag) = chartDef.getDivTags()
+    playTag.addAttribute('height', 500)
+    defTag.addAttribute('height', 500)
 
     body = htmllayout.HtmlTag('<body>')
+    head = htmllayout.HtmlTag('<head>')
+    styles = htmllayout.HtmlTag('<style>')
+    styles.addContent(
+        'body {font-size: 100%;} \
+        .theader {text-align: center; font-size : 1.2em;} \
+        .title {text-align: center; font-size: 1.5em;')
+    head.addContent(styles)
     table = htmllayout.HtmlTable()
     table.addAttribute('width', '500px')
-    (r,c) = table.addRowWithCell('Played by xxx')
-    c.addAttribute('style','center')
+    (r,c) = table.addRowWithCell(
+        'Antal spil fordelt efter parturnerings rang')
+    c.addAttribute('class', 'title')
+    link = htmllayout.HtmlLink(
+        '- med {} som spilfører'.format(focusTeamPlayer[1]),'url')
+    (r,c) = table.addRowWithCell(link)
+    c.addAttribute('class','theader')
     table.addRowWithCell(playTag)
-    table.addRowWithCell('Defended by xxx')
-    table.addRowWithCell(defTag)
+    (r,c) = table.addRowWithCell(
+        '- med {} som forsvarer'.format(focusTeamPlayer[1]))
+    c.addAttribute('class', 'theader')
+    (r,c) = table.addRowWithCell(defTag)
     body.addContent(table)
-    #body.addContent(playTag)
-    #body.addContent(defTag)
-    chartDef.setupData()
+    chartDef.setupData(head)
     wrap= htmllayout.HtmlWrapper()
-    wrap.setHead(chartDef)
+    wrap.setHead(head)
     wrap.setBody(body)
     wrap.saveToFile('../data/testChart.html')
     print("wrote file ../data/testChart.html");

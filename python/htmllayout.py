@@ -633,7 +633,7 @@ class GoogleChart(HtmlTag):
         self.defDivTag = defDivTag
         self.title = title
         self.ticks = ticks
-        HtmlTag.__init__(self, '<head>')
+        #HtmlTag.__init__(self, '<head>')
         self.loadLibsScript = JsScriptTag(None)
         self.loadLibsScript.addAttribute(
             'src', 
@@ -645,7 +645,7 @@ class GoogleChart(HtmlTag):
         self.playRows = playRows
         self.defendRows = defendRows
         
-    def setupData(self):
+    def setupData(self, head):
         res = self.tableScript.getPreContent()
         res = res.replace('¤defrows¤', self.playRows)
         res = res.replace('¤playrows¤', self.defendRows)
@@ -653,6 +653,8 @@ class GoogleChart(HtmlTag):
         res = res.replace('¤defdivtag¤', self.defDivTag)
         res = res.replace('¤ticks¤', self.ticks.__str__())
         self.tableScript.addContent(res)
+        head.addContent(self.loadLibsScript)
+        head.addContent(self.tableScript)
 
     def renderContent(self):
         res = self.loadLibsScript.render()

@@ -15,18 +15,29 @@ function drawVisualization() {
       rows: ¤defrows¤ 
   });
   
-  var options = {
+  var optionsPlay = {
   chart: {
   legend:{position:'top'}},
   hAxis:{baseline: 'none', baselineColor : 'white', ticks : ¤ticks¤, 
 	 gridlines : {color:'white'}},
-  vAxis: {gridlines:{color:'white'}, textPosition: 'none' }
+  vAxis: {gridlines:{color:'white'}, textPosition: 'none' },
+			bar:{groupWidth:'85%'}
+  };
+  
+  var optionsDef = {
+  chart: {
+  legend:{position:'top'}},
+  hAxis:{baseline: 'none', baselineColor : 'white', ticks : ¤ticks¤, 
+	 gridlines : {color:'white'}},
+			vAxis: {gridlines:{color:'white'}, textPosition: 'none' },
+			bar:{groupWidth:'85%'},
+			colors : ['red']
   };
   
   var playWrap = new google.visualization.ChartWrapper({
   'chartType':'ColumnChart',
   'containerId':¤playdivtag¤,
-  'options': options
+  'options': optionsPlay
   })
   playWrap.setDataTable(playData);
   playWrap.draw();
@@ -34,7 +45,7 @@ function drawVisualization() {
   var defWrap = new google.visualization.ChartWrapper({
   'chartType':'ColumnChart',
   'containerId':¤defdivtag¤,
-  'options': options
+  'options': optionsDef
   })
   defWrap.setDataTable(defData);
   defWrap.draw();
