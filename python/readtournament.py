@@ -12,6 +12,8 @@ import sys
 import javascriptdata
 import json
 
+
+
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
     '<a href="([a-zA-Z/]+Resultat[0-9]+.html)"',re.IGNORECASE)
@@ -232,33 +234,6 @@ def doPlayerFocus():
     t = oneTournament('islevbridge.dk',
                           '/Resultat/Klub1/Turneringer/Resultat1082.html')
 
-def readTournament(server, url):
-    res = readOneTournament(server, url)
-
-    #print(res)
-    if res[0] == 'pair':
-        for file in res[1]:
-            readresfile.basicIslevPairs(
-                Crawler.fromServerUrl(
-                    'islevbridge.dk',file).getFileContent())
-
-    elif res[0] == 'team':
-        t = tournament.Tournament()
-        for file in res[1]: 
-            readresfile.basicIslevTeams(
-                Crawler.fromServerUrl(
-                    'islevbridge.dk',file).getFileContent(), t)
-   
-        t.addOrigin(server, url)
-
-    print(len(t.teams), len(t.deals))
-    for team in t.teams:
-        print(team)
-        for p in t.teams[team].teamPlayers:
-            print('\t', p, len(p))
-    #only team implemented
-
-    return (res[0], t)
 
 def displayFocus(t, focusTeamPlayer, asPlayer, isTeam):
     #largeTest()
@@ -408,96 +383,11 @@ def displayRanks(t, focusTeamPlayer, asPlayer):
     wrap.saveToFile('../data/testChart.html')
    
 
-def makeFocusViewTeam(tournament, focusTeamPlayer):
-    (playedBy, defendedBy) = tournament.getParticipatedByPlayer(focusTeamPlayer)
-
-    playRanks = {}
-    defendRanks = {}
-
-    playRanksList = []
-    defendRanksList = []
-
-    #crossImps = {}
-    for play in playedBy:
-        direction = play.pairOf(focusTeamPlayer)
-        (r, total) = tournament.getRank(play, direction)
-        playRanksList.append((r, play.deal))
-        playRanks[r] = playRanks.get(r, 0) + 1
-        
-    for play in defendedBy:
-        direction = play.pairOf(focusTeamPlayer)
-        (r, total) = tournament.getRank(play, direction)
-        defendRanksList.append((r, play.deal))
-        defendRanks[r] = defendRanks.get(r, 0) + 1
-        res = makeTestRows(playRanksList,defendRanksList)
-
-    playRows = []
-    defendRows = []
-    ticks = []
-    for r in range(total + 1):
-        played = playRanks.get(r, 0)
-        defended = defendRanks.get(r, 0)
-        tick = round(r/total, 2) 
-        tickFormat = '{:.0f}%'.format(tick*100) 
-        googleTick = javascriptdata.makeGoogleValue(tick, tickFormat)
-        ticks.append(googleTick)
-        playRows.append([googleTick, 
-                         javascriptdata.makeGoogleValue(played),
-                         javascriptdata.makeGoogleValue('{:d}'.format(played))])
-        defendRows.append([googleTick, 
-                           javascriptdata.makeGoogleValue(defended),
-                           javascriptdata.makeGoogleValue('{:d}'.format(defended))] )
-        
-    playRowsString =  javascriptdata.makeGoogleDataRows(playRows) 
-    defendRowsString =  javascriptdata.makeGoogleDataRows(defendRows) 
-    ticksString = json.dumps(ticks)
-
-    chartDef = htmllayout.GoogleChart(
-        'play', 'def', 'TITLE', playRowsString, defendRowsString, ticksString)
-    
-    (playTag, defTag) = chartDef.getDivTags()
-    playTag.addAttribute('height', 500)
-    defTag.addAttribute('height', 500)
-
-    body = htmllayout.HtmlTag('<body>')
-    head = htmllayout.HtmlTag('<head>')
-    styles = htmllayout.HtmlTag('<style>')
-    styles.addContent(
-        'body {font-size: 100%;} \
-        .theader {text-align: center; font-size : 1.2em;} \
-        .title {text-align: center; font-size: 1.5em;')
-    head.addContent(styles)
-    table = htmllayout.HtmlTable()
-    table.addAttribute('width', '500px')
-    (r,c) = table.addRowWithCell(
-        'Antal spil fordelt efter parturnerings rang')
-    c.addAttribute('class', 'title')
-    link = htmllayout.HtmlLink(
-        '- med {} som spilfører'.format(focusTeamPlayer[1]),'url')
-    (r,c) = table.addRowWithCell(link)
-    c.addAttribute('class','theader')
-    table.addRowWithCell(playTag)
-    (r,c) = table.addRowWithCell(
-        '- med {} som forsvarer'.format(focusTeamPlayer[1]))
-    c.addAttribute('class', 'theader')
-    (r,c) = table.addRowWithCell(defTag)
-    body.addContent(table)
-    chartDef.setupData(head)
-    wrap= htmllayout.HtmlWrapper()
-    wrap.setHead(head)
-    wrap.setBody(body)
-    wrap.saveToFile('../data/testChart.html')
-    print("wrote file ../data/testChart.html");
-    
 def doDefenderFocus():
     pass
 
 if __name__ == '__main__':
-    (type, tournament) = readTournament(
-        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
-    focus = ('Orion','Einar Poulsen')
-    makeFocusViewTeam(tournament, focus)
-
+    pass
     #focus = ('Lille O','Lars Sørensen')
  
     

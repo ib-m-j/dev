@@ -2,80 +2,80 @@ import sys
 import re
 import json
 
-class JsObject:
-    def __init__(self, content, start = '', end = ''):
-        self.start = start
-        self.end = end
-        self.content = content
-        self.tabs = 0
-
-    def render(self, tabs = 0):
-        return self.start+self.content.__str__()+self.end
-
-    @staticmethod
-    def makeJsObject(content):
-        if isinstance(content, str):
-            return JsStr(content)
-        elif isinstance(content, list):
-            jsContent = []
-            for x in content:
-                jsContent.append(JsObject.makeJsObject(x))
-            return JsList(jsContent)
-        elif isinstance(content, dict):
-            jsContent = {}
-            for (k,v) in content.items():
-                jsContent[k] = JsObject.makeJsObject(v)
-            return JsMap(jsContent)
-        elif isinstance(content, JsObject):
-            return content
-        else:
-            return JsObject(content, indent = 1)
-
-class JsList(JsObject):
-    def __init__(self, content):
-        JsObject.__init__(self, content, '[',']')
-        if not isinstance(content, list):
-            raise (BaseException('need list in JsList'))
-            
-
-    def render(self, tabs):
-        res = self.start
-        for x in self.content:
-            res = res + x.render(tabs + 1) + ', '
-        return res[:-2] + self.end
-
-    def addContent(self, element):
-        self.content.append(element)
-        
-class JsMap(JsObject):
-    def __init__(self, content):
-        JsObject.__init__(self, content, '{','}')
-        if not isinstance(content, dict):
-            raise (BaseException('need dict in JsMap'))
-            
-
-    def render(self, tabs):
-        res = self.start
-        for (k,v) in self.content.items():
-            res = res + '{}: {}, '.format(k, v.render(tabs + 1))
-        return res[:-2] + self.end
-
-    def addContent(self, key, value):
-        self.content[key] = value
-        
-class JsStr(JsObject):
-    def __init__(self, content):
-        JsObject.__init__(self, content, "'","'")
-        if not isinstance(content, str):
-            raise (BaseException('need dict in JsMap'))
-            
-
-    def renderContent(self, tabs):
-        res = self.content 
-        return (res)
-
-
-
+#class JsObject:
+#    def __init__(self, content, start = '', end = ''):
+#        self.start = start
+#        self.end = end
+#        self.content = content
+#        self.tabs = 0
+#
+#    def render(self, tabs = 0):
+#        return self.start+self.content.__str__()+self.end
+#
+#    @staticmethod
+#    def makeJsObject(content):
+#        if isinstance(content, str):
+#            return JsStr(content)
+#        elif isinstance(content, list):
+#            jsContent = []
+#            for x in content:
+#                jsContent.append(JsObject.makeJsObject(x))
+#            return JsList(jsContent)
+#        elif isinstance(content, dict):
+#            jsContent = {}
+#            for (k,v) in content.items():
+#                jsContent[k] = JsObject.makeJsObject(v)
+#            return JsMap(jsContent)
+#        elif isinstance(content, JsObject):
+#            return content
+#        else:
+#            return JsObject(content, indent = 1)
+#
+#class JsList(JsObject):
+#    def __init__(self, content):
+#        JsObject.__init__(self, content, '[',']')
+#        if not isinstance(content, list):
+#            raise (BaseException('need list in JsList'))
+#            
+#
+#    def render(self, tabs):
+#        res = self.start
+#        for x in self.content:
+#            res = res + x.render(tabs + 1) + ', '
+#        return res[:-2] + self.end
+#
+#    def addContent(self, element):
+#        self.content.append(element)
+#        
+#class JsMap(JsObject):
+#    def __init__(self, content):
+#        JsObject.__init__(self, content, '{','}')
+#        if not isinstance(content, dict):
+#            raise (BaseException('need dict in JsMap'))
+#            
+#
+#    def render(self, tabs):
+#        res = self.start
+#        for (k,v) in self.content.items():
+#            res = res + '{}: {}, '.format(k, v.render(tabs + 1))
+#        return res[:-2] + self.end
+#
+#    def addContent(self, key, value):
+#        self.content[key] = value
+#        
+#class JsStr(JsObject):
+#    def __init__(self, content):
+#        JsObject.__init__(self, content, "'","'")
+#        if not isinstance(content, str):
+#            raise (BaseException('need dict in JsMap'))
+#            
+#
+#    def renderContent(self, tabs):
+#        res = self.content 
+#        return (res)
+#
+#
+#
 
 class GoogleHeader:
     def __init__(self, label, type = 'string', formatter = None, id = None):
