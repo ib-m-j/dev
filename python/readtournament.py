@@ -12,6 +12,8 @@ import sys
 import javascriptdata
 import json
 
+
+
 #resultlink only used to read all tounaments from one file
 resultlink = re.compile(
     '<a href="([a-zA-Z/]+Resultat[0-9]+.html)"',re.IGNORECASE)
@@ -577,21 +579,23 @@ def makeFocusViewPair(tournament, focusPlayer):
  
 
 
-   
+
 def doDefenderFocus():
     pass
 
 if __name__ == '__main__':
-    (type, tournament) = readTournament(
-        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
-        #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
-    focus = ('14877','Einar Poulsen')
-    if type == 'team':
-        makeFocusViewTeam(tournament, focus)
-    else:
-        print('starting pairs')
-        makeFocusViewPair(tournament, focus)
-
+    pass
+# belwo may be used for trestingf
+#    (type, tournament) = readTournament(
+#        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
+#        #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
+#    focus = ('14877','Einar Poulsen')
+#    if type == 'team':
+#        makeFocusViewTeam(tournament, focus)
+#    else:
+#        print('starting pairs')
+#        makeFocusViewPair(tournament, focus)
+#
     #focus = ('Lille O','Lars Sørensen')
  
     

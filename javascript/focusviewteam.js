@@ -21,7 +21,10 @@ function drawVisualization() {
   hAxis:{baseline: 'none', baselineColor : 'white', ticks : ¤ticks¤, 
 	 gridlines : {color:'white'}},
   vAxis: {gridlines:{color:'white'}, textPosition: 'none' },
-			bar:{groupWidth:'85%'}
+			bar:{groupWidth:'85%'},
+			fontSize: '32',
+      height : '500',
+		  chartArea : {left: 20, top: 15, width: '70%', height: '80%'}
   };
   
   var optionsDef = {
@@ -31,7 +34,10 @@ function drawVisualization() {
 	 gridlines : {color:'white'}},
 			vAxis: {gridlines:{color:'white'}, textPosition: 'none' },
 			bar:{groupWidth:'85%'},
-			colors : ['red']
+			colors : ['red'],
+			fontSize: '32',
+      height : '500',
+		  chartArea : {left: 20, top: 15, width: '70%', height: '80%'} 
   };
   
   var playWrap = new google.visualization.ChartWrapper({

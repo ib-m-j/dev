@@ -627,42 +627,24 @@ def renderLinks():
 
 
 class GoogleChart(HtmlTag):
-    def __init__(self, playDivTag, defDivTag, 
-                 title, playRows, defendRows, ticks):
-        self.playDivTag = playDivTag
-        self.defDivTag = defDivTag
-        self.title = title
-        self.ticks = ticks
-        #HtmlTag.__init__(self, '<head>')
+    def __init__(self, tags, jsTableSource):
+        self.tags = tags
         self.loadLibsScript = JsScriptTag(None)
         self.loadLibsScript.addAttribute(
             'src', 
             "https://www.google.com/jsapi?autoload={ \
             'modules':[{'name':'visualization','version':'1'}]}")
-        self.tableScript = JsScriptTag(os.path.join(
-            '..','javascript','showFocusViewTeam.js'))
+        self.tableScript = JsScriptTag(jsTableSource)
         self.tableScript.dontEscape()
-        self.playRows = playRows
-        self.defendRows = defendRows
         
     def setupData(self, head):
         res = self.tableScript.getPreContent()
-        res = res.replace('¤defrows¤', self.playRows)
-        res = res.replace('¤playrows¤', self.defendRows)
-        res = res.replace('¤playdivtag¤', self.playDivTag)
-        res = res.replace('¤defdivtag¤', self.defDivTag)
-        res = res.replace('¤ticks¤', self.ticks.__str__())
+        for (k,v) in self.tags.items():
+            res = res.replace('¤'+k+'¤', v)
         self.tableScript.addContent(res)
         head.addContent(self.loadLibsScript)
         head.addContent(self.tableScript)
 
-    def renderContent(self):
-        res = self.loadLibsScript.render()
-        res = res + self.tableScript.render()
-        return res
-      
-    def getDivTags(self):
-        return (DivTag(self.playDivTag), DivTag(self.defDivTag))
 
 if __name__ == '__main__':
     #renderTable()

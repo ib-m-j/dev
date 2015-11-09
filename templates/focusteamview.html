@@ -1,0 +1,91 @@
+<!doctype html public "-//W3C//DTD HTML 4.0//EN" >
+<html>
+<head >
+<style >
+.frame {border: '1px solid black';}
+body {font-size: '100%';}
+.theader {text-align: center; font-size : 1.2em;}
+.title {text-align: center; font-size: 1.3em;}
+.pageTitle {text-align: center; font-size: 1.5em;}
+</style>
+<script  type = "text/javascript"  src = "https://www.google.com/jsapi?autoload={             'modules':[{'name':'visualization','version':'1'}]}" ></script>
+<script  type = "text/javascript" >google.setOnLoadCallback(drawVisualization);
+  
+function drawVisualization() {
+  var playData = new google.visualization.DataTable({
+    cols: [{ label: 'rang', type: 'number'},
+	    {label: 'spil', type: 'number'},
+	    {label: 'ann', type: 'string', role:'annotation'}],
+    rows: ¤playrows¤
+  });
+
+  var defData = new google.visualization.DataTable({
+    cols: [{ label: 'rang', type: 'number'},
+			{label: 'forsvar', type: 'number'},
+	    {label: 'ann', type: 'string', role:'annotation'}],
+    rows: ¤defrows¤
+  });
+  
+  var optionsPlay = {
+		chart: {
+			legend:{position:'top'}},
+		hAxis:{baseline: 'none', baselineColor : 'white', 
+			ticks : ¤hticks¤,
+			gridlines : {color:'white'}},
+		vAxis: {gridlines:{color:'white'}, textPosition: 'none' },
+			bar:{groupWidth:'85%'},
+    height : '100%',
+		chartArea : {left: 10, top: 15, width: '60%', height: '80%'},
+		allowHtml : true,
+		fontSize : 22,
+		chartArea : {backgroundColor : 'white', left: "15%", width: '55%'},
+		vAxis : {viewWindow: {max : 6}, ticks : ¤vticks¤}
+  };
+  
+  var optionsDef = {
+		chart: {
+			legend:{position:'top'}},
+		hAxis:{baseline: 'none', baselineColor : 'white', 
+			ticks : ¤hticks¤,
+			gridlines : {color:'white'}},
+		vAxis: {gridlines:{color:'white'}, textPosition: 'none' },
+			bar:{groupWidth:'85%'},
+    height : '100%',
+		chartArea : {left: 10, top: 15, width: '60%', height: '80%'},
+		allowHtml : true,
+		fontSize : 22,
+		chartArea : {backgroundColor : 'white', left: "15%", width: '55%'},
+		vAxis : {viewWindow: {max : ¤vmax¤}, ticks : ¤vticks¤},
+		colors : ['red']
+  };
+  
+  var playWrap = new google.visualization.ChartWrapper({
+  'chartType':'ColumnChart',
+  'containerId':play,
+  'options': optionsPlay
+  })
+  playWrap.setDataTable(playData);
+  playWrap.draw();
+
+  var defWrap = new google.visualization.ChartWrapper({
+  'chartType':'ColumnChart',
+  'containerId':def,
+  'options': optionsDef
+  })
+  defWrap.setDataTable(defData);
+  defWrap.draw();
+  }
+
+</script>
+</head>
+<body >
+<table  class ="frame" width = "100%" height ="600px">
+	<tr><td  class = "pageTitle" >¤pagetitle¤</td></tr>
+	<tr ><td class = "title" >¤pagesubtitle¤</td></tr>
+	<tr ><td class = "theader" ><a  href = "¤playedurl¤" >¤playedtitle¤</a></td></tr>
+	<tr height="45%"><td id ="¤playtabletag¤" ></td></tr>
+	<tr ><td  class = "theader" ><a  href = "¤defurl" >¤deftitle¤</a></td></tr>
+	<tr height="45%"><td id = "¤deftabletag¤"></td></tr>
+</table>
+</body>
+</html>

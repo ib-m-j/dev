@@ -5,6 +5,9 @@ ehthumbs.db
 TAGS
 # python backups
 *~
+data/*.html
+data/#*
+logs/*
 __pycache__
 # Folder config file
 Desktop.ini
