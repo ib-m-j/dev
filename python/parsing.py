@@ -10,18 +10,34 @@ strain = re.compile('UT|SP|HJ|RU|KL')
 dbl = re.compile('[PDR]*')
 passed = re.compile('P')
 seat = re.compile('S|V|N|Ø')
+notPlayed = re.compile('\(Justeret\)')
 
 class PlayedBid(str):
     grammar = (attr('seat', seat), contiguous(attr('tricks', tricks), attr('strain', strain)), optional(attr('dbl', dbl)))
 
 class PassedHand(str):
-    grammar = attr('passed', str)
+    grammar = attr('passed', passed)
+
+class NotPlayed(str):
+    grammar = attr('not_played', notPlayed)
 
 class Bid(str):
-    grammar = [attr('played',PlayedBid), attr('passed', PassedHand)]
+    grammar = [attr('played',PlayedBid), attr('passed', PassedHand), 
+               attr('not_played', NotPlayed)]
 
 
-#res = parse('Ø 6UT', Bid)
+if __name__ == '__main__':
+
+
+    res = parse('Ø 6UT', Bid)
+    print(res.played.__dict__)
+
+    res = parse('P', Bid)
+    print(res.passed.__dict__)
+
+    res = parse('(Justeret)', Bid)
+    print(res.__dict__)
+
 #print(isinstance(res, Bid))
 #print(res.__dict__)
 #print(res.played.seat)

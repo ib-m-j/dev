@@ -406,10 +406,14 @@ class Bid:
         self.tricks = tricks
         self.strain = strain
         self.dbl = dbl
+        self.notPlayed = False
+        self.passedBid = False
         if not bidder:
-            self.passedBid = True
-        else:
-            self.passedBid = False
+            if strain: 
+                self.passedBid = True
+            else:
+                self.notPlayed = True
+
         #will need to extend when handling not played 
 
     #def relevantFor(self, other):
@@ -421,6 +425,9 @@ class Bid:
 
     def isPassedBid(self):
         return self.passedBid
+
+    def isNotPlayed(self):
+        return self.notPlayed
 
     def bridgebaseBid(self):
         if self.dbl == 'P':
@@ -456,7 +463,9 @@ class Bid:
         #    raise (BaseException("bid exception"))
         #print(bidstring)
         res = parse(bidstring, parsing.Bid)
-        if hasattr(res, 'passed'):
+        if hasattr(res, 'not_played'):
+            return Bid()
+        elif hasattr(res, 'passed'):
             return Bid(strain = Strain.fromId('P'))
         else:
             res = res.played
@@ -470,9 +479,15 @@ class Bid:
             return Bid(player, tricks, strain, dbl)
 
     def isPlayedBid(self):
+        #team system uses this should 
+        #probably be changed to use ispassed below
         if not(self.bidder):
             return False
         return True
+
+    #def isPassedBid(self):
+    #    return self.isPassedBid
+
 
     def __str__(self):
         if self.dbl == 'P':

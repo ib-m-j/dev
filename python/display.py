@@ -138,12 +138,12 @@ class DisplayFocusResults:
                 else:
                     self.primaryTableContent.setContent(r, c, 1)
 
-            if self.teamFocusIsPrimary:
-                (r, c) = self.primaryTableContent.getCoord(
-                    self.teamFocusPlay.bid.strain, 
-                    self.getFocusResult(self.teamFocusPlay))
-                self.primaryTableContent.setAttributes(
-                    r,c,[('bgcolor','#FFAAAA')])
+            #if self.teamFocusIsPrimary:
+            #   (r, c) = self.primaryTableContent.getCoord(
+            #       self.teamFocusPlay.bid.strain, 
+            #       self.getFocusResult(self.teamFocusPlay))
+            #   self.primaryTableContent.setAttributes(
+            #       r,c,[('bgcolor','#FFAAAA')])
             if self.focusIsPrimary:
                 (r, c) = self.primaryTableContent.getCoord(
                     self.play.bid.strain, 
@@ -163,12 +163,12 @@ class DisplayFocusResults:
                         r, c, self.secondaryTableContent.getContent(r,c) + 1)
                 else:
                     self.secondaryTableContent.setContent(r, c, 1)
-            if not(self.teamFocusIsPrimary):
-                (r, c) = self.secondaryTableContent.getCoord(
-                    self.teamFocusPlay.bid.strain, 
-                    self.getFocusResult(self.teamFocusPlay))
-                self.secondaryTableContent.setAttributes(
-                    r,c,[('bgcolor','#FFAAAA')])
+            #if not(self.teamFocusIsPrimary):
+            #    (r, c) = self.secondaryTableContent.getCoord(
+            #        self.teamFocusPlay.bid.strain, 
+            #        self.getFocusResult(self.teamFocusPlay))
+            #    self.secondaryTableContent.setAttributes(
+            #        r,c,[('bgcolor','#FFAAAA')])
             if not(self.focusIsPrimary):
                 (r, c) = self.secondaryTableContent.getCoord(
                     self.play.bid.strain, 
@@ -209,9 +209,11 @@ class ScoreOverview:
             elif column == 'Antal spil':
                 toAdd = 1
             else:
-                toAdd = focusPlay.getResult(focusPair)- \
-                self.tournament.getPlayedByTeamOther(
-                    focusPlay.deal, focusTeamPlayer).getResult(focusPair)
+                toAdd = 0
+                #hack to handle pairs below needed for teams
+                #toAdd = focusPlay.getResult(focusPair)- \
+                #self.tournament.getPlayedByTeamOther(
+                #    focusPlay.deal, focusTeamPlayer).getResult(focusPair)
 
             #(r,c) = self.array.getCoord(
             #    focusPlay.bid.strain.dkName(), column)

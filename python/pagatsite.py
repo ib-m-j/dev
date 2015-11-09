@@ -6,7 +6,7 @@ import display
 import bridgecore
 
 def getTeamFocusHtml(t):
-    return ('Orion','Einar Poulsen')
+    return ('14877','Einar Poulsen')
 
 
 def makeTeamFocusPlay(t, play, focusTeamPlayer):
@@ -35,6 +35,7 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
 
         playerList = play.getBridgeBasePlayers()
 
+            
         iframe.addAttribute(
             'src', t.deals[play.deal].bridgebaseHand(
                 playerList, play.bid.bridgebaseBid()))
@@ -75,8 +76,13 @@ def makeTeamTournamentHtml(t, root):
         for p in t.teams[team].teamPlayers:
             print('\t',p)
     
+
+
     print("eventidxx ", t.getId())
-    (playedByFocus, defendedByFocus) = t.getPlayedByPair(focusTeamPlayer)
+    (playedByFocus, defendedByFocus) = t.getParticipatedByPlayer(
+        focusTeamPlayer)
+
+    print('played by Einar', len(playedByFocus), 'defended', len(defendedByFocus))
     
     #(wrap1, body1, br1) = htmllayout.getHtmlStart()
 
@@ -97,8 +103,9 @@ def makeTeamTournamentHtml(t, root):
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
             'Spil {:d} Holdscore  {:d} KrydsImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
-                play.getResult(focusPair)- \
-                t.getPlayedByTeamOther(play.deal, focusTeamPlayer).getResult(focusPair),
+                play.getResult(focusPair),
+                #play.getResult(focusPair)- \
+                #t.getPlayedByTeamOther(play.deal, focusTeamPlayer).getResult(focusPair),
                 t.getCrossImps(play, focusPair),
                 t.getRank(play, focusPair)[0], t.getRank(play, focusPair)[1]))
 
@@ -113,9 +120,11 @@ def makeTeamTournamentHtml(t, root):
             '{}-{}{}'.format(eventId, gameNo, focusPair), 
             'Spil {:d} Holdscore  {:d} KrydsImps {:.2f} Rang {:d} af {:d}'.format(
                 play.deal, 
-                play.getResult(focusPair)- \
-                t.getPlayedByTeamOther(
-                    play.deal, focusTeamPlayer).getResult(focusPair),
+                play.getResult(focusPair),
+                #hack to handle pairs teasm need below
+                #play.getResult(focusPair)- \
+                #t.getPlayedByTeamOther(
+                #    play.deal, focusTeamPlayer).getResult(focusPair),
                 t.getCrossImps(play, focusPair),
                 t.getRank(play, focusPair)[0], t.getRank(play, focusPair)[1]))
 
@@ -152,7 +161,7 @@ def makeTeamTournamentHtml(t, root):
     return (t.name, list1.getMasterName())
 
     
-def makePairTournament(t):
+def makePairTournamentHtml(t):
     pass
 
 def makeTournamentHtml(server, url, root):
@@ -161,7 +170,8 @@ def makeTournamentHtml(server, url, root):
     if type == 'team':
         return makeTeamTournamentHtml(t, root)
     else:
-        return makePairTournamentHtml(t)
+        return makeTeamTournamentHtml(t, root)
+        #return makePairTournamentHtml(t)
 
         
 
@@ -170,7 +180,7 @@ def makeTournamentHtml(server, url, root):
 if __name__ == '__main__':
     
     url1 = makeTournamentHtml('islevbridge.dk',
-                              '/Resultat/Klub1/Turneringer/Resultat1082.html',
+                              '/Resultat/Klub1/Turneringer/Resultat1140.html',
                               os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
     
     #url2 = makeTournamentHtml('islevbridge.dk',

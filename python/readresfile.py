@@ -217,7 +217,7 @@ def parseIslevTitle(title):
     print(section)
     #print(bracket)
 
-def basicIslevPairs(input):
+def basicIslevPairs(input, t):
     (parser,statesManager, games, cards, title) = states.setIslevPairResStates()
     #inputFile  = open(r"..\data\allresults.html",'r')
     #input = inputFile.read()
@@ -232,11 +232,64 @@ def basicIslevPairs(input):
         print('could not read file')
     else:
         print('games')
+        newDealPattern = re.compile('Spil (\d+)')
+        playersPattern = re.compile('([^-]+)-(.+)')
         for l in games:
-            print(l)
-        print('cards')
-        for l in cards:
-            print( l)
+            m = newDealPattern.match(l)
+            if m:
+                dealNo = int(m.group(1))
+                #print(dealNo)
+            else:
+                playElements = l.split(',')
+                pairNSId = playElements[0].strip()
+                NSplayers = playElements[2].strip()
+                players = playersPattern.match(NSplayers)
+                NPlayer = players.group(1).strip()
+                SPlayer = players.group(2).strip()
+                pairEWId = playElements[3].strip()
+                EWplayers = playElements[5].strip()
+                players = playersPattern.match(EWplayers)
+                EPlayer = players.group(1).strip()
+                WPlayer = players.group(2).strip()
+                bid = bridgecore.Bid.fromIslevString(playElements[6])
+                if bid.isNotPlayed():
+                    print('exiting from not played deal', dealNo)
+                else:
+                    if bid.isPassedBid():
+                        NSScore = int(playElements[11])
+                        IMPScore = int(playElements[12])
+                    else:
+                        tricks = int(playElements[7])
+                        playedCardSuit = playElements[8]
+                        playedCardValue = playElements[9]
+                        scoreA = playElements[10].strip()
+                        scoreB = playElements[11].strip()
+                        #print('--',scoreA,'--',scoreB)
+                        if scoreA.isnumeric():
+                            NSScore = int(scoreA)
+                        else:
+                            #print('scoreB is:',scoreB)
+                            NSScore = -int(scoreB)
+                            #print('negative score:', NSScore)
+                    t.addPlay(dealNo, [
+                        (pairNSId, SPlayer), 
+                        (pairEWId, WPlayer), 
+                        (pairNSId, NPlayer), 
+                        (pairEWId, EPlayer)],
+                        bid, tricks, NSScore)
+
+            
+        print('cards....')
+        #for l in cards:
+        #    print(l)
+
+        allDeals = {}
+
+        makeDeals(cards, allDeals)
+        for (id, deal) in allDeals.items():
+            #print(deal)
+            t.addDeal(id, deal)
+
 
 def basicIslevTeams(input, t):
     (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
