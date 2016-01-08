@@ -6,7 +6,11 @@ import display
 import bridgecore
 
 def getTeamFocusHtml(t):
-    return ('14877','Einar Poulsen')
+    if t.type == 'pair':
+        return ('14877','Einar Poulsen')
+    else:
+        return ('Onkel Einars Party','Einar Poulsen')
+    
 
 
 def makeTeamFocusPlay(t, play, focusTeamPlayer):
@@ -71,11 +75,11 @@ def makeTeamFocusPlay(t, play, focusTeamPlayer):
         
 def makeTeamTournamentHtml(t, root):
     focusTeamPlayer = getTeamFocusHtml(t)
-    for team in t.teams:
-        print(team)
-        for p in t.teams[team].teamPlayers:
-            print('\t',p)
-    
+    #for team in t.teams:
+    #    print("team",team)
+    #    for p in t.teams[team].teamPlayers:
+    #        print('\t',p)
+    #
 
 
     print("eventidxx ", t.getId())
@@ -86,7 +90,7 @@ def makeTeamTournamentHtml(t, root):
     
     #(wrap1, body1, br1) = htmllayout.getHtmlStart()
 
-
+    #alle displays er i parformat.................
     list1 = htmllayout.HtmlList(root, t.getId(), 
                     'Spillet af par med {}'.format(focusTeamPlayer[1]))
     list2 = htmllayout.HtmlList(root, t.getId(), 
@@ -165,13 +169,13 @@ def makePairTournamentHtml(t):
     pass
 
 def makeTournamentHtml(server, url, root):
-    (type, t) = readtournament.readTournament(server, url)
-    print(len(t.teams), len(t.deals))
-    if type == 'team':
-        return makeTeamTournamentHtml(t, root)
-    else:
-        return makeTeamTournamentHtml(t, root)
-        #return makePairTournamentHtml(t)
+    t = readtournament.readTournament(server, url)
+    return makeTeamTournamentHtml(t, root)
+    #if type == 'team':
+    #    return makeTeamTournamentHtml(t, root)
+    #else:
+    #    return makeTeamTournamentHtml(t, root)
+    #    #return makePairTournamentHtml(t)
 
         
 
@@ -179,14 +183,16 @@ def makeTournamentHtml(server, url, root):
 
 if __name__ == '__main__':
     
+    #the url below is teams and works
     url1 = makeTournamentHtml('islevbridge.dk',
+                              '/Resultat/Klub1/Turneringer/Resultat1164.html',
+                              os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+
+    #the url below is pairs and works
+    url2 = makeTournamentHtml('islevbridge.dk',
                               '/Resultat/Klub1/Turneringer/Resultat1140.html',
                               os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
     
-    #url2 = makeTournamentHtml('islevbridge.dk',
-    #                          '/Resultat/Klub1/Turneringer/Resultat1067.html',
-    #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
-    #
     #url3 = makeTournamentHtml('islevbridge.dk',
     #                          '/Resultat/Klub1/Turneringer/Resultat1068.html',
     #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
@@ -194,17 +200,18 @@ if __name__ == '__main__':
     #url4 = makeTournamentHtml('islevbridge.dk',
     #                          '/Resultat/Klub1/Turneringer/Resultat1069.html',
     #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
-
+    print(url1, url2)
     wrap, body, br = htmllayout.getHtmlStart()
     header = htmllayout.HtmlTag('<H2>','</H2>','Pagat hold 2014-2015')
     urlRef1 = htmllayout.HtmlLink(url1[0], url1[1])
-    #urlRef2 = htmllayout.HtmlLink(url2[0], url2[1])
+    urlRef2 = htmllayout.HtmlLink(url2[0], url2[1])
     #urlRef3 = htmllayout.HtmlLink(url3[0], url3[1])
     #urlRef4 = htmllayout.HtmlLink(url4[0], url4[1])
+    body.addContent(header)
     body.addContent(urlRef1)
     body.addContent(br)
-    #body.addContent(urlRef2)
-    #body.addContent(br)
+    body.addContent(urlRef2)
+    body.addContent(br)
     #body.addContent(urlRef3)
     #body.addContent(br)
     #body.addContent(urlRef4)

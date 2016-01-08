@@ -114,6 +114,7 @@ class Tournament:
 
     #only teams for now
     def __init__(self, name = None):
+        self.type = ''
         self.name = name
         self.teams = {}
         self.deals = {}

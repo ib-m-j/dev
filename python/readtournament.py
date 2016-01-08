@@ -238,31 +238,35 @@ def readTournament(server, url):
     res = readOneTournament(server, url)
     t = tournament.Tournament()
     t.addOrigin(server, url)
+    t.type = res[0]
 
-    #print(res)
-    if res[0] == 'pair':
+    if t.type == 'pair':
+        print("doing pairs")
         for file in res[1]:
             readresfile.basicIslevPairs(
                 Crawler.fromServerUrl(
                     'islevbridge.dk',file).getFileContent(), t)
     
-    elif res[0] == 'team':
+    elif t.type == 'team':
+        print("doing teams")
         for file in res[1]: 
             readresfile.basicIslevTeams(
                 Crawler.fromServerUrl(
                     'islevbridge.dk',file).getFileContent(), t)
    
  
-        #t = tournament.Tournament()
-        #t.addOrigin(server, url)
-        print(len(t.teams), len(t.deals))
-        for team in t.teams:
-            print(team)
-            for p in t.teams[team].teamPlayers:
-                print('\t', p, len(p))
-        #only team implemented
+        print(len(t.teamPlayers.getTeams()), len(t.deals))
+        allPlayers = t.teamPlayers.values[:]
+        allPlayers.sort()
+        team = ''
+        for (a,b) in allPlayers:
+            if a != team:
+                team = a
+                print(team)
+            print('\t', b)
+    
 
-    return (res[0], t)
+    return t
 
 def displayFocus(t, focusTeamPlayer, asPlayer, isTeam):
     #largeTest()
@@ -421,7 +425,6 @@ def makeFocusViewTeam(tournament, focusTeamPlayer):
     playRanksList = []
     defendRanksList = []
 
-    #crossImps = {}
     for play in playedBy:
         direction = play.pairOf(focusTeamPlayer)
         (r, total) = tournament.getRank(play, direction)

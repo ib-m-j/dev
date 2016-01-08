@@ -223,7 +223,6 @@ def basicIslevPairs(input, t):
     #input = inputFile.read()
     #inputFile.close()
 
-    print("doing pairs")
     statesManager.advance()
     try:
         parser.feed(input)
@@ -231,7 +230,7 @@ def basicIslevPairs(input, t):
     except:
         print('could not read file')
     else:
-        print('games')
+        t.setName(title[1]) 
         newDealPattern = re.compile('Spil (\d+)')
         playersPattern = re.compile('([^-]+)-(.+)')
         for l in games:
@@ -292,10 +291,14 @@ def basicIslevPairs(input, t):
 
 
 def basicIslevTeams(input, t):
+    #print(input)
     (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
     #inputFile  = open(r"..\data\mellemrundehold.http",'r')
     #input = inputFile.read()
     #inputFile.close()
+    #f = open("c:\\Users\\Ib\\temp\\input.txt","w")
+    #f.write(input)
+    #f.close()
 
     statesManager.advance()
     try:
@@ -303,11 +306,13 @@ def basicIslevTeams(input, t):
     except:
         print('could not read file')
     else:
+        #print("result", cards)
         #parseIslevTitle(title[1]) to many changes to thi8s string no parse yet
         t.setName(title[1]) #gets set twice but should be ok
         dealNo = t.getNextDeal()
         
         for (n,l) in enumerate(games):
+            #print("working on game", l)
             if n % 2 == 0:
                 playElements1 = [x.strip() for x in l.split(',')]
             else:

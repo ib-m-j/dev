@@ -230,7 +230,7 @@ class ScoreOverview:
                 self.array.setContent(r,c, toAdd)
                 self.countArray.setContent(r,c, 1)
 
-            print("setting values",r,c,self.array.getContent(r,c), self.countArray.getContent(r,c))
+            #print("setting values",r,c,self.array.getContent(r,c), self.countArray.getContent(r,c))
             
     def makeTable(self):
         for r in range(len(self.array.headerColumn)):

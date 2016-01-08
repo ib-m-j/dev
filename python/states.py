@@ -47,9 +47,6 @@ titleActions = pypeg2.parse(titleStates, StateDef)
 
 
 
-
-
-
 class Action:
     def __init__(self, definition):
         self.tag = definition.tagName
@@ -88,6 +85,7 @@ class StatesManager:
             self.type = 'tuple'
 
     def advance(self):
+        #debugging
         #print(self.remainingStates)
         if len(self.remainingStates) > 0:
             self.currentState = self.remainingStates[0]
@@ -188,6 +186,8 @@ class TableState(State):
 
     def flushRow(self):
         #print('got flush row')
+        #for l in self.currentRow:
+        #    print(l.value)
         self.rows.append(self.currentRow)
         pass
 
@@ -233,6 +233,7 @@ class TableState(State):
             for d in r:
                 line = line + '{}, '.format(d.value)
             self.storage.append(line[:-2])
+        #print(self.storage)
         self.rows = []
         self.mgr.advance()
         pass
@@ -355,6 +356,8 @@ def setIslevPairResStates():
     title = []
     parser = HTMLParserTableBased()
 
+    #the definition below works with pairs islev 1140 mellemrunde
+    #par 3/11 20152.sektion a rækken
     gamesResults = TableState(tournamentActions, parser, games)
     hands = TableState(tournamentActions, parser, cards)
     tournamentTitle = TableState(oneHeaderActions, parser, title)
@@ -367,7 +370,6 @@ def setIslevPairResStates():
                                   gotoTableNo(0, parser), skipRowNo(1, parser), 
                                  gamesResults,gotoTableNo(1, parser),
                                   hands]), None)
-
 
     return (parser, mgr, games, cards, title)
 
@@ -386,10 +388,9 @@ def setIslevTeamResStates():
 
     mgr = StatesManager(parser, (
         clubName, gotoTableNo(0, parser), tournamentTitle, 
-        gotoTableNo(6, parser),gotoTableNo(0,parser), 
-        [hands, gotoTableNo(0, parser), skipRowNo(0,parser), gamesResults,
+        gotoTableNo(6, parser),[gotoTableNo(0,parser), 
+        hands, gotoTableNo(0, parser), skipRowNo(0,parser), gamesResults,
          gotoTableNo(0,parser)]), None)
-
 
     return (parser, mgr, games, cards, title)
 

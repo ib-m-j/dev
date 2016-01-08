@@ -745,7 +745,7 @@ class TeamPlayers(IdList):
         res = []
         for (t,p) in self.values:
             if not t in res:
-                t.append(res)
+                res.append(t)
         return res
 
     def getPlayer(self, index):

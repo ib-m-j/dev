@@ -26,6 +26,7 @@ def makeFocusViewTeam(tournament, focusTeamPlayer, id):
         (r, total) = tournament.getRank(play, direction)
         defendRanksList.append((r, play.deal))
         defendRanks[r] = defendRanks.get(r, 0) + 1
+        #res = makeTestRows(playRanksList,defendRanksList)
 
     playRows = []
     defendRows = []
@@ -75,7 +76,7 @@ def makeFocusViewTeam(tournament, focusTeamPlayer, id):
         '¤playedurl¤' : 'url',
         '¤playtabletag¤' : 'play',
         '¤deftitle¤' : '{} spil med {} som modspiller'.format(
-            len(playedBy), focusTeamPlayer[1]),
+            len(defendedBy), focusTeamPlayer[1]),
         '¤defurl¤' : 'url',
         '¤deftabletag¤' : 'def'
     }
@@ -157,41 +158,48 @@ def makeFocusViewTeam(tournament, focusTeamPlayer, id):
     #print("wrote file {}".format(saveTo));
 
 
+# start hereXXXXXXdef makeFocusViewPair()
+
 def readTournament(server, url):
     res = readtournament.readOneTournament(server, url)
 
-    #print(res)
-    if res[0] == 'pair':
+    t = tournament.Tournament()
+    t.addOrigin(server, url)
+    t.type = res[0]
+    if t.type == 'pair':
         for file in res[1]:
             readresfile.basicIslevPairs(
                 readtournament.Crawler.fromServerUrl(
-                    'islevbridge.dk',file).getFileContent())
+                    'islevbridge.dk',file).getFileContent(), t)
 
-    elif res[0] == 'team':
-        t = tournament.Tournament()
+    elif t.type == 'team':
         for file in res[1]: 
             readresfile.basicIslevTeams(
                 readtournament.Crawler.fromServerUrl(
                     'islevbridge.dk',file).getFileContent(), t)
    
-        t.addOrigin(server, url)
 
-    print(len(t.teams), len(t.deals))
-    for team in t.teams:
-        print(team)
-        for p in t.teams[team].teamPlayers:
-            print('\t', p, len(p))
-    #only team implemented
+        print(len(t.teams), len(t.deals))
+        for team in t.teams:
+            print(team)
+            for p in t.teams[team].teamPlayers:
+                print('\t', p, len(p))
 
     return (res[0], t)
 
 
 
+#def getTournamentFocus():
+#    (type, tournament) = readTournament(
+#        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1083.html')
+#    focus = ('Orion','Einar Poulsen')
+#    makeFocusViewTeam(tournament, focus, '1083')
+#
 def getTournamentFocus():
     (type, tournament) = readTournament(
-        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1083.html')
-    focus = ('Orion','Einar Poulsen')
-    makeFocusViewTeam(tournament, focus, '1083')
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
+    focus = ('14877','Einar Poulsen')
+    makeFocusViewTeam(tournament, focus, '1140')
 
     
 if __name__ == '__main__':
