@@ -186,20 +186,20 @@ if __name__ == '__main__':
     #the url below is teams and works
     url1 = makeTournamentHtml('islevbridge.dk',
                               '/Resultat/Klub1/Turneringer/Resultat1164.html',
-                              os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+                              os.path.normpath('..\\..\\..\\einarftp\\spil'))
 
     #the url below is pairs and works
     url2 = makeTournamentHtml('islevbridge.dk',
                               '/Resultat/Klub1/Turneringer/Resultat1140.html',
-                              os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+                              os.path.normpath('..\\..\\..\\einarftp\\spil'))
     
     #url3 = makeTournamentHtml('islevbridge.dk',
     #                          '/Resultat/Klub1/Turneringer/Resultat1068.html',
-    #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+    #                          os.path.normpath('..\\..\\..\\einarftp\\spil'))
     #
     #url4 = makeTournamentHtml('islevbridge.dk',
     #                          '/Resultat/Klub1/Turneringer/Resultat1069.html',
-    #                          os.path.normpath('..\\..\\..\\einarftp\\pagaten'))
+    #                          os.path.normpath('..\\..\\..\\einarftp\\spil'))
     print(url1, url2)
     wrap, body, br = htmllayout.getHtmlStart()
     header = htmllayout.HtmlTag('<H2>','</H2>','Pagat hold 2014-2015')
@@ -217,5 +217,5 @@ if __name__ == '__main__':
     #body.addContent(urlRef4)
     #body.addContent(br)
     wrap.saveToFile(
-        os.path.normpath('..\\..\\..\\einarftp\\pagaten\\index.html'))
+        os.path.normpath('..\\..\\..\\einarftp\\spil\\index.html'))
     
