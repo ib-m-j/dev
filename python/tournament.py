@@ -24,7 +24,8 @@ import os.path
 #
 
 class Play:
-    def __init__(self, deal, SWNEPlayers, bid, tricks, NSResult):
+    def __init__(
+            self, deal, SWNEPlayers, bid, tricks, NSResult, playedOut = None):
         self.deal = deal
         self.players = {}
         for id, p in zip(['S','W','N','E'],SWNEPlayers):
@@ -32,8 +33,17 @@ class Play:
         self.bid = bid
         self.tricks = tricks
         self.NSResult = NSResult
+        self.playedOut = playedOut
         if not self.bid.bidder:
             self.tricks = '-'
+
+    def dump(self):
+        print("dealno",self.deal)
+        print(self.players)
+        print(self.bid)
+        print(self.NSResult)
+        print(self.playedOut)
+        
 
 #    def displayStrainId(self):
 #        if self.bid.bidder:
@@ -94,7 +104,7 @@ class Play:
         playerList = []
         for seat in ['S','W','N','E']:
             playerList.append(
-                (seat.lower(), self.players[bridgecore.Seat.fromId(seat)][1]))
+                (seat, self.players[bridgecore.Seat.fromId(seat)][1]))
         return playerList
 
 
@@ -149,12 +159,14 @@ class Tournament:
         self.deals[dealId] = deal
         
             
-    def addPlay(self, dealLocalId, SWNEPlayers, bid, tricks, NSResult):
+    def addPlay(self, dealLocalId, SWNEPlayers, 
+                bid, tricks, NSResult, playedOut):
         #One Player: (TeamName, OwnName)
         #bid bidder, bid
         for (team, player) in SWNEPlayers:
             self.teamPlayers.addValue((team, player))
-        self.plays.append(Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult))
+        self.plays.append(
+            Play(dealLocalId, SWNEPlayers, bid, tricks, NSResult, playedOut))
 
     #deprecated def getPlayedByPair(self, teamPlayer):
     def getParticipatedByPlayer(self, teamPlayer):

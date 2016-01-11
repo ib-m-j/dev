@@ -239,6 +239,7 @@ def basicIslevPairs(input, t):
                 dealNo = int(m.group(1))
                 #print(dealNo)
             else:
+                #print(l)
                 playElements = l.split(',')
                 pairNSId = playElements[0].strip()
                 NSplayers = playElements[2].strip()
@@ -259,8 +260,8 @@ def basicIslevPairs(input, t):
                         IMPScore = int(playElements[12])
                     else:
                         tricks = int(playElements[7])
-                        playedCardSuit = playElements[8]
-                        playedCardValue = playElements[9]
+                        playedCardSuit = playElements[8].strip()
+                        playedCardValue = playElements[9].strip()
                         scoreA = playElements[10].strip()
                         scoreB = playElements[11].strip()
                         #print('--',scoreA,'--',scoreB)
@@ -270,12 +271,19 @@ def basicIslevPairs(input, t):
                             #print('scoreB is:',scoreB)
                             NSScore = -int(scoreB)
                             #print('negative score:', NSScore)
+                    
+                    #print(playedCardValue,playedCardSuit)
+                    #print(bridgecore.Colour.fromId(playedCardSuit))
+                    #print(bridgecore.CardValue.fromSymbol(playedCardValue))
                     t.addPlay(dealNo, [
                         (pairNSId, SPlayer), 
                         (pairEWId, WPlayer), 
                         (pairNSId, NPlayer), 
                         (pairEWId, EPlayer)],
-                        bid, tricks, NSScore)
+                              bid, tricks, NSScore,
+                          bridgecore.Card(
+                              bridgecore.Colour.fromId(playedCardSuit), 
+                              bridgecore.CardValue.fromSymbol(playedCardValue)))
 
             
         print('cards....')
@@ -324,10 +332,13 @@ def basicIslevTeams(input, t):
                 EPlayer = playElements1[4]
                 bid = bridgecore.Bid.fromIslevString(playElements1[5])
                 if not(bid.isPlayedBid()):
+                    playedOut = None
                     tricks = int(playElements1[7])
                     NSScore = int(playElements1[8])
                     IMPScore = int(playElements1[9])
                 else:
+                    playedCardSuit = playElements1[8].strip()
+                    playedCardValue = playElements1[9].strip()
                     tricks = int(playElements1[8])
                     NSScore = int(playElements1[9])
                     IMPScore = int(playElements1[10])
@@ -342,7 +353,10 @@ def basicIslevTeams(input, t):
                     (teamEW, WPlayer), 
                     (teamNS, NPlayer), 
                     (teamEW, EPlayer)],
-                          bid, tricks, NSScore)
+                          bid, tricks, NSScore,
+                          bridgecore.Card(
+                              bridgecore.Colour.fromId(playedCardSuit), 
+                              bridgecore.CardValue.fromSymbol(playedCardValue)))
 
         allDeals = {}
 

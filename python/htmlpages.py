@@ -159,8 +159,8 @@ def makeFocusViewTeam(tournament, focusTeamPlayer, id):
 
 
 # start hereXXXXXXdef makeFocusViewPair()
-
-def readTournament(server, url):
+#below moved to readtournament
+def old_readTournament(server, url):
     res = readtournament.readOneTournament(server, url)
 
     t = tournament.Tournament()

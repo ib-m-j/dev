@@ -83,6 +83,13 @@ class Strain(Colour):
         map = {'P':'Pas', 'NT':'Sans','S':'Spar','H':'Hjerter','D':'Ruder','C':'Klør'}
         return map[self.id]
 
+    def htmlSymbol(self):
+        map = {'P':'Pas', 'NT':'UT','S':'&spades;',
+               'H':'<font class=redcolor>&hearts;</font>',
+               'D':'<font class=redcolor>&diams;</font>',
+               'C':'&clubs;'}
+        return map[self.id]
+
     @staticmethod
     def fromId(id):
         return Strain.strains[id]
@@ -184,6 +191,18 @@ class Card:
             return True
         return False
 
+    def htmlStr(self):
+        map = {'S':'&spades;',
+               'H':'<font class=redcolor>&hearts;</font>',
+               'D':'<font class=redcolor>&diams;</font>',
+               'C':'&clubs;'}
+        if self.value:
+            return '{} {}'.format(map[self.colour.id], self.value.symbol)
+        else:
+            return'not indicated'
+
+
+
 class Cards:
     all = []
 
@@ -265,6 +284,8 @@ class Cards:
     def removeCard(self, card):
         self.cards.remove(card)
 
+
+    
 
 class Deal:
     
@@ -378,6 +399,51 @@ class Deal:
         #res = res + '&a=-{}'.format(bid)
         return res.format(cards).lower()
 
+#    def htmlHand(self, playerList, bid):
+#        hand = Seat.fromId('N')
+#        for x in range (3):
+#            cards = cards + '&{}='.format(hand)
+#            suits = [c for c in self.cards[hand].keys()]
+#            suits.sort(reverse = True)
+#            for suit in suits:
+#                symbols = ''.join(
+#                    [c.value.symbol for c in self.cards[hand][suit]])
+#                cards = cards + '{}{}'.format(suit, symbols)
+#            hand = hand.getNext()
+#        res = res + '&v={}&d={}&b={}&p=s'.format(
+#            self.zone.bridgebaseZone(), 's', self.dealNo) 
+#        #the p parameter above is required but does not show the player
+#        for (s,name) in playerList:
+#            res = res + '&{}n={}'.format(s,name)
+#        #the bid destroys other display
+#        #res = res + '&a=-{}'.format(bid)
+#
+#        input = dict()
+#        input[board]=
+#        input[vulnerability]=
+#        input[contract]=
+#        input[spadesNorth]=
+#        input[heartsNorth]=
+#        input[diamondsNorth]=
+#        input[clubsNorth]=
+#        input[spadesWest]=
+#        input[heartsWest]=
+#        input[diamondsWest]=
+#        input[clubsWest]=
+#        input[spadesEast]=
+#        input[heartsEast]=
+#        input[diamondsEast]=
+#        input[clubsEast]=
+#        input[lead]=
+#        input[spadesSouth]=
+#        input[heartsSouth]=
+#        input[diamondsSouth]=
+#        input[clubsSouth]=
+#
+#
+
+
+
 
     @staticmethod
     def fromHash(hash):
@@ -488,6 +554,19 @@ class Bid:
     #def isPassedBid(self):
     #    return self.isPassedBid
 
+    def htmlStr(self):
+        if self.dbl == 'P':
+            dblStr = ''
+        elif self.dbl == 'D':
+            dblStr = 'Dbl'
+        else:
+            dblStr = 'Rdbl'
+
+        if self.bidder:
+            return("{} {} {} i {}".format(
+                self.tricks,self.strain.htmlSymbol(),dblStr,self.bidder))
+        else:
+            return("Pas")
 
     def __str__(self):
         if self.dbl == 'P':
@@ -673,13 +752,13 @@ class Zone:
 
     def bridgebaseZone(self):
         if self.zone == 'ALL':
-            return 'b'
+            return 'Begge'
         elif self.zone == 'EW':
-            return 'e'
+            return 'ØV'
         elif self.zone == 'NS':
-            return 'n'
+            return 'NS'
         else:
-            return '-'
+            return 'Ingen'
 
     @staticmethod
     def fromDKName(name):

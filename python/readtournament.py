@@ -11,7 +11,7 @@ import htmllayout
 import sys
 import javascriptdata
 import json
-
+import htmlhands
 
 
 #resultlink only used to read all tounaments from one file
@@ -588,10 +588,13 @@ def doDefenderFocus():
 
 if __name__ == '__main__':
     pass
-# belwo may be used for trestingf
-#    (type, tournament) = readTournament(
-#        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
-#        #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
+    # belwo may be used for trestingf
+    t = readTournament(
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
+        #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
+    
+    htmlhands.makeHtmlHand(t)
+
 #    focus = ('14877','Einar Poulsen')
 #    if type == 'team':
 #        makeFocusViewTeam(tournament, focus)
