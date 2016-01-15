@@ -12,11 +12,10 @@ def makeContractText(tricks, suit, seat):
 
 template = """
 <font class=tablesize>
-<table width=100% cellspacing=0 cellpadding=0>
-<col width=33%><col width=33%><col width=33%>
+<table cellspacing=0 cellpadding=0>
 <tr valign=top>
   <td rowspan=2>Spil Nr {board}<br>Zone: {zone}<br>{contract}
-  <td style=halign:left>{NName}
+  <td>{NName}
 <tr>
   <td>
       &spades;<font class=spacy>{SN}</font><br>
@@ -24,35 +23,37 @@ template = """
       <font class=redcolor>&diams;</font><font class=spacy>{DN}</font><br>
       &clubs;<font class=spacy>{CN}</font>
 <tr>  
-  <td class=special>{WName}
-  <td rowspan=2>
-    <table id=middle width=90% cellspacing=0 cellpadding=0>
+  <td class=right-padding>{WName}
+  <td rowspan=2 class="top-padding">
+    <table id=middle cellspacing=0 cellpadding=0>
     <col width=33%><col width=34%><col width=33%>
       <tr valign=top>
          <td><td style="text-align:center">N<td>
       <tr valign=middle>
-         <td>W<td><td style="text-align:right">E
+         <td style="padding-left:20px;">W
+         <td>
+         <td style="text-align:right; padding-right:20px;">E
       <tr valign=bottom>
          <td><td style="text-align:center">S<td>
     </table>
-  <td class=special>{EName}
+  <td >{EName}
 <tr>
-  <td class=special>
+  <td >
       &spades;<font class=spacy>{SW}</font><br>
       <font class=redcolor>&hearts;</font><font class=spacy>{HW}</font><br>
       <font class=redcolor>&diams;</font><font class=spacy>{DW}</font><br>
       &clubs;<font class=spacy>{CW}</font>
-  <td class=special>
+  <td >
       &spades;<font class=spacy>{SE}</font><br>
       <font class=redcolor>&hearts;</font><font class=spacy>{HE}</font><br>
       <font class=redcolor>&diams;</font><font class=spacy>{DE}</font><br>
       &clubs;<font class=spacy>{CE}</font>
 <tr>
   <td>
-  <td class=special>{SName}
+  <td >{SName}
 <tr>
-  <td class=special style=text-align:top><font class=normalspace>Udspil: </font>{lead}
-  <td class=special>
+  <td  style=text-align:top><font class=normalspace>Udspil: </font>{lead}
+  <td >
       &spades;<font class=spacy>{SS}</font><br>
       <font class=redcolor>&hearts;</font><font class=spacy>{HS}</font><br>
       <font class=redcolor>&diams;</font><font class=spacy>{DS}</font><br>
@@ -69,11 +70,13 @@ def makeHtmlTemplate(input, x):
 <head >
 <style>
     .tablesize {font-size:2em;}
-    #middle {font-size:1.7em; color:white; horizontal-align:left; background-color:green}
-    table,td {table-layout:fixed}
+    #middle {font-size:1.6em; color:white; 
+       horizontal-align:center; width:70%; 
+       background-color:green; margin:auto;}
     .redcolor {color:red;}
     .spacy {letter-spacing:3px}
-    
+    .right-padding  {padding-right:20px;}
+    .top-padding  {padding-top:10px;}
 </style>
 </head>
 <body><br><br>"""+template.format(**input)+"</body></html>")
@@ -91,15 +94,15 @@ def makeHtmlHand(t):
 
         input = dict()
         for seat in bridgecore.Seat.all:
-            print(seat)
+            #print(seat)
             for suit in bridgecore.colours:
-                print(seat,suit)
+                #print(seat,suit)
                 key = '{}{}'.format(suit,seat)
 
                 res = '  '
                 for c in cards[seat][suit]:
                     res = res + c.value.symbol
-                print(res)
+                #print(res)
 
                 input[key] = res
 
