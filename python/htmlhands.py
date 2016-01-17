@@ -10,6 +10,31 @@ def makeContractText(tricks, suit, seat):
     return '{tricks}{suittag}{seat}'.format(
         tricks=tricks, suittag=makeSuitTag(suit), seat=seat)
 
+
+def makeHtmlTemplate(input, x):
+    f = open("..\\..\\tests\\testHand{}.html".format(x), "w")
+    f.write("""
+    <!doctype html public "-//W3C//DTD HTML 4.0//EN" >
+            <html>
+<head >
+<style>
+    .tablesize {font-size:2em;}
+    #middle {font-size:1.7em; color:white; 
+       horizontal-align:center; width:70%; 
+       background-color:green; margin:auto;}
+    .redcolor {color:red;}
+    .spaced {letter-spacing:3px; padding-left:5px;}
+    .right-padding  {padding-right:20px;}
+    .top-padding  {padding-top:10px;}
+    .blackcard {text-align:center; }
+    .redcard {text-align:center; color:red; }
+</style>
+</head>
+<body><br><br>"""+template.format(**input)+"</body></html>")
+    f.close()     
+
+
+
 template = """
 <font class=tablesize>
 <table cellspacing=0 cellpadding=0>
@@ -17,14 +42,25 @@ template = """
   <td rowspan=2>Spil Nr {board}<br>Zone: {zone}<br>{contract}
   <td>{NName}
 <tr>
-  <td>
-      &spades;<font class=spacy>{SN}</font><br>
-      <font class=redcolor>&hearts;</font><font class=spacy>{HN}</font><br>
-      <font class=redcolor>&diams;</font><font class=spacy>{DN}</font><br>
-      &clubs;<font class=spacy>{CN}</font>
+  <td style="display:flex; justify-content:center;">
+<table>
+  <tr>
+    <td class="blackcard">&spades;<td class="spaced">{SN}
+  </tr>
+  <tr>
+    <td class="redcard">&hearts;<td class="spaced">{HN}
+  </tr>
+  <tr>
+    <td class="redcard">&diams;<td class="spaced">{DN}
+  </tr>
+  <tr>
+    <td class="blackcard">&clubs;<td class="spaced">{CN}
+  </tr>
+</table>
 <tr>  
   <td class=right-padding>{WName}
   <td rowspan=2 class="top-padding">
+    <div  style="display:flex; justify-content:center;">
     <table id=middle cellspacing=0 cellpadding=0>
     <col width=33%><col width=34%><col width=33%>
       <tr valign=top>
@@ -36,51 +72,66 @@ template = """
       <tr valign=bottom>
          <td><td style="text-align:center">S<td>
     </table>
+</div>
   <td >{EName}
 <tr>
-  <td >
-      &spades;<font class=spacy>{SW}</font><br>
-      <font class=redcolor>&hearts;</font><font class=spacy>{HW}</font><br>
-      <font class=redcolor>&diams;</font><font class=spacy>{DW}</font><br>
-      &clubs;<font class=spacy>{CW}</font>
-  <td >
-      &spades;<font class=spacy>{SE}</font><br>
-      <font class=redcolor>&hearts;</font><font class=spacy>{HE}</font><br>
-      <font class=redcolor>&diams;</font><font class=spacy>{DE}</font><br>
-      &clubs;<font class=spacy>{CE}</font>
+ <td style="display:flex; justify-content:center;">
+<table>
+  <tr>
+    <td class="blackcard">&spades;<td class="spaced">{SW}
+  </tr>
+  <tr>
+    <td class="redcard">&hearts;<td class="spaced">{HW}
+  </tr>
+  <tr>
+    <td class="redcard">&diams;<td class="spaced">{DW}
+  </tr>
+  <tr>
+    <td class="blackcard">&clubs;<td class="spaced">{CW}
+  </tr>
+</table>
+ <td  display:flex; justify-content:center;">
+<table>
+  <tr>
+    <td class="blackcard">&spades;<td class="spaced">{SE}
+  </tr>
+  <tr>
+    <td class="redcard">&hearts;<td class="spaced">{HE}
+  </tr>
+  <tr>
+    <td class="redcard">&diams;<td class="spaced">{DE}
+  </tr>
+  <tr>
+    <td class="blackcard">&clubs;<td class="spaced">{CE}
+  </tr>
+</table>
 <tr>
   <td>
   <td >{SName}
 <tr>
-  <td  style=text-align:top><font class=normalspace>Udspil: </font>{lead}
-  <td >
-      &spades;<font class=spacy>{SS}</font><br>
-      <font class=redcolor>&hearts;</font><font class=spacy>{HS}</font><br>
-      <font class=redcolor>&diams;</font><font class=spacy>{DS}</font><br>
-      &clubs;<font class=spacy>{CS}</font> 
+  <td>Udspil:  {lead}
+  <td style="display:flex; justify-content:center;">
+<table>
+  <tr>
+    <td class="blackcard">&spades;<td class="spaced">{SS}
+  </tr>
+  <tr>
+    <td class="redcard">&hearts;<td class="spaced">{HS}
+  </tr>
+  <tr>
+    <td class="redcard">&diams;<td class="spaced">{DS}
+  </tr>
+  <tr>
+    <td class="blackcard">&clubs;<td class="spaced">{CS}
+  </tr>
 </table>
+  </td>
+</tr>
+</table>
+
 </font>
 """
 
-def makeHtmlTemplate(input, x):
-    f = open("..\\..\\tests\\testHand{}.html".format(x), "w")
-    f.write("""
-    <!doctype html public "-//W3C//DTD HTML 4.0//EN" >
-            <html>
-<head >
-<style>
-    .tablesize {font-size:2em;}
-    #middle {font-size:1.6em; color:white; 
-       horizontal-align:center; width:70%; 
-       background-color:green; margin:auto;}
-    .redcolor {color:red;}
-    .spacy {letter-spacing:3px}
-    .right-padding  {padding-right:20px;}
-    .top-padding  {padding-top:10px;}
-</style>
-</head>
-<body><br><br>"""+template.format(**input)+"</body></html>")
-    f.close()     
 
 
 def makeHtmlHand(t):
