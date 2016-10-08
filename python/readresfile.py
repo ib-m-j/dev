@@ -18,7 +18,7 @@ def makeDeals(cards, allDeals):
             #print('breaking', n, len(cards))
             break
 
-        cardElements = [x.strip() for x in l.split(',')]
+        cardElements = [x.strip() for x in l.split('¤')]
 
         if n % 12 == 0:
             currentDeal = bridgecore.Deal()
@@ -301,9 +301,6 @@ def basicIslevPairs(input, t):
 def basicIslevTeams(input, t):
     #print(input)
     (parser,statesManager, games, cards, title) = states.setIslevTeamResStates()
-    #inputFile  = open(r"..\data\mellemrundehold.http",'r')
-    #input = inputFile.read()
-    #inputFile.close()
     #f = open("c:\\Users\\Ib\\temp\\input.txt","w")
     #f.write(input)
     #f.close()
@@ -320,43 +317,44 @@ def basicIslevTeams(input, t):
         dealNo = t.getNextDeal()
         
         for (n,l) in enumerate(games):
-            #print("working on game", l)
             if n % 2 == 0:
-                playElements1 = [x.strip() for x in l.split(',')]
+                #print("lineno {} working on line {}".format(n,l))
+                playElements1 = [x.strip() for x in l.split('¤')]
             else:
-                playElements2 = [x.strip() for x in l.split(',')]
+                print("lineno {} working on line {}".format(n,l))
+                playElements2 = [x.strip() for x in l.split('¤')]
                 tableNo = int(playElements1[0])
                 teamNS = playElements1[1]
                 NPlayer = playElements1[2]
                 teamEW = playElements1[3]
                 EPlayer = playElements1[4]
                 bid = bridgecore.Bid.fromIslevString(playElements1[5])
-                if not(bid.isPlayedBid()):
-                    playedOut = None
-                    tricks = int(playElements1[7])
-                    NSScore = int(playElements1[8])
-                    IMPScore = int(playElements1[9])
-                else:
-                    playedCardSuit = playElements1[8].strip()
-                    playedCardValue = playElements1[9].strip()
+
+                if (bid.isPlayedBid()):
+                    playedCardSuit = playElements1[6].strip()
+                    playedCardValue = playElements1[7].strip()
                     tricks = int(playElements1[8])
                     NSScore = int(playElements1[9])
                     IMPScore = int(playElements1[10])
-                SPlayer = playElements2[0]
-                WPlayer = playElements2[1]
-                
-                if tableNo == 1:
-                    dealNo = dealNo + 1
 
-                t.addPlay(dealNo, [
-                    (teamNS, SPlayer), 
-                    (teamEW, WPlayer), 
-                    (teamNS, NPlayer), 
-                    (teamEW, EPlayer)],
-                          bid, tricks, NSScore,
-                          bridgecore.Card(
-                              bridgecore.Colour.fromId(playedCardSuit), 
-                              bridgecore.CardValue.fromSymbol(playedCardValue)))
+                    #lines below only done when ther is a bid 
+                    #should maybe be done always??
+                    SPlayer = playElements2[0]
+                    WPlayer = playElements2[1]
+
+                    if tableNo == 1:
+                        dealNo = dealNo + 1
+
+                    t.addPlay(dealNo, [
+                        (teamNS, SPlayer), 
+                        (teamEW, WPlayer), 
+                        (teamNS, NPlayer), 
+                        (teamEW, EPlayer)],
+                              bid, tricks, NSScore, bridgecore.Card(
+                                  bridgecore.Colour.fromId(playedCardSuit), 
+                                  bridgecore.CardValue.fromSymbol(
+                                      playedCardValue)))
+
 
         allDeals = {}
 
@@ -377,8 +375,25 @@ def basicIslevTeams(input, t):
 if __name__ == '__main__':
     #print(locale.getlocale())
     #locale.setlocale(locale.LC_ALL, 'da_dk')
-    largeIslevPairs()
-    #basicIslevTeams()
+    #largeIslevPairs()
+    t = tournament.Tournament()
+    t.type = "team"
+
+    inputFile  = open(r"..\data\islev04102016hold.txt",'r')
+    input = inputFile.read()
+    inputFile.close()
+
+    basicIslevTeams(input, t)
+
+    output = open('../data/newdeal.pbn', 'w')
+    
+    keys = sorted(t.deals.keys())
+
+    for k in keys:
+        output.write(t.deals[k].PBNHand(k))
+        output.write('\n')
+    output.close()
+
     #basicIslevPairs()
     
     #dateString = '25. oktober 2014'
