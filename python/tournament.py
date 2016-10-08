@@ -173,6 +173,7 @@ class Tournament:
         playedBy  = []
         defendedBy = []
         for play in self.plays:
+            #print(play.players)
             if teamPlayer in play.playedByPair():
                 playedBy.append(play)
             elif play.hasParticipant(teamPlayer):
