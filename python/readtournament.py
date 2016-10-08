@@ -419,8 +419,8 @@ def displayRanks(t, focusTeamPlayer, asPlayer):
     print(wrap.render())
     wrap.saveToFile('../data/testChart.html')
    
-def makeFocusViewTeam(tournament, focusTeamPlayer):
-    (playedBy, defendedBy) = tournament.getParticipatedByPlayer(focusTeamPlayer)
+def makeFocusViewTeam(t, focusTeamPlayer):
+    (playedBy, defendedBy) = t.getParticipatedByPlayer(focusTeamPlayer)
 
     playRanks = {}
     defendRanks = {}
@@ -428,15 +428,17 @@ def makeFocusViewTeam(tournament, focusTeamPlayer):
     playRanksList = []
     defendRanksList = []
 
+    print(playedBy)
+    print(defendedBy)
     for play in playedBy:
         direction = play.pairOf(focusTeamPlayer)
-        (r, total) = tournament.getRank(play, direction)
+        (r, total) = t.getRank(play, direction)
         playRanksList.append((r, play.deal))
         playRanks[r] = playRanks.get(r, 0) + 1
         
     for play in defendedBy:
         direction = play.pairOf(focusTeamPlayer)
-        (r, total) = tournament.getRank(play, direction)
+        (r, total) = t.getRank(play, direction)
         defendRanksList.append((r, play.deal))
         defendRanks[r] = defendRanks.get(r, 0) + 1
         res = makeTestRows(playRanksList,defendRanksList)
@@ -461,6 +463,8 @@ def makeFocusViewTeam(tournament, focusTeamPlayer):
     playRowsString =  javascriptdata.makeGoogleDataRows(playRows) 
     defendRowsString =  javascriptdata.makeGoogleDataRows(defendRows) 
     ticksString = json.dumps(ticks)
+
+    print(ticksString)
 
     chartDef = htmllayout.GoogleChart(
         'play', 'def', 'TITLE', playRowsString, defendRowsString, ticksString)
@@ -499,9 +503,9 @@ def makeFocusViewTeam(tournament, focusTeamPlayer):
     wrap.saveToFile('../data/testChart.html')
     print("wrote file ../data/testChart.html");
  
-def makeFocusViewPair(tournament, focusPlayer):
+def makeFocusViewPair(t, focusPlayer):
 #XXXXXXXXXX
-    (playedBy, defendedBy) = tournament.getParticipatedByPlayer(focusPlayer)
+    (playedBy, defendedBy) = t.getParticipatedByPlayer(focusPlayer)
 
     #print(playedBy, defendedBy)
 
@@ -514,13 +518,13 @@ def makeFocusViewPair(tournament, focusPlayer):
     #crossImps = {}
     for play in playedBy:
         direction = play.pairOf(focusPlayer)
-        (r, total) = tournament.getRank(play, direction)
+        (r, total) = t.getRank(play, direction)
         playRanksList.append((r, play.deal))
         playRanks[r] = playRanks.get(r, 0) + 1
         
     for play in defendedBy:
         direction = play.pairOf(focusPlayer)
-        (r, total) = tournament.getRank(play, direction)
+        (r, total) = t.getRank(play, direction)
         defendRanksList.append((r, play.deal))
         defendRanks[r] = defendRanks.get(r, 0) + 1
         res = makeTestRows(playRanksList,defendRanksList)
@@ -589,24 +593,37 @@ def makeFocusViewPair(tournament, focusPlayer):
 def doDefenderFocus():
     pass
 
+def makePBNHands(t, resFile):
+    output = open(resFile, 'w')
+
+    keys = sorted(t.deals.keys())
+    for k in keys:
+        output.write(t.deals[k].PBNHand(k))
+        output.write('\n')
+
+    output.close()
+
+
+
 if __name__ == '__main__':
     pass
     # belwo may be used for trestingf
     t = readTournament(
-        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1235.html')
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1228.html')
         #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
         #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
     
-    htmlhands.makeHtmlHand(t)
+    makePBNHands(t,"..\\data\\pbnhand.pbn")
+    #htmlhands.makeHtmlHand(t)
 
-#    focus = ('14877','Einar Poulsen')
-#    if type == 'team':
-#        makeFocusViewTeam(tournament, focus)
-#    else:
-#        print('starting pairs')
-#        makeFocusViewPair(tournament, focus)
-#
-    #focus = ('Lille O','Lars Sørensen')
+    #focus = ('Christians Tyranner','Einar Poulsen')
+    #if t.type == 'team':
+    #    makeFocusViewTeam(t, focus)
+    #else:
+    #    print('starting pairs')
+    #    makeFocusViewPair(t, focus)
+    #
+    ##focus = ('Lille O','Lars Sørensen')
  
     
     #displayFocus(tournament, focus, True, True)
