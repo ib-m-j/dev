@@ -86,9 +86,12 @@ class StatesManager:
 
     def advance(self):
         #debugging
-        #print(self.remainingStates)
+        #if self.currentState:
+        #    print(self.currentState)
         if len(self.remainingStates) > 0:
             self.currentState = self.remainingStates[0]
+            print("new state")
+            print(self.currentState)
             self.remainingStates = self.remainingStates[1:]
             if isinstance(self.currentState, State):
                 self.currentState.start(self)
@@ -122,8 +125,10 @@ class State:
         self.parser = parser
         
     def __str__(self):
-        return self.name
-        pass
+        res ="actions: "
+        for a in self.actions:
+            res = res + a.tag + ", "
+        return res
 
     def reset(self):
         pass
@@ -150,14 +155,14 @@ class TableState(State):
         self.storage = storage
         State.__init__(self, actionDefs, parser)
 
-    def __str__(self):
-        res = str(len(self.rows))+'\n'
-        for c,r in enumerate(self.rows):
-            res = res + '{}:'.format(c)
-            for d in r:
-                res = res + '{}, '.format(d.__str__())
-            res = res[:-2] +'\n'
-        return res
+#    def __str__(self):
+#        res = str(len(self.rows))+'\n'
+#        for c,r in enumerate(self.rows):
+#            res = res + '{}:'.format(c)
+#            for d in r:
+#                res = res + '{}, '.format(d.__str__())
+#            res = res[:-2] +'\n'
+#        return res
 
 
     def start(self, mgr):
@@ -231,7 +236,7 @@ class TableState(State):
         for r in self.rows:
             line = ''
             for d in r:
-                line = line + '{}, '.format(d.value)
+                line = line + '{}¤ '.format(d.value)
             self.storage.append(line[:-2])
         #print(self.storage)
         self.rows = []
@@ -343,6 +348,8 @@ class HTMLParserTableBased(html.parser.HTMLParser):
 
     def handle_endtag(self, tag):
         if tag in self.endTags.keys():
+            #print("got endtag")
+            #print(tag)
             self.endTags[tag]()
 
     def handle_data(self, data):
