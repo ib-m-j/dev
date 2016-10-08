@@ -295,6 +295,32 @@ class Deal:
         self.cards = {}
         self.dealNo = None
 
+    def PBNHand(self, dealNo):
+        elements = {}
+        elements['Board'] = '"{}"'.format(dealNo)
+        elements['Dealer'] = '"{}"'.format(self.dealer)
+        elements['Vulnerable'] = '"{}"'.format(self.zone)
+        res = '{}:'.format(self.dealer)
+        hand = Seat.fromId(self.dealer.id)
+        for x in range (4):
+            suits = [c for c in self.cards[hand].keys()]
+            suits.sort(reverse = True)
+            for suit in suits:
+                symbols = ''.join(
+                    [c.value.symbol for c in self.cards[hand][suit]])
+                res = res + '{}.'.format(symbols)
+            res = res[:-1]+' '
+            hand = hand.getNext()
+        elements['Deal'] = '"{}"'.format(res[:-1])
+
+        returnValue = ''
+        for key in ['Board', 'Dealer', 'Vulnerable', 'Deal']:
+            returnValue = returnValue + '[{} {}]\n'.format(key, elements[key])
+
+        #[Deal "N:K943.AQJT8.AT2.2 Q762.743.J87.AQ9 J8.K96.Q653.KJ83 AT5.52.K94.T7654"]
+
+        return returnValue
+
     def setDealNo(self, no):
         self.dealNo = no
 
@@ -398,6 +424,7 @@ class Deal:
         #the bid destroys other display
         #res = res + '&a=-{}'.format(bid)
         return res.format(cards).lower()
+
 
 #    def htmlHand(self, playerList, bid):
 #        hand = Seat.fromId('N')
@@ -527,7 +554,10 @@ class Bid:
         #        dbl = match.group("dbl")
         #else:
         #    raise (BaseException("bid exception"))
-        #print(bidstring)
+        if len(bidstring) < 3:
+            #hack to deal with games that wont get played
+            return Bid()
+
         res = parse(bidstring, parsing.Bid)
         if hasattr(res, 'not_played'):
             return Bid()
@@ -578,7 +608,9 @@ class Bid:
             return("{} {} {} i {}".format(
                 self.tricks,self.strain.dkName(),dblStr,self.bidder))
         else:
-            return("Pass")
+            if self.isPassedBid():
+                return("Pass")
+            return("Not played")
 
     def getTricks(self):
         return int(self.tricks)
