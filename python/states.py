@@ -90,8 +90,8 @@ class StatesManager:
         #    print(self.currentState)
         if len(self.remainingStates) > 0:
             self.currentState = self.remainingStates[0]
-            print("new state")
-            print(self.currentState)
+            #print("new state")
+            #print(self.currentState)
             self.remainingStates = self.remainingStates[1:]
             if isinstance(self.currentState, State):
                 self.currentState.start(self)

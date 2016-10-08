@@ -321,7 +321,7 @@ def basicIslevTeams(input, t):
                 #print("lineno {} working on line {}".format(n,l))
                 playElements1 = [x.strip() for x in l.split('¤')]
             else:
-                print("lineno {} working on line {}".format(n,l))
+                #print("lineno {} working on line {}".format(n,l))
                 playElements2 = [x.strip() for x in l.split('¤')]
                 tableNo = int(playElements1[0])
                 teamNS = playElements1[1]
