@@ -103,6 +103,7 @@ def readOneTournament(server, url):
             record.append(line.strip())
             type = 'pair'
     conn.close()
+    #print(record)
     return (type, record)
 
 #debugging
@@ -209,6 +210,7 @@ def onePairTournament():
                     'islevbridge.dk',file).getFileContent())
 
 def oneTournament(server, file):
+    print("new text")
     res = readOneTournament(server, file)
     #print(res)
     if res[0] == 'pair':
@@ -248,7 +250,8 @@ def readTournament(server, url):
                     'islevbridge.dk',file).getFileContent(), t)
     
     elif t.type == 'team':
-        print("doing teams")
+        print("doing teams with files: ")
+        print(res[1])
         for file in res[1]: 
             readresfile.basicIslevTeams(
                 Crawler.fromServerUrl(
@@ -590,7 +593,8 @@ if __name__ == '__main__':
     pass
     # belwo may be used for trestingf
     t = readTournament(
-        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
+        'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1235.html')
+        #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1140.html')
         #'islevbridge.dk','/Resultat/Klub1/Turneringer/Resultat1069.html')
     
     htmlhands.makeHtmlHand(t)
